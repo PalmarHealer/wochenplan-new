@@ -17,6 +17,7 @@
     >
         <input
             type="text"
+            class="hidden"
         {!! $applyStateBindingModifiers('wire:model') !!}="{{ $getStatePath() }}"
         />
         <table class="table-auto w-full border border-gray-400 rounded-xl text-xs bg-white dark:bg-white/5">
