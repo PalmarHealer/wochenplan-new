@@ -10,6 +10,7 @@ use Filament\Forms\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class TimeResource extends Resource
 {
@@ -27,6 +28,31 @@ class TimeResource extends Resource
     }
 
     protected static ?string $navigationGroup = 'Administration';
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_time');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_time');
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()->can('update_time');
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return auth()->user()->can('delete_time');
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()->can('delete_any_time');
+    }
 
     public static function form(Form $form): Form
     {

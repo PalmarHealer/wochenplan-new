@@ -7,7 +7,6 @@ use App\Forms\Components\CustomRichEditor;
 use App\Forms\Components\LayoutEditor;
 use App\Models\Lesson;
 use Filament\Forms;
-use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Form;
@@ -15,7 +14,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use FilamentTiptapEditor\TiptapEditor;
+use Illuminate\Database\Eloquent\Model;
 
 class LessonResource extends Resource
 {
@@ -31,6 +30,32 @@ class LessonResource extends Resource
     {
         return 'Angebote';
     }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_lesson');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_lesson');
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()->can('update_lesson');
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return auth()->user()->can('delete_lesson');
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()->can('delete_any_lesson');
+    }
+
     public static function form(Form $form): Form
     {
         return $form

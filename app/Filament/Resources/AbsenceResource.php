@@ -12,6 +12,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Malzariey\FilamentDaterangepickerFilter\Fields\DateRangePicker;
 
@@ -30,6 +31,30 @@ class AbsenceResource extends Resource
         return 'Krankmeldungen';
     }
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_absence');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_absence');
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()->can('update_absence');
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return auth()->user()->can('delete_absence');
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()->can('delete_any_absence');
+    }
 
     public static function form(Form $form): Form
     {
