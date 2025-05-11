@@ -2,15 +2,18 @@
 
 namespace App\Providers\Filament;
 
+use Filament\Actions\MountableAction;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
 use Filament\Pages;
+use Filament\Pages\Page;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Alignment;
 use Filament\Support\Facades\FilamentColor;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -23,6 +26,14 @@ use Jeffgreco13\FilamentBreezy\BreezyCore;
 
 class AdminPanelProvider extends PanelProvider
 {
+    public function boot(): void
+    {
+        Page::formActionsAlignment(Alignment::Right);
+
+        MountableAction::configureUsing(function (MountableAction $action) {
+            $action->modalFooterActionsAlignment(Alignment::Right);
+        });
+    }
     public function panel(Panel $panel): Panel
     {
         return $panel

@@ -18,7 +18,7 @@ class Lesson extends Model
         'description',
         'notes',
         'disabled',
-        'type',
+        'date',
         'color',
         'room',
         'lesson_time',
@@ -35,6 +35,16 @@ class Lesson extends Model
     public function colors(): BelongsTo
     {
         return $this->belongsTo(Color::class, 'color');
+    }
+
+    public function rooms(): BelongsTo
+    {
+        return $this->belongsTo(Room::class, 'room');
+    }
+
+    public function times(): BelongsTo
+    {
+        return $this->belongsTo(Time::class, 'lesson_time');
     }
 
     public function creator(): BelongsTo

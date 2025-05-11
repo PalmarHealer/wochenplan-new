@@ -83,19 +83,17 @@ class AbsenceResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
+                    ->date("d.m.Y H:i")
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
+                    ->date("d.m.Y H:i")
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
-            ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -116,7 +114,6 @@ class AbsenceResource extends Resource
         return [
             'index' => Pages\ListAbsences::route('/'),
             'create' => Pages\CreateAbsence::route('/create'),
-            'view' => Pages\ViewAbsence::route('/{record}'),
             'edit' => Pages\EditAbsence::route('/{record}/edit'),
         ];
     }

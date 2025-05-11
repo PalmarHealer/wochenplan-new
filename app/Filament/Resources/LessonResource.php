@@ -74,6 +74,7 @@ class LessonResource extends Resource
                     LayoutEditor::make('layout')
                         ->label('Slot')
                         ->columnSpanFull()
+                        ->required()
                         ->layout([
                             [
                                 ['customName' => 'Test', 'colspan' => 2, 'rowspan' => 1, 'color' => 1, 'attributes' => ['room' => 1, 'lesson_time' => 2]],
@@ -104,6 +105,7 @@ class LessonResource extends Resource
                                 ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
                                 ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
                                 ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
                             ],
                         ])
                         ->colors([
@@ -113,20 +115,27 @@ class LessonResource extends Resource
                         ]),
                 ]),
                 Section::make([
+                    Forms\Components\DatePicker::make('date')
+                        ->label('Datum')
+                        ->native(false)
+                        ->displayFormat('d.m.Y')
+                        ->format('Y-m-d')
+                        ->default(now())
+                        ->required(),
                     Forms\Components\Select::make('color')
                         ->label('Farbe')
                         ->relationship('colors', 'name')
                         ->preload()
                         ->required(),
-                    Forms\Components\TextInput::make('type')
-                        ->required(),
+                ])->columns(2),
+                Section::make([
                     Forms\Components\Select::make('assignedUsers')
                         ->label('Personen')
                         ->relationship('assignedUsers', 'name')
                         ->multiple()
                         ->preload()
                         ->required(),
-                ])->columns(2),
+                ]),
                 Section::make([
                     Forms\Components\TextInput::make('notes')
                         ->columnSpanFull()
@@ -137,14 +146,18 @@ class LessonResource extends Resource
                     ->required()
                     ->boolean()
                     ->inline()
-                    ->default(1)
+                    ->default(false)
                     ->options([
-                        1 => 'Aktiviert',
-                        0 => 'Deaktiviert',
+                        false => 'Aktiviert',
+                        true => 'Deaktiviert',
+                    ])
+                    ->icons([
+                            false => 'heroicon-o-check',
+                            true => 'heroicon-o-x-mark',
                     ])
                     ->colors([
-                        1 => 'success',
-                        0 => 'warning',
+                        false => 'success',
+                        true => 'warning',
                     ]),
             ]);
     }
@@ -165,21 +178,24 @@ class LessonResource extends Resource
                 Tables\Columns\TextColumn::make('notes')
                     ->label('Notizen')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('type')
+                Tables\Columns\TextColumn::make('date')
+                    ->label('Datum')
+                    ->date("d.m.Y")
                     ->searchable(),
-                Tables\Columns\TextColumn::make('room')
+                Tables\Columns\TextColumn::make('rooms.name')
                     ->label('Raum')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('lesson_time')
+                Tables\Columns\TextColumn::make('times.name')
                     ->label('Zeit')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('assignedUsers')
                     ->label('Zugewiesen')
-                    ->sortable()
+                    ->searchable()
                     ->formatStateUsing(fn ($state, $record) =>
                     $record->assignedUsers->pluck('name')->join(', ')
-                    )
-                    ->searchable(),
+                    ),
+                Tables\Columns\ColorColumn::make('colors.color')
+                    ->label('Farbe'),
                 Tables\Columns\IconColumn::make('disabled')
                     ->label('Aktiviert')
                     ->getStateUsing(fn ($record) => !$record->disabled)
@@ -197,11 +213,13 @@ class LessonResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
                     ->dateTime()
+                    ->date("d.m.Y H:i")
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Geändert am')
                     ->dateTime()
+                    ->date("d.m.Y H:i")
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -214,10 +232,10 @@ class LessonResource extends Resource
                         false => 'Aktiviert',
                     ]),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-            ])
+            //->actions([
+            //    Tables\Actions\ViewAction::make(),
+            //    Tables\Actions\EditAction::make(),
+            //])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
@@ -237,7 +255,7 @@ class LessonResource extends Resource
         return [
             'index' => Pages\ListLessons::route('/'),
             'create' => Pages\CreateLesson::route('/create'),
-            'view' => Pages\ViewLesson::route('/{record}'),
+            //'view' => Pages\ViewLesson::route('/{record}'),
             'edit' => Pages\EditLesson::route('/{record}/edit'),
         ];
     }

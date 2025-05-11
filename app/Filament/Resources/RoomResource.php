@@ -54,20 +54,18 @@ class RoomResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
                     ->dateTime()
+                    ->date("d.m.Y H:i")
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Geändert am')
                     ->dateTime()
+                    ->date("d.m.Y H:i")
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
 
-            ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -88,7 +86,6 @@ class RoomResource extends Resource
         return [
             'index' => Pages\ListRooms::route('/'),
             'create' => Pages\CreateRoom::route('/create'),
-            'view' => Pages\ViewRoom::route('/{record}'),
             'edit' => Pages\EditRoom::route('/{record}/edit'),
         ];
     }

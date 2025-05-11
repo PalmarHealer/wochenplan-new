@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->string('notes')->nullable();
             $table->boolean('disabled')->default(false);
-            $table->integer('type');
+            $table->dateTime('date');
             $table->foreignId('color')->constrained('colors')->nullOnDelete();
             $table->foreignId('room')->constrained('rooms')->nullOnDelete();
             $table->foreignId('lesson_time')->constrained('times')->nullOnDelete();

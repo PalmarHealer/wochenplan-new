@@ -60,20 +60,18 @@ class ColorResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
                     ->dateTime()
+                    ->date("d.m.Y H:i")
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Geändert am')
                     ->dateTime()
+                    ->date("d.m.Y H:i")
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
 
-            ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -94,7 +92,6 @@ class ColorResource extends Resource
         return [
             'index' => Pages\ListColors::route('/'),
             'create' => Pages\CreateColor::route('/create'),
-            'view' => Pages\ViewColor::route('/{record}'),
             'edit' => Pages\EditColor::route('/{record}/edit'),
         ];
     }
