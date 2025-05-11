@@ -21,7 +21,7 @@ class Lesson extends Model
         'type',
         'color',
         'room',
-        'time',
+        'lesson_time',
         'assigned',
         'created_by',
         'updated_by',
@@ -35,11 +35,6 @@ class Lesson extends Model
     public function colors(): BelongsTo
     {
         return $this->belongsTo(Color::class, 'color');
-    }
-
-    public function rooms(): BelongsTo
-    {
-        return $this->belongsTo(Room::class, 'room');
     }
 
     public function creator(): BelongsTo

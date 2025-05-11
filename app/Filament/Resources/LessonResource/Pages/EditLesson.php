@@ -23,7 +23,7 @@ class EditLesson extends EditRecord
         $data['updated_by'] = auth()->id();
         $layout = json_decode($data['layout'], true);
         $data['room'] = $layout['room'];
-        $data['time'] = $layout['time'];
+        $data['lesson_time'] = $layout['lesson_time'];
 
         return $data;
     }

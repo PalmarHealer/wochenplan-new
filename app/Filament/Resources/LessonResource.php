@@ -76,34 +76,34 @@ class LessonResource extends Resource
                         ->columnSpanFull()
                         ->layout([
                             [
-                                ['customName' => 'Test', 'colspan' => 2, 'rowspan' => 1, 'color' => 1, 'attributes' => ['room' => 1, 'time' => 20]],
-                                ['customName' => 'A3', 'attributes' => ['room' => 2, 'time' => 2]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 3, 'time' => 3]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 4, 'time' => 4]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 5, 'time' => 5]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'time' => 6]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 7, 'time' => 7]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 8, 'time' => 8]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 9, 'time' => 9]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 10, 'time' => 10]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 11, 'time' => 11]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 12, 'time' => 12]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 13, 'time' => 13]],
+                                ['customName' => 'Test', 'colspan' => 2, 'rowspan' => 1, 'color' => 1, 'attributes' => ['room' => 1, 'lesson_time' => 2]],
+                                ['customName' => 'A3', 'attributes' => ['room' => 2, 'lesson_time' => 2]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 3, 'lesson_time' => 3]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 4, 'lesson_time' => 4]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 5, 'lesson_time' => 5]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 6]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 7, 'lesson_time' => 7]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 8, 'lesson_time' => 8]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 9, 'lesson_time' => 9]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 10, 'lesson_time' => 10]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 11, 'lesson_time' => 11]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 12, 'lesson_time' => 12]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 13, 'lesson_time' => 13]],
                             ],
                             [
-                                ['customName' => 'B1', 'attributes' => ['room' => 4, 'time' => 50]],
-                                ['customName' => 'B2', 'attributes' => ['room' => 5, 'time' => 60]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'time' => 70]],
+                                ['customName' => 'B1', 'attributes' => ['room' => 4, 'lesson_time' => 50]],
+                                ['customName' => 'B2', 'attributes' => ['room' => 5, 'lesson_time' => 60]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
+                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
                             ],
                         ])
                         ->colors([
@@ -170,7 +170,7 @@ class LessonResource extends Resource
                 Tables\Columns\TextColumn::make('room')
                     ->label('Raum')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('time')
+                Tables\Columns\TextColumn::make('lesson_time')
                     ->label('Zeit')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('assignedUsers')
