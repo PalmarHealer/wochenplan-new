@@ -31,31 +31,6 @@ class LessonResource extends Resource
         return 'Angebote';
     }
 
-    public static function canViewAny(): bool
-    {
-        return auth()->user()->can('view_lesson');
-    }
-
-    public static function canCreate(): bool
-    {
-        return auth()->user()->can('create_lesson');
-    }
-
-    public static function canEdit(Model $record): bool
-    {
-        return auth()->user()->can('update_lesson');
-    }
-
-    public static function canDelete(Model $record): bool
-    {
-        return auth()->user()->can('delete_lesson');
-    }
-
-    public static function canDeleteAny(): bool
-    {
-        return auth()->user()->can('delete_any_lesson');
-    }
-
     public static function form(Form $form): Form
     {
         return $form
@@ -150,6 +125,7 @@ class LessonResource extends Resource
                     Forms\Components\Select::make('color')
                         ->label('Farbe')
                         ->relationship('colors', 'name')
+                        ->native(false)
                         ->preload()
                         ->required(),
                 ])->columns(2),
@@ -237,14 +213,12 @@ class LessonResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
-                    ->dateTime()
-                    ->date("d.m.Y H:i")
+                    ->dateTime("d.m.Y H:i")
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Geändert am')
-                    ->dateTime()
-                    ->date("d.m.Y H:i")
+                    ->dateTime("d.m.Y H:i")
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

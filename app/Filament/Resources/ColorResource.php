@@ -29,31 +29,6 @@ class ColorResource extends Resource
 
     protected static ?string $navigationGroup = 'Administration';
 
-    public static function canViewAny(): bool
-    {
-        return auth()->user()->can('view_color');
-    }
-
-    public static function canCreate(): bool
-    {
-        return auth()->user()->can('create_color');
-    }
-
-    public static function canEdit(Model $record): bool
-    {
-        return auth()->user()->can('update_color');
-    }
-
-    public static function canDelete(Model $record): bool
-    {
-        return auth()->user()->can('delete_color');
-    }
-
-    public static function canDeleteAny(): bool
-    {
-        return auth()->user()->can('delete_any_color');
-    }
-
     public static function form(Form $form): Form
     {
         return $form

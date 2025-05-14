@@ -2,19 +2,17 @@
 
 namespace App\Filament\Resources;
 
+use Malzariey\FilamentDaterangepickerFilter\Fields\DateRangePicker;
 use App\Filament\Resources\AbsenceResource\Pages;
-use App\Filament\Resources\AbsenceResource\RelationManagers;
 use App\Models\Absence;
 use Carbon\Carbon;
 use Filament\Forms;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Malzariey\FilamentDaterangepickerFilter\Fields\DateRangePicker;
 
 class AbsenceResource extends Resource
 {
@@ -31,59 +29,26 @@ class AbsenceResource extends Resource
         return 'Krankmeldungen';
     }
 
-    public static function canViewAny(): bool
-    {
-        return auth()->user()->can('view_absence');
-    }
-
-    public static function canCreate(): bool
-    {
-        return auth()->user()->can('create_absence');
-    }
-
-    public static function canEdit(Model $record): bool
-    {
-        return auth()->user()->can('update_absence');
-    }
-
-    public static function canDelete(Model $record): bool
-    {
-        return auth()->user()->can('delete_absence');
-    }
-
-    public static function canDeleteAny(): bool
-    {
-        return auth()->user()->can('delete_any_absence');
-    }
-
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\DatePicker::make('start')
-                    ->native(false)
-                    ->displayFormat('d.m.Y')
-                    ->format('Y/m/d')
-                    ->required(),
-                Forms\Components\DatePicker::make('end')
-                    ->native(false)
-                    ->displayFormat('d.m.Y')
-                    ->format('Y/m/d')
-                    ->required(),
-                Forms\Components\TextInput::make('user_id')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('created_by')
-                    ->numeric(),
-                DateRangePicker::make('created_at')
-                    ->label('Datum')
-                    ->displayFormat('DD.MM.YYYY')
-                    ->disableRanges()
-                    ->startDate(Carbon::now())
-                    ->endDate(Carbon::now())
-                    ->required(),
-                Forms\Components\TextInput::make('updated_by')
-                    ->numeric(),
+                Section::make([
+                    DateRangePicker::make('date')
+                        ->label('Datum')
+                        ->displayFormat('DD.MM.YYYY')
+                        ->format('d.m.Y')
+                        ->disableRanges()
+                        ->startDate(Carbon::now())
+                        ->endDate(Carbon::now())
+                        ->required(),
+                    Forms\Components\Select::make('user_id')
+                        ->label('Benutzer')
+                        ->searchable()
+                        ->preload()
+                        ->required()
+                        ->relationship('user', 'name'),
+                ])->columns(2),
             ]);
     }
 
@@ -92,33 +57,43 @@ class AbsenceResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('start')
-                    ->date()
+                    ->label('Start')
+                    ->date("d.m.Y")
                     ->sortable(),
                 Tables\Columns\TextColumn::make('end')
-                    ->date()
+                    ->label('Ende')
+                    ->date("d.m.Y")
                     ->sortable(),
-                Tables\Columns\TextColumn::make('user_id')
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('Benutzer')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('creator.name')
+                    ->label('Erstellt von')
                     ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('created_by')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updater.name')
+                    ->label('Geändert von')
                     ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('updated_by')
-                    ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
+                    ->label('Erstellt am')
                     ->date("d.m.Y H:i")
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->label('Geändert am')
                     ->date("d.m.Y H:i")
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('user.name')
+                    ->label('Benutzer')
+                    ->searchable()
+                    ->preload()
+                    ->relationship('user', 'name'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

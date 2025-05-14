@@ -29,31 +29,6 @@ class UserResource extends Resource
 
     protected static ?string $navigationGroup = 'Administration';
 
-    public static function canViewAny(): bool
-    {
-        return auth()->user()->can('view_user');
-    }
-
-    public static function canCreate(): bool
-    {
-        return auth()->user()->can('create_user');
-    }
-
-    public static function canEdit(Model $record): bool
-    {
-        return auth()->user()->can('update_user');
-    }
-
-    public static function canDelete(Model $record): bool
-    {
-        return auth()->user()->can('delete_user');
-    }
-
-    public static function canDeleteAny(): bool
-    {
-        return auth()->user()->can('delete_any_user');
-    }
-
     public static function form(Form $form): Form
     {
         return $form
@@ -84,7 +59,6 @@ class UserResource extends Resource
                     Forms\Components\Select::make('roles')
                         ->label('Rollen')
                         ->relationship('roles', 'name')
-                        ->multiple()
                         ->preload()
                         ->searchable(),
                 ]),
@@ -110,14 +84,12 @@ class UserResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
-                    ->dateTime()
-                    ->date("d.m.Y H:i")
+                    ->dateTime("d.m.Y H:i")
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Geändert am')
-                    ->dateTime()
-                    ->date("d.m.Y H:i")
+                    ->dateTime("d.m.Y H:i")
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
