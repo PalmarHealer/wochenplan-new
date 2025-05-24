@@ -19,7 +19,9 @@ class ColorResource extends Resource
 
     protected static ?string $navigationLabel = 'Farben';
 
-    protected static ?string $label = 'Farben';
+    protected static ?int $navigationSort = 0;
+
+    protected static ?string $label = 'Farbe';
 
     public static function getPluralLabel(): string
     {

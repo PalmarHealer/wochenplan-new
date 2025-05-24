@@ -19,11 +19,14 @@ class LessonResource extends Resource
 {
     protected static ?string $model = Lesson::class;
 
-    protected static ?string $navigationIcon = 'tabler-calendar';
+    protected static ?string $navigationIcon = 'tabler-calendar-dot';
 
     protected static ?string $navigationLabel = "Angebote";
 
-    protected static ?string $label = 'Angebote';
+    protected static ?int $navigationSort = 2;
+
+    protected static ?string $label = 'Angebot';
+
 
     public static function getPluralLabel(): string
     {

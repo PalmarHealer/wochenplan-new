@@ -19,7 +19,9 @@ class RoomResource extends Resource
 
     protected static ?string $navigationLabel = 'Räume';
 
-    protected static ?string $label = 'Räume';
+    protected static ?int $navigationSort = 1;
+
+    protected static ?string $label = 'Raum';
 
     public static function getPluralLabel(): string
     {

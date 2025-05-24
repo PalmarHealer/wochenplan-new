@@ -22,7 +22,9 @@ class AbsenceResource extends Resource
 
     protected static ?string $navigationLabel = 'Krankmeldungen';
 
-    protected static ?string $label = 'Krankmeldungen';
+    protected static ?int $navigationSort = 1;
+
+    protected static ?string $label = 'Krankmeldung';
 
     public static function getPluralLabel(): string
     {

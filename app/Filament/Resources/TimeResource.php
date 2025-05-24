@@ -19,7 +19,9 @@ class TimeResource extends Resource
 
     protected static ?string $navigationLabel = 'Zeiten';
 
-    protected static ?string $label = 'Zeiten';
+    protected static ?int $navigationSort = 2;
+
+    protected static ?string $label = 'Zeit';
 
     public static function getPluralLabel(): string
     {

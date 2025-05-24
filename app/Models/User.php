@@ -27,12 +27,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
     ];
 
-    public function assignedLessons(): BelongsToMany
-    {
-        return $this->belongsToMany(Lesson::class, 'lesson_user');
-    }
-
-
     /**
      * The attributes that should be hidden for serialization.
      *

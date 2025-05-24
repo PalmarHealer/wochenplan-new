@@ -17,7 +17,11 @@ class LayoutResource extends Resource
 {
     protected static ?string $model = Layout::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'tabler-layout';
+
+    protected static ?int $navigationSort = 3;
+
+    protected static ?string $navigationGroup = 'Administration';
 
     public static function form(Form $form): Form
     {
@@ -35,10 +39,6 @@ class LayoutResource extends Resource
             ])
             ->filters([
                 //
-            ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -59,7 +59,6 @@ class LayoutResource extends Resource
         return [
             'index' => Pages\ListLayouts::route('/'),
             'create' => Pages\CreateLayout::route('/create'),
-            'view' => Pages\ViewLayout::route('/{record}'),
             'edit' => Pages\EditLayout::route('/{record}/edit'),
         ];
     }
