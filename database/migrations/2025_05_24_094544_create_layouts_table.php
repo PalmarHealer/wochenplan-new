@@ -13,6 +13,14 @@ return new class extends Migration
     {
         Schema::create('layouts', function (Blueprint $table) {
             $table->id();
+
+            $table->string('name');
+            $table->string('description')->nullable();
+            $table->string('notes')->nullable();
+            $table->longText('layout');
+            $table->boolean('disabled')->default(false);
+            $table->integer('date');
+
             $table->timestamps();
         });
     }

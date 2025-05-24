@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('lesson_templates', function (Blueprint $table) {
             $table->id();
-            $table->integer('parent_id')->nullable();
             $table->string('name');
             $table->string('description')->nullable();
             $table->string('notes')->nullable();
@@ -26,6 +25,15 @@ return new class extends Migration
             $table->foreignId('created_by')->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->constrained('users')->nullOnDelete();
 
+            $table->softDeletes();
+
+            $table->timestamps();
+        });
+
+        Schema::create('lesson_template_user', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('lesson_templates_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }
@@ -36,5 +44,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('lesson_templates');
+        Schema::dropIfExists('lesson_template_user');
     }
 };
