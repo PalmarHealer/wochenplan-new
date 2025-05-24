@@ -133,8 +133,7 @@ class LessonResource extends Resource
                         ->label('Personen')
                         ->relationship('assignedUsers', 'name')
                         ->multiple()
-                        ->preload()
-                        ->required(),
+                        ->preload(),
                 ]),
                 Section::make([
                     Forms\Components\TextInput::make('notes')

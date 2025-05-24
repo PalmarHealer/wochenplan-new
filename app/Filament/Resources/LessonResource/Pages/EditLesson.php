@@ -28,6 +28,17 @@ class EditLesson extends EditRecord
         return $data;
     }
 
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+
+        $data['layout'] = json_encode([
+            "room" => $data['room'],
+            "lesson_time" => $data['lesson_time']],
+            true);
+
+        return $data;
+    }
+
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');

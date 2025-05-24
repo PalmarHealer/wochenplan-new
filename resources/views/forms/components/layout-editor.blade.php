@@ -10,10 +10,11 @@
     <div
         style="overflow-y: scroll;"
         x-data="layoutEditor({
-        layout: {{ Js::from($layout) }},
-        colors: {{ Js::from($colors) }},
-        state: $wire.entangle('{{ $getStatePath() }}'),
-    })"
+            layout: {{ Js::from($layout) }},
+            colors: {{ Js::from($colors) }},
+            state: $wire.entangle('{{ $getStatePath() }}'),
+        })"
+        x-init="init()"
     >
         <input
             type="text"
@@ -71,9 +72,42 @@
                     }
 
                     this.state = JSON.stringify(cell.attributes);
-                }
+                },
 
+                init() {
+                    const parsedArray = Object.values(JSON.parse(this.state));
+                    if (parsedArray === null) return;
+
+                    const cellPath = this.findCellPath(this.layout, parsedArray[0], parsedArray[1]);
+                    try {
+
+                        this.selectCell(cellPath[0], cellPath[1]);
+                    } catch (e) {
+                        console.log('State could not be loaded:', cellPath);
+                    }
+                },
+
+                findCellPath(data, targetRoom, targetLessonTime) {
+                    this.test2 = "";
+                for (let row = 0; row < data.length; row++) {
+                    const columns = data[row];
+                    for (let col = 0; col < columns.length; col++) {
+                        const cell = columns[col];
+                        if (!cell || !cell.attributes) continue;
+
+                        const room = cell.attributes.room;
+                        const lessonTime = cell.attributes.lesson_time;
+
+                        if (room === targetRoom && lessonTime === targetLessonTime) {
+                            return [row, col];
+                        }
+                    }
+                }
+                return null;
             }
+
+        }
         }
     </script>
+
 </x-dynamic-component>
