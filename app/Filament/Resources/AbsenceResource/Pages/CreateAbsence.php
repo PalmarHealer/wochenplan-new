@@ -9,7 +9,6 @@ class CreateAbsence extends CreateRecord
 {
     protected static string $resource = AbsenceResource::class;
 
-
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['created_by'] = auth()->id();

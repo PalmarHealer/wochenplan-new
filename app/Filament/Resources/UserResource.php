@@ -58,7 +58,7 @@ class UserResource extends Resource
 
                 Section::make([
                     Forms\Components\Select::make('roles')
-                        ->label('Rollen')
+                        ->label('Rolle')
                         ->relationship('roles', 'name')
                         ->preload()
                         ->searchable(),

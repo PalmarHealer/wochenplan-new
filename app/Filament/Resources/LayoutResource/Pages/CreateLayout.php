@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateLayout extends CreateRecord
 {
     protected static string $resource = LayoutResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

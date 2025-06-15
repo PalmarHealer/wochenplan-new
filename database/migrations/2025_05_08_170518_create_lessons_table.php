@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('lessons', function (Blueprint $table) {
             $table->id();
             $table->integer('parent_id')->nullable();
-            $table->string('name');
+            $table->string('name')->nullable();
             $table->string('description')->nullable();
             $table->string('notes')->nullable();
             $table->boolean('disabled')->default(false);

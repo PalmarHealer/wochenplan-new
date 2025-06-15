@@ -19,25 +19,41 @@
 
         <input
             type="text"
-            class="hidden2"
+            class="hidden"
         {!! $applyStateBindingModifiers('wire:model') !!}="{{ $getStatePath() }}"
         />
-        <table class="table-auto w-full border border-gray-400 rounded-xl text-xs bg-white dark:bg-white/5">
+        <table class="table-auto w-full border border-gray-400 text-xs bg-white dark:bg-white/5">
             <tbody>
             <template x-for="(row, rowIndex) in layout" :key="rowIndex">
-                <tr>
+                <tr class="h-10">
                     <template x-for="(cell, colIndex) in row" :key="colIndex">
                         <td
-                            class="border border-gray-300 dark:border-white/10 px-2 py-1 cursor-pointer"
+                            x-show="!cell?.hidden"
+                            x-data="{ isHovered: false }"
+                            class="border border-gray-300 dark:border-white/10 px-2 py-1 text-xl"
+                            :class="{
+                                'text-center': cell.alignment === 'center',
+                                'text-right': cell.alignment === 'right',
+                                'text-left': !cell.alignment,
+                                'cursor-pointer': cell.room && cell.time,
+                            }"
                             :rowspan="cell.rowspan || 1"
                             :colspan="cell.colspan || 1"
                             :style="{
-                                backgroundColor: colors[cell.color] || 'transparent',
-                                filter: isSelected(rowIndex, colIndex) ? 'contrast(50%)' : 'none'
+                                backgroundColor: colors[(cell.color ?? 'default')] ?? 'red',
+                                filter: isSelected(rowIndex, colIndex) && (cell.room && cell.time) ?
+                                    cell.color ? 'grayscale(20%) brightness(80%)' :
+                                        'invert(50%)' :
+                                        isHovered && (cell.room && cell.time) ?
+                                            cell.color ? 'grayscale(10%) brightness(90%)' :
+                                            'invert(70%)' :
+                                        'none'
                             }"
                             @click="selectCell(rowIndex, colIndex); updateState()"
+                            @mouseenter="isHovered = true"
+                            @mouseleave="isHovered = false"
                         >
-                            <div x-text="cell.customName ?? `${rowIndex}:${colIndex}`"></div>
+                            <div x-html="cell.displayName ?? ``" class="select-none"></div>
                         </td>
                     </template>
                 </tr>
@@ -57,6 +73,10 @@
                 state: state,
 
                 selectCell(row, col) {
+                    if (row && col) return;
+                    const cell = this.layout[row][col];
+                    if (!cell.room && !cell.time) return;
+
                     this.selectedRow = row;
                     this.selectedCol = col;
                 },
@@ -69,11 +89,8 @@
                     if (this.selectedRow === null || this.selectedCol === null) return;
 
                     const cell = this.layout[this.selectedRow][this.selectedCol];
-                    if (!cell.attributes) {
-                        this.layout[this.selectedRow][this.selectedCol].attributes = {};
-                    }
 
-                    this.state = JSON.stringify(cell.attributes);
+                    this.state = JSON.stringify({room: cell.room, lesson_time: cell.time});
                 },
 
                 init() {
@@ -90,15 +107,14 @@
                 },
 
                 findCellPath(data, targetRoom, targetLessonTime) {
-                    this.test2 = "";
                     for (let row = 0; row < data.length; row++) {
                         const columns = data[row];
                         for (let col = 0; col < columns.length; col++) {
                             const cell = columns[col];
-                            if (!cell || !cell.attributes) continue;
+                            if (!cell) continue;
 
-                            const room = cell.attributes.room;
-                            const lessonTime = cell.attributes.lesson_time;
+                            const room = cell.room;
+                            const lessonTime = cell.time;
 
                             if (room === targetRoom && lessonTime === targetLessonTime) {
                                 return [row, col];

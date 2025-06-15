@@ -18,8 +18,7 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->string('notes')->nullable();
             $table->longText('layout');
-            $table->boolean('disabled')->default(false);
-            $table->integer('date');
+            $table->boolean('active')->default(false);
 
             $table->timestamps();
         });

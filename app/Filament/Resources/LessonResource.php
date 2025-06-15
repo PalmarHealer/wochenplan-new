@@ -4,7 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\LessonResource\Pages;
 use App\Forms\Components\CustomRichEditor;
-use App\Forms\Components\LayoutEditor;
+use App\Forms\Components\LayoutSelector;
+use App\Models\Color;
+use App\Models\Layout;
 use App\Models\Lesson;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
@@ -35,6 +37,14 @@ class LessonResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $colors = Color::all()->pluck('color', 'id')->toArray();
+        $colors['default'] = 'rgba(0, 0, 0, 0.10)';
+
+        $layout = json_decode(Layout::where('active', true)
+            ->limit(1)
+            ->pluck('layout')
+            ->first());
+
         return $form
             ->schema([
                 Section::make('Angebot details')
@@ -42,7 +52,6 @@ class LessonResource extends Resource
                     ->schema([
                         CustomRichEditor::make('name')
                             ->label('Name')
-                            ->required()
                             ->toolbarButtons([
                                 'bold',
                                 'h2',
@@ -55,7 +64,6 @@ class LessonResource extends Resource
                             ]),
                         CustomRichEditor::make('description')
                             ->label('Beschreibung')
-                            ->required()
                             ->extraAttributes([
                                 'style' => 'min-height: 2.5rem;',
                             ])
@@ -73,48 +81,12 @@ class LessonResource extends Resource
                             ]),
                     ]),
                 Section::make([
-                    LayoutEditor::make('layout')
+                    LayoutSelector::make('layout')
                         ->label('Slot')
                         ->columnSpanFull()
                         ->required()
-                        ->layout([
-                            [
-                                ['customName' => 'Test', 'colspan' => 2, 'rowspan' => 1, 'color' => 1, 'attributes' => ['room' => 1, 'lesson_time' => 2]],
-                                ['customName' => 'A3', 'attributes' => ['room' => 2, 'lesson_time' => 2]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 3, 'lesson_time' => 3]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 4, 'lesson_time' => 4]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 5, 'lesson_time' => 5]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 6]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 7, 'lesson_time' => 7]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 8, 'lesson_time' => 8]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 9, 'lesson_time' => 9]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 10, 'lesson_time' => 10]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 11, 'lesson_time' => 11]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 12, 'lesson_time' => 12]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 13, 'lesson_time' => 13]],
-                            ],
-                            [
-                                ['customName' => 'B1', 'attributes' => ['room' => 4, 'lesson_time' => 50]],
-                                ['customName' => 'B2', 'attributes' => ['room' => 5, 'lesson_time' => 60]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
-                                ['customName' => 'B3', 'attributes' => ['room' => 6, 'lesson_time' => 70]],
-                            ],
-                        ])
-                        ->colors([
-                            'default' => '#ffffff',
-                            1 => '#fcd34d',
-                            2 => '#60a5fa',
-                        ]),
+                        ->layout($layout)
+                        ->colors($colors),
                 ]),
                 Section::make([
                     Forms\Components\DatePicker::make('date')
@@ -150,16 +122,16 @@ class LessonResource extends Resource
                     ->inline()
                     ->default(false)
                     ->options([
-                        false => 'Aktiviert',
                         true => 'Deaktiviert',
+                        false => 'Aktiviert',
                     ])
                     ->icons([
+                        true => 'heroicon-o-x-mark',
                             false => 'heroicon-o-check',
-                            true => 'heroicon-o-x-mark',
                     ])
                     ->colors([
-                        false => 'success',
                         true => 'warning',
+                        false => 'success',
                     ]),
             ]);
     }

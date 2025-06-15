@@ -8,8 +8,6 @@ class LayoutEditor extends Field
 {
     protected string $view = 'forms.components.layout-editor';
 
-    protected array $layout = [];
-
     protected array $colors = [];
 
     public function colors(array $colors): static
@@ -22,18 +20,5 @@ class LayoutEditor extends Field
     public function getColors(): array
     {
         return $this->colors;
-    }
-
-
-    public function layout(array $layout): static
-    {
-        $this->layout = $layout;
-
-        return $this;
-    }
-
-    public function getLayout(): array
-    {
-        return $this->layout;
     }
 }

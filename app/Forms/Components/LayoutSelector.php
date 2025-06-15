@@ -12,8 +12,6 @@ class LayoutSelector extends Field
 
     protected array $colors = [];
 
-    protected bool $isEditable = false;
-
     public function colors(array $colors): static
     {
         $this->colors = $colors;

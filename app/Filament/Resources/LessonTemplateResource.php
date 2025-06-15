@@ -17,7 +17,18 @@ class LessonTemplateResource extends Resource
 {
     protected static ?string $model = LessonTemplate::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'tabler-calendar-repeat';
+
+    protected static ?string $navigationLabel = "Angebot vorlagen";
+
+    protected static ?int $navigationSort = 3;
+
+    protected static ?string $label = 'Angebot vorlage';
+
+    public static function getPluralLabel(): string
+    {
+        return 'Angebot vorlagen';
+    }
 
     public static function form(Form $form): Form
     {
@@ -35,10 +46,6 @@ class LessonTemplateResource extends Resource
             ])
             ->filters([
                 //
-            ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -59,7 +66,6 @@ class LessonTemplateResource extends Resource
         return [
             'index' => Pages\ListLessonTemplates::route('/'),
             'create' => Pages\CreateLessonTemplate::route('/create'),
-            'view' => Pages\ViewLessonTemplate::route('/{record}'),
             'edit' => Pages\EditLessonTemplate::route('/{record}/edit'),
         ];
     }
