@@ -15,15 +15,19 @@ class AbsencePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_absence');
+        return ($user->can('view_any_absence') or $user->can('view_absence'));
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user): bool
+    public function view(User $user, Absence $absence): bool
     {
-        return $user->can('view_absence');
+        if ($user->can('view_absence')) {
+            if ($absence->user_id === $user->id or $user->can('view_any_absence')) return true;
+        }
+
+        return false;
     }
 
     /**
@@ -39,7 +43,11 @@ class AbsencePolicy
      */
     public function update(User $user, Absence $absence): bool
     {
-        return $user->can('update_absence');
+        if ($user->can('update_absence')) {
+            if ($absence->user_id === $user->id or $user->can('view_any_absence')) return true;
+        }
+
+        return false;
     }
 
     /**
@@ -47,7 +55,11 @@ class AbsencePolicy
      */
     public function delete(User $user, Absence $absence): bool
     {
-        return $user->can('delete_absence');
+        if ($user->can('delete_absence')) {
+            if ($absence->user_id === $user->id or $user->can('view_any_absence')) return true;
+        }
+
+        return false;
     }
 
     /**
@@ -56,53 +68,5 @@ class AbsencePolicy
     public function deleteAny(User $user): bool
     {
         return $user->can('delete_any_absence');
-    }
-
-    /**
-     * Determine whether the user can permanently delete.
-     */
-    public function forceDelete(User $user, Absence $absence): bool
-    {
-        return $user->can('{{ ForceDelete }}');
-    }
-
-    /**
-     * Determine whether the user can permanently bulk delete.
-     */
-    public function forceDeleteAny(User $user): bool
-    {
-        return $user->can('{{ ForceDeleteAny }}');
-    }
-
-    /**
-     * Determine whether the user can restore.
-     */
-    public function restore(User $user, Absence $absence): bool
-    {
-        return $user->can('{{ Restore }}');
-    }
-
-    /**
-     * Determine whether the user can bulk restore.
-     */
-    public function restoreAny(User $user): bool
-    {
-        return $user->can('{{ RestoreAny }}');
-    }
-
-    /**
-     * Determine whether the user can replicate.
-     */
-    public function replicate(User $user, Absence $absence): bool
-    {
-        return $user->can('{{ Replicate }}');
-    }
-
-    /**
-     * Determine whether the user can reorder.
-     */
-    public function reorder(User $user): bool
-    {
-        return $user->can('{{ Reorder }}');
     }
 }

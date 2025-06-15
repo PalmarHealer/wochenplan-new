@@ -19,6 +19,10 @@ class CreateAbsence extends CreateRecord
         $data['start'] = $parts[0];
         $data['end'] = $parts[1];
 
+        if (! auth()->user()->can('view_any_absence')) {
+            $data['user_id'] = auth()->id();
+        }
+
         return $data;
     }
     protected function getRedirectUrl(): string

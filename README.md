@@ -2,18 +2,15 @@
 
 ### TODO:
 
-- Page
-    - Day view (Very important)
+- Dashboard
+---
+- Features
+  - Pre fillable lesson resource
 ---
 - Policies
-  - Layout
   - LessonTemplate
-    - Normal Policy
+    - Policy
     - Use templates
-  - Absence
-    - Users should have "access to all" and "access to their own" seperated
-  - Lesson
-    - Users should have "access to all" and "access to their own" seperated
  
 ---
 

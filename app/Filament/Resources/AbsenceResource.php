@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use Illuminate\Database\Eloquent\Builder;
 use Malzariey\FilamentDaterangepickerFilter\Fields\DateRangePicker;
 use App\Filament\Resources\AbsenceResource\Pages;
 use App\Models\Absence;
@@ -14,7 +16,7 @@ use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
-class AbsenceResource extends Resource
+class AbsenceResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Absence::class;
 
@@ -46,10 +48,12 @@ class AbsenceResource extends Resource
                         ->required(),
                     Forms\Components\Select::make('user_id')
                         ->label('Benutzer')
+                        ->relationship('user', 'name')
                         ->searchable()
                         ->preload()
-                        ->required()
-                        ->relationship('user', 'name'),
+                        ->default(auth()->id())
+                        ->required(auth()->user()->can('view_any_absence'))
+                        ->disabled(! auth()->user()->can('view_any_absence'))
                 ])->columns(2),
             ]);
     }
@@ -104,10 +108,32 @@ class AbsenceResource extends Resource
             ]);
     }
 
-    public static function getRelations(): array
+    public static function getEloquentQuery(): Builder
+    {
+        $user = auth()->user();
+
+        $query = parent::getEloquentQuery();
+
+        if ($user->can('view_any_absence')) {
+            return $query;
+        }
+
+        if ($user->can('view_absence')) {
+            return $query->where('user_id', ($user->id ?? null));
+        }
+
+        return $query->whereRaw('1 = 0');
+    }
+
+    public static function getPermissionPrefixes(): array
     {
         return [
-            //
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'delete',
+            'delete_any',
         ];
     }
 

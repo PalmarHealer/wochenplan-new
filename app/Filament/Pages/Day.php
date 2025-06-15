@@ -16,10 +16,13 @@ class Day extends Page
 
     protected static string $view = 'filament.pages.day';
 
+    public function getHeading(): string {
+        return $this->figureOutDay()->translatedFormat('l \d\e\r d.m.Y');
+    }
 
     public function getTitle(): string
     {
-        return $this->figureOutDay()->translatedFormat('l \d\e\r d.m.Y');
+        return "Tagesansicht";
     }
 
     public array $dayLayout = [];

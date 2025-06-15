@@ -8,6 +8,7 @@ use App\Forms\Components\LayoutSelector;
 use App\Models\Color;
 use App\Models\Layout;
 use App\Models\Lesson;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\ToggleButtons;
@@ -16,8 +17,9 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
-class LessonResource extends Resource
+class LessonResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Lesson::class;
 
@@ -108,8 +110,10 @@ class LessonResource extends Resource
                         ->label('Personen')
                         ->relationship('assignedUsers', 'name')
                         ->multiple()
-                        ->preload(),
-                ]),
+                        ->preload()
+                        ->disabled(! auth()->user()->can('view_any_lesson'))
+                        ->visible(auth()->user()->can('view_any_lesson')),
+                ])->visible(auth()->user()->can('view_any_lesson')),
                 Section::make([
                     Forms\Components\TextInput::make('notes')
                         ->columnSpanFull()
@@ -219,6 +223,38 @@ class LessonResource extends Resource
     {
         return [
             //
+        ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $user = auth()->user();
+
+        $query = parent::getEloquentQuery();
+
+        if ($user->can('view_any_lesson')) {
+            return $query;
+        }
+
+        if ($user->can('view_lesson')) {
+            return $query->whereHas('assignedUsers', function ($q) use ($user) {
+                $q->where('user_id', ($user->id ?? null));
+            });
+        }
+
+        return $query->whereRaw('1 = 0');
+    }
+
+
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'delete',
+            'delete_any',
         ];
     }
 
