@@ -12,7 +12,7 @@ class LessonPolicy
      */
     public function viewAny(User $user): bool
     {
-        return ($user->can('view_any_lesson') or $user->can('view_lesson'));
+        return ($user->can('view_any_lesson'));
     }
 
     /**

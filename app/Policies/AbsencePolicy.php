@@ -15,7 +15,7 @@ class AbsencePolicy
      */
     public function viewAny(User $user): bool
     {
-        return ($user->can('view_any_absence') or $user->can('view_absence'));
+        return ($user->can('view_any_absence'));
     }
 
     /**

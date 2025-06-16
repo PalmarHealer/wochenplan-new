@@ -73,7 +73,7 @@
                 state: state,
 
                 selectCell(row, col) {
-                    if (row && col) return;
+                    if (!row && !col) return;
                     const cell = this.layout[row][col];
                     if (!cell.room && !cell.time) return;
 

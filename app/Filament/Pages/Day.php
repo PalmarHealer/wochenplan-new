@@ -38,11 +38,13 @@ class Day extends Page
 
     public ?string $day = null;
 
-    public string $test = "";
+    public bool $canCreate = false;
 
     public function mount(): void
     {
-        $this->day = $this->figureOutDay();
+        $this->day = $this->figureOutDay()->toDateString();
+
+        $this->canCreate = auth()->user()->can('view_lesson') || auth()->user()->can('view_any_lesson');
 
         $layout = Layout::where('active', true)
             ->limit(1)
@@ -60,7 +62,10 @@ class Day extends Page
         $this->lessons = $rawLessons->map(function ($lesson) {
             $lessonArray = $lesson->toArray();
             $lessonArray['assigned_users'] = $lesson->assignedUsers->pluck('name', 'id')->toArray();
-            $lessonArray['url'] = LessonResource::getUrl('edit', ['record' => $lesson->id]);
+            $user = auth()->user();
+            if (($user->can('view_lesson') && $lesson->assignedUsers()->where('user_id', $user->id)->exists()) || $user->can('view_any_lesson')) {
+                $lessonArray['url'] = LessonResource::getUrl('edit', ['record' => $lesson->id]);
+            }
             return $lessonArray;
         })->toArray();
 
