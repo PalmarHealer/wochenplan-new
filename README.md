@@ -5,7 +5,7 @@
 - Dashboard
 ---
 - Features
-  - Pre fillable lesson resource
+  - Pre fillable lesson resource (see end of file)
 ---
 - Policies
   - LessonTemplate

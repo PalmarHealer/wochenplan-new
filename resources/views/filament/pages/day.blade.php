@@ -97,13 +97,27 @@
                                     @endif
                                 >
                                     @if(isset($lesson))
-                                        <small>
-                                            @foreach($lesson['assigned_users'] as $userName)
-                                                {{ $userName }}@if(!$loop->last), @endif
-                                            @endforeach
-                                        </small>
-                                        <strong>{!! $lesson['name'] ?? '' !!}</strong>
-                                        {!! $lesson['description'] ?? '' !!}
+                                        @if($lesson['disabled'])
+                                            <small>
+                                                <s>
+                                                    @foreach($lesson['assigned_users'] as $userName)
+                                                        {{ $userName }}@if(!$loop->last), @endif
+                                                    @endforeach
+                                                </s>
+                                            </small>
+
+                                            <strong><s>{!! $lesson['name'] ?? '' !!}</s></strong>
+                                            <s>{!! $lesson['description'] ?? '' !!}</s>
+                                        @else
+                                            <small>
+                                                @foreach($lesson['assigned_users'] as $userName)
+                                                    {{ $userName }}@if(!$loop->last), @endif
+                                                @endforeach
+                                            </small>
+
+                                            <strong>{!! $lesson['name'] ?? '' !!}</strong>
+                                            {!! $lesson['description'] ?? '' !!}
+                                        @endif
                                     @else
                                         {!! $this->replacePlaceholders($cell['displayName'] ?? '', $this->day) !!}
                                     @endif
