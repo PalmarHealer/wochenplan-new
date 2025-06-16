@@ -119,7 +119,7 @@ class AbsenceResource extends Resource implements HasShieldPermissions
         }
 
         if ($user->can('view_absence')) {
-            return $query->where('user_id', ($user->id ?? null));
+            return $query->where('user_id', $user->id);
         }
 
         return $query->whereRaw('1 = 0');

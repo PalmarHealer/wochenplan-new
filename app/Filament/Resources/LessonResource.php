@@ -238,7 +238,7 @@ class LessonResource extends Resource implements HasShieldPermissions
 
         if ($user->can('view_lesson')) {
             return $query->whereHas('assignedUsers', function ($q) use ($user) {
-                $q->where('user_id', ($user->id ?? null));
+                $q->where('user_id', $user->id);
             });
         }
 
