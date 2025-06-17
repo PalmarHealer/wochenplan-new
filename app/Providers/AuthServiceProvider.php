@@ -6,6 +6,7 @@ use App\Models\Absence;
 use App\Models\Color;
 use App\Models\Layout;
 use App\Models\Lesson;
+use App\Models\LessonTemplate;
 use App\Models\Role;
 use App\Models\Room;
 use App\Models\Time;
@@ -14,6 +15,7 @@ use App\Policies\AbsencePolicy;
 use App\Policies\ColorPolicy;
 use App\Policies\LayoutPolicy;
 use App\Policies\LessonPolicy;
+use App\Policies\LessonTemplatePolicy;
 use App\Policies\RolePolicy;
 use App\Policies\RoomPolicy;
 use App\Policies\TimePolicy;
@@ -43,6 +45,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         Absence::class => AbsencePolicy::class,
         Lesson::class => LessonPolicy::class,
+        LessonTemplate::class => LessonTemplatePolicy::class,
         Layout::class => LayoutPolicy::class,
         Color::class => ColorPolicy::class,
         Role::class => RolePolicy::class,

@@ -22,7 +22,8 @@ class Lesson extends Model
         'color',
         'room',
         'lesson_time',
-        'assigned',
+        'parent_id',
+        'origin_day',
         'created_by',
         'updated_by',
     ];

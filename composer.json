@@ -13,7 +13,8 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "malzariey/filament-daterangepicker-filter": "^3.3",
-        "secondnetwork/blade-tabler-icons": "^3.31"
+        "secondnetwork/blade-tabler-icons": "^3.31",
+        "silviolleite/laravelpwa": "^2.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

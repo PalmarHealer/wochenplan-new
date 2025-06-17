@@ -6,6 +6,7 @@ use App\Filament\Resources\LessonResource;
 use App\Models\Color;
 use App\Models\Layout;
 use App\Models\Lesson;
+use App\Models\LessonTemplate;
 use Carbon\Carbon;
 use Exception;
 use Filament\Pages\Page;
@@ -42,7 +43,9 @@ class Day extends Page
 
     public function mount(): void
     {
-        $this->day = $this->figureOutDay()->toDateString();
+        $rawDay = $this->figureOutDay();
+
+        $this->day = $rawDay->toDateString();
 
         $this->canCreate = auth()->user()->can('view_lesson') || auth()->user()->can('view_any_lesson');
 
@@ -59,15 +62,48 @@ class Day extends Page
             ->whereDate('date', $this->day)
             ->get();
 
-        $this->lessons = $rawLessons->map(function ($lesson) {
-            $lessonArray = $lesson->toArray();
-            $lessonArray['assigned_users'] = $lesson->assignedUsers->pluck('name', 'id')->toArray();
+        $parentIds = $rawLessons->pluck('parent_id')->filter()->unique();
+
+        $rawLessonTemplates = LessonTemplate::with(['assignedUsers'])
+            ->where('weekday', $rawDay->format('N'))
+            ->where('created_at', '<=', $rawDay)
+            ->where(function ($query) use ($rawDay) {
+                $query->whereNull('deleted_at')
+                    ->orWhere('deleted_at', '>=', $rawDay);
+            })
+            ->get();
+
+        $filteredTemplates = $rawLessonTemplates->reject(function ($template) use ($parentIds) {
+            return $parentIds->contains($template->id);
+        });
+
+        $templateLessons = $filteredTemplates->mapWithKeys(function ($template) {
+            $key = $template->room . '-' . $template->lesson_time;
+            $array = $template->toArray();
+            $array['assigned_users'] = $template->assignedUsers->pluck('name', 'id')->toArray();;
+            $user = auth()->user();
+            if (($user->can('create_lesson') && $template->assignedUsers()->where('user_id', $user->id)->exists()) || $user->can('view_any_lesson')) {
+                $array['url'] = LessonResource::getUrl('create', ['copy' => $template->id, 'date' => $this->day]);
+            }
+            return [$key => $array];
+        });
+
+        $lessonLessons = $rawLessons->mapWithKeys(function ($lesson) {
+            $key = $lesson->room . '-' . $lesson->lesson_time;
+            $array = $lesson->toArray();
+            $array['assigned_users'] = $lesson->assignedUsers->pluck('name', 'id')->toArray();
             $user = auth()->user();
             if (($user->can('view_lesson') && $lesson->assignedUsers()->where('user_id', $user->id)->exists()) || $user->can('view_any_lesson')) {
-                $lessonArray['url'] = LessonResource::getUrl('edit', ['record' => $lesson->id]);
+                $array['url'] = LessonResource::getUrl('edit', ['record' => $lesson->id, 'date' => $this->day]);
             }
-            return $lessonArray;
-        })->toArray();
+            return [$key => $array];
+        });
+
+        if (empty($templateLessons->values()->toArray())) $merged = $lessonLessons;
+        else $merged = $templateLessons->merge($lessonLessons);
+
+        $this->lessons = $merged->values()->toArray();
+
 
     }
     public function replacePlaceholders(string $text): string

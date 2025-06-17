@@ -12,7 +12,7 @@ class LessonTemplatePolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return ($user->can('view_any_lesson::template') or $user->can('view_lesson::template'));
     }
 
     /**
@@ -20,6 +20,11 @@ class LessonTemplatePolicy
      */
     public function view(User $user, LessonTemplate $lessonTemplate): bool
     {
+        if ($user->can('view_lesson::template')) {
+            if ($lessonTemplate->assignedUsers()->where('user_id', $user->id)->exists() || $user->can('view_any_lesson::template')) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -28,7 +33,7 @@ class LessonTemplatePolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->can('create_lesson::template');
     }
 
     /**
@@ -36,6 +41,11 @@ class LessonTemplatePolicy
      */
     public function update(User $user, LessonTemplate $lessonTemplate): bool
     {
+        if ($user->can('update_lesson::template')) {
+            if ($lessonTemplate->assignedUsers()->where('user_id', $user->id)->exists() || $user->can('view_any_lesson::template')) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -44,6 +54,11 @@ class LessonTemplatePolicy
      */
     public function delete(User $user, LessonTemplate $lessonTemplate): bool
     {
+        if ($user->can('delete_lesson::template')) {
+            if ($lessonTemplate->assignedUsers()->where('user_id', $user->id)->exists() || $user->can('view_any_lesson::template')) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -52,7 +67,12 @@ class LessonTemplatePolicy
      */
     public function forceDelete(User $user, LessonTemplate $lessonTemplate): bool
     {
-        return $user->can('{{ ForceDelete }}');
+        if ($user->can('force_delete_lesson::template')) {
+            if ($lessonTemplate->assignedUsers()->where('user_id', $user->id)->exists() || $user->can('view_any_lesson::template')) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -60,7 +80,7 @@ class LessonTemplatePolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('{{ ForceDeleteAny }}');
+        return $user->can('force_delete_any_lesson::template');
     }
 
     /**
@@ -68,7 +88,12 @@ class LessonTemplatePolicy
      */
     public function restore(User $user, LessonTemplate $lessonTemplate): bool
     {
-        return $user->can('{{ Restore }}');
+        if ($user->can('restore_lesson::template')) {
+            if ($lessonTemplate->assignedUsers()->where('user_id', $user->id)->exists() || $user->can('view_any_lesson::template')) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -76,6 +101,6 @@ class LessonTemplatePolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('{{ RestoreAny }}');
+        return $user->can('restore_any_lesson::template');
     }
 }

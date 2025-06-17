@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('lesson_templates', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name')->nullable();
             $table->string('description')->nullable();
             $table->string('notes')->nullable();
             $table->boolean('disabled')->default(false);
-            $table->integer('date');
-            $table->foreignId('color')->constrained('colors')->nullOnDelete();
+            $table->tinyInteger('weekday');
+            $table->foreignId('color')->nullable()->constrained('colors')->nullOnDelete();
             $table->foreignId('room')->constrained('rooms')->nullOnDelete();
             $table->foreignId('lesson_time')->constrained('times')->nullOnDelete();
 
@@ -32,7 +32,7 @@ return new class extends Migration
 
         Schema::create('lesson_template_user', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('lesson_templates_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('lesson_template_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
         });

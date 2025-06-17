@@ -8,6 +8,7 @@ use App\Forms\Components\LayoutSelector;
 use App\Models\Color;
 use App\Models\Layout;
 use App\Models\Lesson;
+use App\Models\LessonTemplate;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
@@ -47,12 +48,56 @@ class LessonResource extends Resource implements HasShieldPermissions
             ->pluck('layout')
             ->first());
 
+
+        $request = request();
+        $defaults = [];
+
+        if ($request->has('copy')) {
+            $id = $request->input('copy');
+            $template = LessonTemplate::with('assignedUsers')->find($id);
+
+            if ($template) {
+                $defaults = [
+                    'parent_id' => $id,
+                    'name' => $template->name,
+                    'description' => $template->description,
+                    'layout' => $template->layout,
+                    'notes' => $template->notes,
+                    'disabled' => $template->disabled,
+                    'color' => $template->color,
+                    'room' => $template->room,
+                    'time' => $template->lesson_time,
+                    'assignedUsers' => $template->assignedUsers->pluck('id')->toArray(),
+                ];
+            }
+        }
+
+        if ($request->has('room')) $defaults['room'] = $request->input('room');
+
+        if ($request->has('time')) $defaults['time'] = $request->input('time');
+
+        if ($request->has('date')) {
+            $defaults['date'] = $request->input('date');
+            $defaults['origin_day'] = $defaults['date'];
+        }
+
+        if (isset($defaults['room']) and isset($defaults['time'])) {
+            $defaults['layout'] = json_encode(['room' => $defaults['room'], 'lesson_time' => $defaults['time']]);
+        }
+
         return $form
             ->schema([
+                Forms\Components\Hidden::make('parent_id')
+                    ->default($defaults['parent_id'] ?? null),
+                Forms\Components\Hidden::make('origin_day')
+                    ->afterStateHydrated(function (Forms\Components\Field $component) use ($defaults) {
+                        $component->state($defaults['origin_day'] ?? null);
+                    }),
                 Section::make('Angebot details')
                     ->columns(2)
                     ->schema([
                         CustomRichEditor::make('name')
+                            ->default($defaults['name'] ?? '')
                             ->label('Name')
                             ->toolbarButtons([
                                 'bold',
@@ -65,6 +110,7 @@ class LessonResource extends Resource implements HasShieldPermissions
                                 'undo',
                             ]),
                         CustomRichEditor::make('description')
+                            ->default($defaults['description'] ?? '')
                             ->label('Beschreibung')
                             ->extraAttributes([
                                 'style' => 'min-height: 2.5rem;',
@@ -84,6 +130,7 @@ class LessonResource extends Resource implements HasShieldPermissions
                     ]),
                 Section::make([
                     LayoutSelector::make('layout')
+                        ->default($defaults['layout'] ?? '')
                         ->label('Slot')
                         ->columnSpanFull()
                         ->required()
@@ -92,13 +139,14 @@ class LessonResource extends Resource implements HasShieldPermissions
                 ]),
                 Section::make([
                     Forms\Components\DatePicker::make('date')
+                        ->default($defaults['date'] ?? now())
                         ->label('Datum')
                         ->native(false)
                         ->displayFormat('d.m.Y')
                         ->format('Y-m-d')
-                        ->default(now())
                         ->required(),
                     Forms\Components\Select::make('color')
+                        ->default($defaults['color'] ?? '')
                         ->label('Farbe')
                         ->relationship('colors', 'name')
                         ->native(false)
@@ -107,6 +155,7 @@ class LessonResource extends Resource implements HasShieldPermissions
                 ])->columns(2),
                 Section::make([
                     Forms\Components\Select::make('assignedUsers')
+                        ->default($defaults['assignedUsers'] ?? '')
                         ->label('Personen')
                         ->relationship('assignedUsers', 'name')
                         ->multiple()
@@ -116,15 +165,16 @@ class LessonResource extends Resource implements HasShieldPermissions
                 ])->visible(auth()->user()->can('view_any_lesson')),
                 Section::make([
                     Forms\Components\TextInput::make('notes')
+                        ->default($defaults['notes'] ?? '')
                         ->columnSpanFull()
                         ->label('Notizen'),
                 ]),
                 ToggleButtons::make('disabled')
+                    ->default($defaults['disabled'] ?? false)
                     ->label('Aktiviert')
                     ->required()
                     ->boolean()
                     ->inline()
-                    ->default(false)
                     ->options([
                         true => 'Deaktiviert',
                         false => 'Aktiviert',

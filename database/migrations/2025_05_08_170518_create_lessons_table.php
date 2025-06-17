@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::create('lessons', function (Blueprint $table) {
             $table->id();
-            $table->integer('parent_id')->nullable();
+            $table->foreignId('parent_id')->nullable()->constrained('lesson_templates')->nullOnDelete();
             $table->string('name')->nullable();
             $table->string('description')->nullable();
             $table->string('notes')->nullable();
             $table->boolean('disabled')->default(false);
             $table->dateTime('date');
-            $table->foreignId('color')->constrained('colors')->nullOnDelete();
+            $table->foreignId('color')->nullable()->constrained('colors')->nullOnDelete();
             $table->foreignId('room')->constrained('rooms')->nullOnDelete();
             $table->foreignId('lesson_time')->constrained('times')->nullOnDelete();
 
