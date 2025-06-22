@@ -7,7 +7,8 @@
 
 - Plugins
   - Socialite
-
+- Mittagessen API
+- Abwesenheit on Tagesansicht
 ---
 
 ### Features for later

@@ -4,7 +4,6 @@ namespace App\Providers\Filament;
 
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Actions\MountableAction;
-use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -48,6 +47,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->brandName(env('APP_NAME', 'error'))
             ->brandLogo(asset(env('APP_LOGO')))
+            ->darkModeBrandLogo(asset(env('APP_LOGO_DARK')))
             ->brandLogoHeight('2rem')
             ->id('admin')
             ->path('')

@@ -67,15 +67,6 @@ return [
                     "purpose" => "any"
                 ]
             ],
-            [
-                'name' => 'Profil',
-                'description' => 'Passe deine Einstellungen an',
-                'url' => '/profile',
-                'icons' => [
-                    "src" => "/images/icons/icon-72x72.png",
-                    "purpose" => "any"
-                ]
-            ]
         ],
         'custom' => []
     ]
