@@ -62,7 +62,7 @@
 
         <div class="overflow-x-auto h-full">
             <table
-                class="relative table-auto border-collapse border border-gray-300 dark:border-white/10 w-full"
+                class="relative table-auto w-full"
                 :class="{
                 'h-full': isFullscreen,
             }">
@@ -83,14 +83,17 @@
                                     @if (isset($cell['rowspan']) && $cell['rowspan'] > 1)
                                         rowspan="{{ $cell['rowspan'] }}"
                                     @endif
-                                    class="border border-gray-300 dark:border-white/10 p-2 text-center align-middle @if($lesson['url'] ?? false) cursor-pointer @endif"
+                                    class="p-2 text-center align-middle @if($lesson['url'] ?? false) cursor-pointer @endif"
                                     style="
+                                        border-color: white;
+                                        border-style: solid;
+                                        border-width: 0.35vh;
+                                        text-align: {{ $cell['alignment'] ?? 'left' }};
                                         @if (!empty($lesson['color']))
                                             background-color: {{ $colors[$lesson['color']] }};
                                         @elseif(isset($cell['color']))
                                             background-color: {{ $colors[$cell['color']] }};
                                         @endif
-                                        text-align: {{ $cell['alignment'] ?? 'left' }};
                                     "
                                     @if ($lesson['url'] ?? false)
                                         onclick="window.location='{{ $lesson['url'] }}'"
