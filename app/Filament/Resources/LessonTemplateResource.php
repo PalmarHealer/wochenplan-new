@@ -25,15 +25,15 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
 
     protected static ?string $navigationIcon = 'tabler-calendar-repeat';
 
-    protected static ?string $navigationLabel = "Angebot vorlagen";
+    protected static ?string $navigationLabel = "Wiederholendes Angebot";
 
     protected static ?int $navigationSort = 3;
 
-    protected static ?string $label = 'Angebot vorlage';
+    protected static ?string $label = 'Wiederholendes Angebot';
 
     public static function getPluralLabel(): string
     {
-        return 'Angebot vorlagen';
+        return 'Wiederholendes Angebot';
     }
 
     public static function form(Form $form): Form
@@ -149,17 +149,21 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label('Name')
+                    ->sortable()
                     ->searchable()
                     ->html(),
                 Tables\Columns\TextColumn::make('description')
                     ->label('Beschreibung')
+                    ->sortable()
                     ->searchable()
                     ->html(),
                 Tables\Columns\TextColumn::make('notes')
                     ->label('Notizen')
+                    ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('weekday')
                     ->label('Tag')
+                    ->sortable()
                     ->formatStateUsing(function (?int $state) {
                         $days = [
                             1 => 'Montag',
@@ -175,20 +179,25 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                     ->searchable(),
                 Tables\Columns\TextColumn::make('rooms.name')
                     ->label('Raum')
+                    ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('times.name')
                     ->label('Zeit')
+                    ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('assignedUsers')
                     ->label('Zugewiesen')
+                    ->sortable()
                     ->searchable()
                     ->formatStateUsing(fn ($state, $record) =>
                     $record->assignedUsers->pluck('name')->join(', ')
                     ),
                 Tables\Columns\ColorColumn::make('colors.color')
-                    ->label('Farbe'),
+                    ->label('Farbe')
+                    ->sortable(),
                 Tables\Columns\IconColumn::make('disabled')
                     ->label('Aktiviert')
+                    ->sortable()
                     ->getStateUsing(fn ($record) => !$record->disabled)
                     ->boolean(),
                 Tables\Columns\TextColumn::make('creator.name')

@@ -34,6 +34,9 @@ class UserResource extends Resource
 
     public static function form(Form $form): Form
     {
+
+        $isCreate = $form->getOperation() === "create";
+
         return $form
             ->schema([
                 Section::make([
@@ -47,7 +50,9 @@ class UserResource extends Resource
                     Forms\Components\TextInput::make('password')
                         ->label('Passwort')
                         ->password()
-                        ->required(),
+                        ->dehydrated(fn ($state) => filled($state))
+                        ->required($isCreate)
+                        ->nullable(!$isCreate),
                 ])->columns(2),
                 Section::make([
                     Forms\Components\TextInput::make('email')
@@ -83,9 +88,29 @@ class UserResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('name')
                     ->label('Name')
+                    ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
                     ->label('E-Mail')
+                    ->icon('tabler-mail')
+                    ->sortable()
+                    ->searchable()
+                    ->copyable()
+                    ->copyMessage('E-Mail Adresse kopiert')
+                    ->copyMessageDuration(1500),
+                Tables\Columns\TextColumn::make('roles.name')
+                    ->label('Berechtigung')
+                    ->badge()
+                    ->formatStateUsing(function ($state) {
+                        $role = is_array($state) ? $state[0] ?? null : $state;
+
+                        return $role
+                            ? collect(explode('_', $role))
+                                ->map(fn ($word) => ucfirst($word))
+                                ->implode(' ')
+                            : '-';
+                    })
+                    ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email_verified_at')
                     ->label('E-Mail verifiziert am')
@@ -105,7 +130,21 @@ class UserResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('role')
+                    ->label('Rolle')
+                    ->options(
+                        Role::all()->pluck('name', 'id')->mapWithKeys(function ($name, $id) {
+                            $formatted = collect(explode('_', $name))
+                                ->map(fn ($word) => ucfirst($word))
+                                ->implode(' ');
+                            return [$id => $formatted];
+                        })->toArray()
+                    )
+                    ->query(function ($query, $state) {
+                        if (empty($state['value'])) return $query;
+                        return $query->whereHas('roles', fn ($q) => $q->where('id', $state));
+                    })
+                    ->native(false),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

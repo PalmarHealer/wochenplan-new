@@ -150,8 +150,7 @@ class LessonResource extends Resource implements HasShieldPermissions
                         ->label('Farbe')
                         ->relationship('colors', 'name')
                         ->native(false)
-                        ->preload()
-                        ->required(),
+                        ->preload(),
                 ])->columns(2),
                 Section::make([
                     Forms\Components\Select::make('assignedUsers')
@@ -197,35 +196,44 @@ class LessonResource extends Resource implements HasShieldPermissions
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label('Name')
+                    ->sortable()
                     ->searchable()
                     ->html(),
                 Tables\Columns\TextColumn::make('description')
                     ->label('Beschreibung')
+                    ->sortable()
                     ->searchable()
                     ->html(),
                 Tables\Columns\TextColumn::make('notes')
                     ->label('Notizen')
+                    ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('date')
                     ->label('Datum')
+                    ->sortable()
                     ->date("d.m.Y")
                     ->searchable(),
                 Tables\Columns\TextColumn::make('rooms.name')
                     ->label('Raum')
+                    ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('times.name')
                     ->label('Zeit')
+                    ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('assignedUsers')
                     ->label('Zugewiesen')
+                    ->sortable()
                     ->searchable()
                     ->formatStateUsing(fn ($state, $record) =>
                     $record->assignedUsers->pluck('name')->join(', ')
                     ),
                 Tables\Columns\ColorColumn::make('colors.color')
-                    ->label('Farbe'),
+                    ->label('Farbe')
+                    ->sortable(),
                 Tables\Columns\IconColumn::make('disabled')
                     ->label('Aktiviert')
+                    ->sortable()
                     ->getStateUsing(fn ($record) => !$record->disabled)
                     ->boolean(),
                 Tables\Columns\TextColumn::make('creator.name')

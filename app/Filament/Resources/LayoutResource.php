@@ -123,17 +123,21 @@ class LayoutResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label('Name')
+                    ->sortable()
                     ->searchable()
                     ->html(),
                 Tables\Columns\TextColumn::make('description')
                     ->label('Beschreibung')
+                    ->sortable()
                     ->searchable()
                     ->html(),
                 Tables\Columns\TextColumn::make('notes')
                     ->label('Notizen')
+                    ->sortable()
                     ->searchable(),
                 Tables\Columns\IconColumn::make('active')
                     ->label('Aktiviert')
+                    ->sortable()
                     ->getStateUsing(fn ($record) => $record->active)
                     ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
