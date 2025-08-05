@@ -3,12 +3,14 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
+use Spatie\Permission\Models\Role;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class UserResource extends Resource
@@ -35,6 +37,10 @@ class UserResource extends Resource
         return $form
             ->schema([
                 Section::make([
+                    Forms\Components\TextInput::make('display_name')
+                        ->label('Anzeigename')
+                        ->required()
+                        ->columnSpanFull(),
                     Forms\Components\TextInput::make('name')
                         ->label('Name')
                         ->required(),
@@ -71,6 +77,10 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('display_name')
+                    ->label('Anzeigename')
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('name')
                     ->label('Name')
                     ->searchable(),
