@@ -2,7 +2,12 @@
 
 namespace App\Providers\Filament;
 
+
+use App\Livewire\PersonalInfo;
+use App\Models\User;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use DutchCodingCompany\FilamentSocialite\FilamentSocialitePlugin;
+use DutchCodingCompany\FilamentSocialite\Provider;
 use Filament\Actions\MountableAction;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -22,8 +27,11 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
+use Laravel\Socialite\Contracts\User as SocialiteUserContract;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -45,7 +53,7 @@ class AdminPanelProvider extends PanelProvider
                 }
             )
             ->default()
-            ->brandName(env('APP_NAME', 'error'))
+            ->brandName(env('APP_NAME', 'name konnte nicht geladen werden'))
             ->brandLogo(asset(env('APP_LOGO')))
             ->darkModeBrandLogo(asset(env('APP_LOGO_DARK')))
             ->brandLogoHeight('2rem')
@@ -56,6 +64,35 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Indigo,
             ])
             ->plugins([
+                FilamentSocialitePlugin::make()
+                    ->providers([
+                        Provider::make('azure')
+                            ->label('Aktive Schule Leipzig')
+                            ->icon('tabler-brand-teams')
+                            ->color(Color::hex('#2f2a6b'))
+                            ->outlined(false)
+                            ->stateless(false),
+                    ])
+                    ->resolveUserUsing(function (string $provider, SocialiteUserContract $oauthUser, FilamentSocialitePlugin $plugin) {
+                        return User::where('email', $oauthUser->getEmail())->first();
+                    })
+
+
+                    ->createUserUsing(function (string $provider, SocialiteUserContract $oauthUser, FilamentSocialitePlugin $plugin) {
+                        $fullName = $oauthUser->getName() ?? $oauthUser->getNickname() ?? $oauthUser->getEmail();
+                        $firstName = explode(' ', trim($fullName))[0] ?? 'Unbekannt';
+
+                        return User::create([
+                            'display_name' => $firstName,
+                            'name' => $fullName,
+                            'email' => $oauthUser->getEmail(),
+                            'password' => Hash::make(Str::random(32)),
+                            'email_verified_at' => now(),
+                        ]);
+                    })
+                    ->rememberLogin(true)
+                    ->registration(true)
+                    ->userModelClass(User::class),
                 FilamentShieldPlugin::make()->gridColumns([
                     'default' => 1,
                     'sm' => 2,
@@ -75,6 +112,9 @@ class AdminPanelProvider extends PanelProvider
                     ->myProfile(
                         slug: 'profile',
                     )
+                    ->myProfileComponents([
+                        'personal_info' => PersonalInfo::class,
+                    ])
                     ->enableTwoFactorAuthentication()
                     ->enableBrowserSessions()
             ])

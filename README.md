@@ -9,6 +9,7 @@
   - Socialite
 - Mittagessen API
 - Abwesenheit on Tagesansicht
+- API zum Mittagessen
 ---
 
 ### Features for later
@@ -22,3 +23,12 @@
 
 
 schüler sollen Interesse bei angeboten zeigen können.
+
+
+
+
+
+Bugs:
+- Layout selector leeren bei "speichern und weiterer eintrag"
+- LessonTemplate zu Wiederholendes Angebot umbennen
+- Requiered soll auf deutsch sein

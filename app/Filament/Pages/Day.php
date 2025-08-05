@@ -80,7 +80,7 @@ class Day extends Page
         $templateLessons = $filteredTemplates->mapWithKeys(function ($template) {
             $key = $template->room . '-' . $template->lesson_time;
             $array = $template->toArray();
-            $array['assigned_users'] = $template->assignedUsers->pluck('name', 'id')->toArray();;
+            $array['assigned_users'] = $template->assignedUsers->pluck('display_name', 'id')->toArray();;
             $user = auth()->user();
             if (($user->can('create_lesson') && $template->assignedUsers()->where('user_id', $user->id)->exists()) || $user->can('view_any_lesson')) {
                 $array['url'] = LessonResource::getUrl('create', ['copy' => $template->id, 'date' => $this->day]);
@@ -91,7 +91,7 @@ class Day extends Page
         $lessonLessons = $rawLessons->mapWithKeys(function ($lesson) {
             $key = $lesson->room . '-' . $lesson->lesson_time;
             $array = $lesson->toArray();
-            $array['assigned_users'] = $lesson->assignedUsers->pluck('name', 'id')->toArray();
+            $array['assigned_users'] = $lesson->assignedUsers->pluck('display_name', 'id')->toArray();
             $user = auth()->user();
             if (($user->can('view_lesson') && $lesson->assignedUsers()->where('user_id', $user->id)->exists()) || $user->can('view_any_lesson')) {
                 $array['url'] = LessonResource::getUrl('edit', ['record' => $lesson->id, 'date' => $this->day]);
