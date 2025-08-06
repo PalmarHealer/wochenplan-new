@@ -129,12 +129,15 @@
                             return;
                         }
 
-                    const cellPath = this.findCellPath(this.layout, parsedArray[0], parsedArray[1]);
-                    try {
-
-                        this.selectCell(cellPath[0], cellPath[1]);
+                        const cellPath = this.findCellPath(this.layout, parsedArray[0], parsedArray[1]);
+                        if (cellPath) {
+                            this.selectCell(cellPath[0], cellPath[1]);
+                        } else {
+                            this.clearSelection();
+                        }
                     } catch (e) {
-                        console.log('State could not be loaded:', cellPath);
+                        console.log('State could not be loaded:', e);
+                        this.clearSelection();
                     }
                 },
 
