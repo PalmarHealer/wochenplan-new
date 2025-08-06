@@ -29,7 +29,7 @@ class WeekDaysCollection extends Widget
         for ($i = 0; $i < 5; $i++) {
             $currentDay = $startOfWeek->copy()->addDays($i);
 
-            if ($currentDay->isSameDay($baseDate)) {
+            if ($currentDay->isSameDay(Carbon::now())) {
                 $url = route('filament.admin.pages.day');
             } else {
                 $url = route('filament.admin.pages.day', ['date' => $currentDay->format('Y-m-d')]);
