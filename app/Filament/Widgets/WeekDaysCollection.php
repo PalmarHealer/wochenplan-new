@@ -32,7 +32,7 @@ class WeekDaysCollection extends Widget
             if ($currentDay->isSameDay(Carbon::now())) {
                 $url = route('filament.admin.pages.day');
             } else {
-                $url = route('filament.admin.pages.day', ['date' => $currentDay->format('Y-m-d')]);
+                $url = route('filament.admin.pages.day', ['date' => $currentDay->format('d.m.Y')]);
             }
 
             $days[] = [
