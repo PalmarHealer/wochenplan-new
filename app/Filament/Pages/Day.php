@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Resources\LessonResource;
+use App\Models\Absence;
 use App\Models\Color;
 use App\Models\Layout;
 use App\Models\Lesson;
@@ -104,16 +105,49 @@ class Day extends Page
 
         $this->lessons = $merged->values()->toArray();
 
+        $rawAbsences = Absence::with(['user'])
+            ->where('start', '<=', $rawDay->format('d.m.Y'))
+            ->where('end', '>=', $rawDay->format('d.m.Y'))
+            ->get();
 
+        $this->absences = array_map(fn($entry) => [
+            'id' => $entry['user']['id'],
+            'display_name' => $entry['user']['display_name']
+        ], $rawAbsences->toArray());
+
+        $this->absences = array_values(array_unique($this->absences, SORT_REGULAR));
+
+        usort($this->absences, fn($a, $b) => $b['id'] <=> $a['id']);
+
+        if (!env('DAY_VIEW_DISPLAY_ALL_ABSENCE_NOTES')) {
+            $allUserIds = [];
+            foreach ($this->lessons as $entry) {
+                if (!empty($entry['assigned_users'])) {
+                    foreach ($entry['assigned_users'] as $userID => $userName) {
+                        $allUserIds[] = $userID;
+                    }
+                }
+            }
+            $this->absences = array_filter($this->absences, function($absence) use ($allUserIds) {
+                return in_array($absence['id'], $allUserIds);
+            });
+
+        }
     }
     public function replacePlaceholders(string $text): string
     {
         $dayName = $this->figureOutDay()->translatedFormat('D');
         $dayFull = $this->figureOutDay()->translatedFormat('d.m.Y');
 
+        $absences = "";
+
+        foreach ($this->absences as $key => $absence) {
+            $absences .= $absence['display_name'] . ($key === array_key_last($this->absences) ? '' : ', ');
+        }
+
         $context = [
             'mittagessen' => "Mittagessen placeholder found",
-            'abwesenheit' => "Abwesenheits placeholder found",
+            'abwesenheit' => $absences,
             'tag' => str_replace('.', '', $dayName) . " " . $dayFull,
         ];
 
