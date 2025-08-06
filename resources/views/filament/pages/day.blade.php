@@ -85,9 +85,8 @@
                                     @endif
                                     class="p-2 text-center align-middle @if($lesson['url'] ?? false) cursor-pointer @endif"
                                     style="
-                                        border-color: white;
-                                        border-style: solid;
-                                        border-width: 0.35vh;
+                                        color: black;
+                                        border: 0.35vh solid white;
                                         text-align: {{ $cell['alignment'] ?? 'left' }};
                                         @if (!empty($lesson['color']))
                                             background-color: {{ $colors[$lesson['color']] }};

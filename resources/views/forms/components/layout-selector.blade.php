@@ -30,7 +30,7 @@
                         <td
                             x-show="!cell?.hidden"
                             x-data="{ isHovered: false }"
-                            class="border border-gray-300 dark:border-white/10 px-2 py-1 text-xl"
+                            class="px-2 py-1 text-xl"
                             :class="{
                                 'text-center': cell.alignment === 'center',
                                 'text-right': cell.alignment === 'right',
@@ -39,6 +39,7 @@
                             }"
                             :rowspan="cell.rowspan || 1"
                             :colspan="cell.colspan || 1"
+                            style="color: black; border: 0.35vh solid white;"
                             :style="{
                                 backgroundColor: colors[(cell.color ?? 'default')] ?? 'red',
                                 filter: isSelected(rowIndex, colIndex) && (cell.room && cell.time) ?
