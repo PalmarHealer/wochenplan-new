@@ -94,9 +94,40 @@
                     this.state = JSON.stringify({room: cell.room, lesson_time: cell.time});
                 },
 
+                clearSelection() {
+                    this.selectedRow = null;
+                    this.selectedCol = null;
+                },
+
                 init() {
-                    const parsedArray = Object.values(JSON.parse(this.state));
-                    if (parsedArray === null) return;
+                    // Watch for state changes to clear selection when state is empty
+                    this.$watch('state', (newValue) => {
+                        if (!newValue || newValue === '' || newValue === '{}' || newValue === 'null') {
+                            this.clearSelection();
+                            return;
+                        }
+
+                        try {
+                            const parsedState = JSON.parse(newValue);
+                            if (!parsedState || Object.keys(parsedState).length === 0)
+                                this.clearSelection();
+
+                        } catch (e) {
+                            this.clearSelection();
+                        }
+                    });
+
+                    if (!this.state || this.state === '' || this.state === '{}' || this.state === 'null') {
+                        this.clearSelection();
+                        return;
+                    }
+
+                    try {
+                        const parsedArray = Object.values(JSON.parse(this.state));
+                        if (parsedArray === null || parsedArray.length === 0) {
+                            this.clearSelection();
+                            return;
+                        }
 
                     const cellPath = this.findCellPath(this.layout, parsedArray[0], parsedArray[1]);
                     try {

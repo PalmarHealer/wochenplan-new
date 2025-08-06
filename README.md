@@ -20,8 +20,3 @@
 
 
 schüler sollen Interesse bei angeboten zeigen können.
-
-
-Bugs:
-- Layout selector leeren bei "speichern und weiterer eintrag"
-- Requiered soll auf deutsch sein
