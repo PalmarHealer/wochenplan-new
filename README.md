@@ -2,20 +2,27 @@
 
 ### TODO:
 
-- Dashboard
 ---
-
+### Dashboard:
+ - Lesson view
+ - Switch sorting from days
+---
+### Day view:
 - Mittagessen API
 ---
 
-### Features for later
-
-- Plugins
-  - Laravel PDF
 - Policies
     - LayoutOverride
 - Resources
     - LayoutOverride
 
+
+---
+Docker install
+
+### Features for later
+
+- Plugins
+  - Laravel PDF
 
 schüler sollen Interesse bei angeboten zeigen können.
