@@ -4,8 +4,9 @@
 
 ---
 ### Dashboard:
- - Lesson view
- - Switch sorting from days
+- Lesson view
+- Switch sorting from days
+
 ---
 ### Day view:
 - Mittagessen API

@@ -8,6 +8,7 @@ use App\Models\Color;
 use App\Models\Layout;
 use App\Models\Lesson;
 use App\Models\LessonTemplate;
+use App\Services\LunchService;
 use Carbon\Carbon;
 use Exception;
 use Filament\Pages\Page;
@@ -146,7 +147,7 @@ class Day extends Page
         }
 
         $context = [
-            'mittagessen' => "Mittagessen placeholder found",
+            'mittagessen' => app(LunchService::class)->getLunch($this->day),
             'abwesenheit' => $absences,
             'tag' => str_replace('.', '', $dayName) . " " . $dayFull,
         ];
