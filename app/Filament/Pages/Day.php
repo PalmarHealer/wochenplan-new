@@ -36,6 +36,8 @@ class Day extends Page
 
     public array $absences = [];
 
+    public string $lunch = "";
+
     #[\Livewire\Attributes\Url(as: 'date')]
     public ?string $urlDay = null;
 
@@ -48,6 +50,8 @@ class Day extends Page
         $rawDay = $this->figureOutDay();
 
         $this->day = $rawDay->toDateString();
+
+        $this->lunch = app(LunchService::class)->getLunch($this->day);
 
         $this->canCreate = auth()->user()->can('view_lesson') || auth()->user()->can('view_any_lesson');
 
@@ -147,7 +151,7 @@ class Day extends Page
         }
 
         $context = [
-            'mittagessen' => app(LunchService::class)->getLunch($this->day),
+            'mittagessen' => $this->lunch,
             'abwesenheit' => $absences,
             'tag' => str_replace('.', '', $dayName) . " " . $dayFull,
         ];

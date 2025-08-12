@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Services\LunchService;
 use Filament\Widgets\Widget;
 use Carbon\Carbon;
 
@@ -38,6 +39,7 @@ class WeekDaysCollection extends Widget
             $days[] = [
                 'label' => $dayNames[$i],
                 'date' => $currentDay->format('d.m.'),
+                'lunch' => app(LunchService::class)->getLunch($currentDay),
                 'url' => $url,
                 'isToday' => $currentDay->isSameDay(Carbon::now())
             ];

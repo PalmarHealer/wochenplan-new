@@ -10,7 +10,7 @@ class LunchService
 {
     public function getLunch(string $date): string
     {
-        $menu = Lunch::whereDate('date', $date)->first();
+        $menu = Lunch::where('date', $date)->first();
         if ($menu) return $menu->lunch;
 
         try {
@@ -39,7 +39,7 @@ class LunchService
                 'secret' => env('LUNCH_API_KEY'),
                 'date' => $date,
             ],
-            'timeout' => 1,
+            'timeout' => 2,
         ]);
 
         $json = json_decode($response->getBody(), true);

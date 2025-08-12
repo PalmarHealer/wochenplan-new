@@ -12,6 +12,7 @@ class Lunch extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'date',
         'lunch',
     ];
 
@@ -29,6 +30,8 @@ class Lunch extends Model
      */
     protected function casts(): array
     {
-        return [];
+        return [
+            'date' => 'date:d.m.Y',
+        ];
     }
 }
