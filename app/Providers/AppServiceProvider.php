@@ -36,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         if (Request::is('/')) {
-            Redirect::to('/admin/oauth/azure')->send();
+            Redirect::to('/dashboard')->send();
         }
     }
 }
