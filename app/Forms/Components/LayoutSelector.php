@@ -2,13 +2,15 @@
 
 namespace App\Forms\Components;
 
+use Closure;
 use Filament\Forms\Components\Field;
 
 class LayoutSelector extends Field
 {
     protected string $view = 'forms.components.layout-selector';
 
-    protected array $layout = [];
+    /** @var array|Closure */
+    protected $layout = [];
 
     protected array $colors = [];
 
@@ -24,8 +26,10 @@ class LayoutSelector extends Field
         return $this->colors;
     }
 
-
-    public function layout(array $layout): static
+    /**
+     * Accepts either a static array layout or a Closure that returns an array.
+     */
+    public function layout(array|Closure $layout): static
     {
         $this->layout = $layout;
 
@@ -34,6 +38,7 @@ class LayoutSelector extends Field
 
     public function getLayout(): array
     {
-        return $this->layout;
+        $evaluated = $this->evaluate($this->layout);
+        return is_array($evaluated) ? $evaluated : [];
     }
 }

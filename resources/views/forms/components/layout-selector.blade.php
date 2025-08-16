@@ -8,6 +8,7 @@
     :field="$field"
 >
     <div
+        wire:key="layout-selector-{{ md5(json_encode($layout)) }}"
         style="overflow-y: scroll;"
         x-data="layoutEditor({
             layout: {{ Js::from($layout) }},
@@ -74,9 +75,9 @@
                 state: state,
 
                 selectCell(row, col) {
-                    if (!row && !col) return;
-                    const cell = this.layout[row][col];
-                    if (!cell.room && !cell.time) return;
+                    if (row === undefined || col === undefined || row === null || col === null) return;
+                    const cell = this.layout?.[row]?.[col];
+                    if (!cell || !cell.room || !cell.time) return;
 
                     this.selectedRow = row;
                     this.selectedCol = col;
@@ -100,45 +101,47 @@
                 },
 
                 init() {
-                    // Watch for state changes to clear selection when state is empty
+                    const tryReselect = () => {
+                        if (!this.state || this.state === '' || this.state === '{}' || this.state === 'null') {
+                            this.clearSelection();
+                            return;
+                        }
+                        try {
+                            const parsed = JSON.parse(this.state);
+                            const targetRoom = parsed?.room ?? null;
+                            const targetLessonTime = parsed?.lesson_time ?? null;
+                            if (!targetRoom || !targetLessonTime) {
+                                this.clearSelection();
+                                return;
+                            }
+                            const cellPath = this.findCellPath(this.layout, targetRoom, targetLessonTime);
+                            if (cellPath) {
+                                this.selectCell(cellPath[0], cellPath[1]);
+                            } else {
+                                this.clearSelection();
+                            }
+                        } catch (e) {
+                            console.log('State could not be loaded:', e);
+                            this.clearSelection();
+                        }
+                    };
+
+                    // Watch for state changes and try to reselect the matching cell
                     this.$watch('state', (newValue) => {
                         if (!newValue || newValue === '' || newValue === '{}' || newValue === 'null') {
                             this.clearSelection();
                             return;
                         }
-
-                        try {
-                            const parsedState = JSON.parse(newValue);
-                            if (!parsedState || Object.keys(parsedState).length === 0)
-                                this.clearSelection();
-
-                        } catch (e) {
-                            this.clearSelection();
-                        }
+                        tryReselect();
                     });
 
-                    if (!this.state || this.state === '' || this.state === '{}' || this.state === 'null') {
-                        this.clearSelection();
-                        return;
-                    }
+                    // In case the layout changes dynamically and component doesn't remount
+                    this.$watch('layout', () => {
+                        tryReselect();
+                    });
 
-                    try {
-                        const parsedArray = Object.values(JSON.parse(this.state));
-                        if (parsedArray === null || parsedArray.length === 0) {
-                            this.clearSelection();
-                            return;
-                        }
-
-                        const cellPath = this.findCellPath(this.layout, parsedArray[0], parsedArray[1]);
-                        if (cellPath) {
-                            this.selectCell(cellPath[0], cellPath[1]);
-                        } else {
-                            this.clearSelection();
-                        }
-                    } catch (e) {
-                        console.log('State could not be loaded:', e);
-                        this.clearSelection();
-                    }
+                    // Initial selection restore
+                    tryReselect();
                 },
 
                 findCellPath(data, targetRoom, targetLessonTime) {
@@ -151,7 +154,7 @@
                             const room = cell.room;
                             const lessonTime = cell.time;
 
-                            if (room === targetRoom && lessonTime === targetLessonTime) {
+                            if (String(room) === String(targetRoom) && String(lessonTime) === String(targetLessonTime)) {
                                 return [row, col];
                             }
                         }

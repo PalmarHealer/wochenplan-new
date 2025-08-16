@@ -6,13 +6,14 @@ use App\Filament\Resources\LessonTemplateResource\Pages;
 use App\Forms\Components\CustomRichEditor;
 use App\Forms\Components\LayoutSelector;
 use App\Models\Color;
-use App\Models\Layout;
 use App\Models\LessonTemplate;
+use App\Services\LayoutService;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
@@ -41,15 +42,10 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
         $colors = Color::all()->pluck('color', 'id')->toArray();
         $colors['default'] = 'rgba(0, 0, 0, 0.10)';
 
-        $layout = json_decode(Layout::where('active', true)
-            ->limit(1)
-            ->pluck('layout')
-            ->first());
 
         return $form
             ->schema([
                 Section::make('Angebot details')
-                    ->columns(2)
                     ->schema([
                         CustomRichEditor::make('name')
                             ->label('Name')
@@ -86,7 +82,8 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                         ->label('Slot')
                         ->columnSpanFull()
                         ->required()
-                        ->layout($layout)
+                        ->layout(fn(Get $get) => app(LayoutService::class)->getLayoutByWeekday((int) ($get('weekday') ?? 6)))
+                        ->reactive()
                         ->colors($colors),
                 ]),
                 Section::make([
@@ -100,6 +97,7 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                             4 => 'Donnerstag',
                             5 => 'Freitag',
                         ])
+                        ->live()
                         ->required(),
                     Forms\Components\Select::make('color')
                         ->label('Farbe')

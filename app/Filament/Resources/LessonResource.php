@@ -6,14 +6,15 @@ use App\Filament\Resources\LessonResource\Pages;
 use App\Forms\Components\CustomRichEditor;
 use App\Forms\Components\LayoutSelector;
 use App\Models\Color;
-use App\Models\Layout;
 use App\Models\Lesson;
 use App\Models\LessonTemplate;
+use App\Services\LayoutService;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
@@ -43,10 +44,6 @@ class LessonResource extends Resource implements HasShieldPermissions
         $colors = Color::all()->pluck('color', 'id')->toArray();
         $colors['default'] = 'rgba(0, 0, 0, 0.10)';
 
-        $layout = json_decode(Layout::where('active', true)
-            ->limit(1)
-            ->pluck('layout')
-            ->first());
 
 
         $request = request();
@@ -134,7 +131,8 @@ class LessonResource extends Resource implements HasShieldPermissions
                         ->label('Slot')
                         ->columnSpanFull()
                         ->required()
-                        ->layout($layout)
+                        ->layout(fn(Get $get) => app(LayoutService::class)->getLayoutForDate($get('date') ?? now()->toDateString()))
+                        ->reactive()
                         ->colors($colors),
                 ]),
                 Section::make([
@@ -144,6 +142,7 @@ class LessonResource extends Resource implements HasShieldPermissions
                         ->native(false)
                         ->displayFormat('d.m.Y')
                         ->format('Y-m-d')
+                        ->live()
                         ->required(),
                     Forms\Components\Select::make('color')
                         ->default($defaults['color'] ?? '')

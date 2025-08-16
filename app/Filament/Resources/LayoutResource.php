@@ -11,12 +11,12 @@ use App\Models\Room;
 use App\Models\Time;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
-use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class LayoutResource extends Resource
 {
@@ -40,7 +40,6 @@ class LayoutResource extends Resource
         return $form
             ->schema([
                 Section::make('Layout details')
-                    ->columns(2)
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->required()
@@ -95,24 +94,20 @@ class LayoutResource extends Resource
                         ->columnSpanFull()
                         ->label('Notizen'),
                 ]),
-                ToggleButtons::make('active')
-                    ->label('Aktives layout')
-                    ->required()
-                    ->boolean()
-                    ->inline()
-                    ->default(false)
-                    ->options([
-                        false => 'Deaktiviert',
-                        true => 'Aktiviert',
-                    ])
-                    ->icons([
-                        true => 'heroicon-o-check',
-                        false => 'heroicon-o-x-mark',
-                    ])
-                    ->colors([
-                        true => 'success',
-                        false => 'warning',
-                    ]),
+                Section::make([
+                    Forms\Components\Select::make('weekdays')
+                        ->label('Gültig für')
+                        ->options([
+                            1 => 'Montag',
+                            2 => 'Dienstag',
+                            3 => 'Mittwoch',
+                            4 => 'Donnerstag',
+                            5 => 'Freitag',
+                        ])
+                        ->native(false)
+                        ->multiple()
+                        ->nullable(),
+                ]),
             ]);
     }
 
@@ -135,11 +130,14 @@ class LayoutResource extends Resource
                     ->label('Notizen')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\IconColumn::make('active')
-                    ->label('Aktiviert')
-                    ->sortable()
-                    ->getStateUsing(fn ($record) => $record->active)
-                    ->boolean(),
+                Tables\Columns\TextColumn::make('weekdays')
+                    ->badge()
+                    ->label('Gültig für')
+                    ->getStateUsing(function ($record) {
+                        $map = [1 => 'Montag', 2 => 'Dienstag', 3 => 'Mittwoch', 4 => 'Donnerstag', 5 => 'Freitag'];
+                        $days = is_array($record->weekdays) ? $record->weekdays : [];
+                        return array_values(array_map(fn($d) => $map[$d] ?? (string) $d, $days));
+                    }),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
                     ->dateTime("d.m.Y H:i")
@@ -152,13 +150,28 @@ class LayoutResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('active')
-                    ->label('Aktiviert')
+                SelectFilter::make('weekday')
+                    ->label('Tag')
                     ->native(false)
+                    ->multiple()
                     ->options([
-                        false => 'Deaktiviert',
-                        true => 'Aktiviert',
-                    ]),
+                        1 => 'Montag',
+                        2 => 'Dienstag',
+                        3 => 'Mittwoch',
+                        4 => 'Donnerstag',
+                        5 => 'Freitag',
+                    ])
+                    ->query(function (Builder $query, array $data): void {
+                        $selected = $data['values'] ?? $data['value'] ?? [];
+                        if (empty($selected)) {
+                            return;
+                        }
+                        $query->where(function (Builder $q) use ($selected) {
+                            foreach ($selected as $day) {
+                                $q->orWhereJsonContains('weekdays', (int) $day);
+                            }
+                        });
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

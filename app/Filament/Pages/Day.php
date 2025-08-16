@@ -5,9 +5,9 @@ namespace App\Filament\Pages;
 use App\Filament\Resources\LessonResource;
 use App\Models\Absence;
 use App\Models\Color;
-use App\Models\Layout;
 use App\Models\Lesson;
 use App\Models\LessonTemplate;
+use App\Services\LayoutService;
 use App\Services\LunchService;
 use Carbon\Carbon;
 use Exception;
@@ -55,12 +55,7 @@ class Day extends Page
 
         $this->canCreate = auth()->user()->can('view_lesson') || auth()->user()->can('view_any_lesson');
 
-        $layout = Layout::where('active', true)
-            ->limit(1)
-            ->pluck('layout')
-            ->first();
-
-        $this->dayLayout = json_decode($layout, true);
+        $this->dayLayout = app(LayoutService::class)->getLayoutForDate($this->day);
 
         $this->colors = Color::all()->pluck('color', 'id')->toArray();
 
