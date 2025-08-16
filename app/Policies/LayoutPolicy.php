@@ -12,7 +12,7 @@ class LayoutPolicy
      */
     public function viewAny(User $user): bool
     {
-        return auth()->user()->can('view_layout');
+        return $user->can('view_layout');
     }
 
     /**
@@ -20,7 +20,7 @@ class LayoutPolicy
      */
     public function create(User $user): bool
     {
-        return auth()->user()->can('create_layout');
+        return $user->can('create_layout');
     }
 
     /**
@@ -28,7 +28,7 @@ class LayoutPolicy
      */
     public function update(User $user, Layout $layout): bool
     {
-        return auth()->user()->can('update_layout');
+        return $user->can('update_layout');
     }
 
     /**
@@ -36,11 +36,14 @@ class LayoutPolicy
      */
     public function delete(User $user, Layout $layout): bool
     {
-        return auth()->user()->can('delete_layout');
+        return $user->can('delete_layout');
     }
 
+    /**
+     * Determine whether the user can bulk delete.
+     */
     public function deleteAny(User $user): bool
     {
-        return auth()->user()->can('delete_any_layout');
+        return $user->can('delete_any_layout');
     }
 }

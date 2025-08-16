@@ -20,7 +20,7 @@ class TimePolicy
      */
     public function create(User $user): bool
     {
-        return auth()->user()->can('create_time');
+        return $user->can('create_time');
     }
 
     /**
@@ -28,7 +28,7 @@ class TimePolicy
      */
     public function update(User $user, Time $time): bool
     {
-        return auth()->user()->can('update_time');
+        return $user->can('update_time');
     }
 
     /**
@@ -36,11 +36,14 @@ class TimePolicy
      */
     public function delete(User $user, Time $time): bool
     {
-        return auth()->user()->can('delete_time');
+        return $user->can('delete_time');
     }
 
+    /**
+     * Determine whether the user can bulk delete.
+     */
     public function deleteAny(User $user): bool
     {
-        return auth()->user()->can('delete_any_time');
+        return $user->can('delete_any_time');
     }
 }

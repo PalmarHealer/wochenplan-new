@@ -34,7 +34,7 @@ class LessonPolicy
      */
     public function create(User $user): bool
     {
-        return auth()->user()->can('create_lesson');
+        return $user->can('create_lesson');
     }
 
     /**
@@ -65,8 +65,11 @@ class LessonPolicy
         return false;
     }
 
+    /**
+     * Determine whether the user can bulk delete.
+     */
     public function deleteAny(User $user): bool
     {
-        return auth()->user()->can('delete_any_lesson');
+        return $user->can('delete_any_lesson');
     }
 }

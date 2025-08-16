@@ -12,7 +12,7 @@ class RoomPolicy
      */
     public function viewAny(User $user): bool
     {
-        return auth()->user()->can('view_room');
+        return $user->can('view_room');
     }
 
     /**
@@ -20,7 +20,7 @@ class RoomPolicy
      */
     public function create(User $user): bool
     {
-        return auth()->user()->can('create_room');
+        return $user->can('create_room');
     }
 
     /**
@@ -28,7 +28,7 @@ class RoomPolicy
      */
     public function update(User $user, Room $room): bool
     {
-        return auth()->user()->can('update_room');
+        return $user->can('update_room');
     }
 
     /**
@@ -36,11 +36,14 @@ class RoomPolicy
      */
     public function delete(User $user, Room $room): bool
     {
-        return auth()->user()->can('delete_room');
+        return $user->can('delete_room');
     }
 
+    /**
+     * Determine whether the user can bulk delete.
+     */
     public function deleteAny(User $user): bool
     {
-        return auth()->user()->can('delete_any_room');
+        return $user->can('delete_any_room');
     }
 }

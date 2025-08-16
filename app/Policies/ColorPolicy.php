@@ -20,7 +20,7 @@ class ColorPolicy
      */
     public function create(User $user): bool
     {
-        return auth()->user()->can('create_color');
+        return $user->can('create_color');
     }
 
     /**
@@ -28,7 +28,7 @@ class ColorPolicy
      */
     public function update(User $user, Color $color): bool
     {
-        return auth()->user()->can('update_color');
+        return $user->can('update_color');
     }
 
     /**
@@ -36,11 +36,14 @@ class ColorPolicy
      */
     public function delete(User $user, Color $color): bool
     {
-        return auth()->user()->can('delete_color');
+        return $user->can('delete_color');
     }
 
+    /**
+     * Determine whether the user can bulk delete.
+     */
     public function deleteAny(User $user): bool
     {
-        return auth()->user()->can('delete_any_color');
+        return $user->can('delete_any_color');
     }
 }

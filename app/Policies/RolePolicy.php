@@ -12,7 +12,7 @@ class RolePolicy
      */
     public function viewAny(User $user): bool
     {
-        return auth()->user()->can('view_role');
+        return $user->can('view_role');
     }
 
     /**
@@ -20,7 +20,7 @@ class RolePolicy
      */
     public function create(User $user): bool
     {
-        return auth()->user()->can('create_role');
+        return $user->can('create_role');
     }
 
     /**
@@ -28,7 +28,7 @@ class RolePolicy
      */
     public function update(User $user, Role $role): bool
     {
-        return auth()->user()->can('update_role');
+        return $user->can('update_role');
     }
 
     /**
@@ -36,11 +36,14 @@ class RolePolicy
      */
     public function delete(User $user, Role $role): bool
     {
-        return auth()->user()->can('delete_role');
+        return $user->can('delete_role');
     }
 
+    /**
+     * Determine whether the user can bulk delete.
+     */
     public function deleteAny(User $user): bool
     {
-        return auth()->user()->can('delete_any_role');
+        return $user->can('delete_any_role');
     }
 }

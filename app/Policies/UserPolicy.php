@@ -11,7 +11,7 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        return auth()->user()->can('view_user');
+        return $user->can('view_user');
     }
 
     /**
@@ -19,7 +19,7 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return auth()->user()->can('create_user');
+        return $user->can('create_user');
     }
 
     /**
@@ -27,7 +27,7 @@ class UserPolicy
      */
     public function update(User $user): bool
     {
-        return auth()->user()->can('update_user');
+        return $user->can('update_user');
     }
 
     /**
@@ -35,11 +35,14 @@ class UserPolicy
      */
     public function delete(User $user): bool
     {
-        return auth()->user()->can('delete_user');
+        return $user->can('delete_user');
     }
 
+    /**
+     * Determine whether the user can bulk delete.
+     */
     public function deleteAny(User $user): bool
     {
-        return auth()->user()->can('delete_any_user');
+        return $user->can('delete_any_user');
     }
 }
