@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Absence;
 use App\Models\Color;
 use App\Models\Layout;
+use App\Models\LayoutDeviation;
 use App\Models\Lesson;
 use App\Models\LessonTemplate;
 use App\Models\Role;
@@ -14,6 +15,7 @@ use App\Models\User;
 use App\Policies\AbsencePolicy;
 use App\Policies\ColorPolicy;
 use App\Policies\LayoutPolicy;
+use App\Policies\LayoutDeviationPolicy;
 use App\Policies\LessonPolicy;
 use App\Policies\LessonTemplatePolicy;
 use App\Policies\RolePolicy;
@@ -47,6 +49,7 @@ class AuthServiceProvider extends ServiceProvider
         Lesson::class => LessonPolicy::class,
         LessonTemplate::class => LessonTemplatePolicy::class,
         Layout::class => LayoutPolicy::class,
+        LayoutDeviation::class => LayoutDeviationPolicy::class,
         Color::class => ColorPolicy::class,
         Role::class => RolePolicy::class,
         Room::class => RoomPolicy::class,

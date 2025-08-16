@@ -10,6 +10,7 @@ use App\Models\Lesson;
 use App\Models\LessonTemplate;
 use App\Services\LayoutService;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\ToggleButtons;
@@ -137,11 +138,34 @@ class LessonResource extends Resource implements HasShieldPermissions
                 ]),
                 Section::make([
                     Forms\Components\DatePicker::make('date')
-                        ->default($defaults['date'] ?? now())
+                        ->default(function() use ($defaults) {
+                            $date = isset($defaults['date']) ?
+                                Carbon::parse($defaults['date']) :
+                                now();
+
+                            while ($date->isWeekend()) {
+                                $date->addDay();
+                            }
+                            return $date;
+                        })
                         ->label('Datum')
                         ->native(false)
                         ->displayFormat('d.m.Y')
                         ->format('Y-m-d')
+                        ->disabledDates(function () {
+                            $disabledDates = [];
+                            $start = now()->startOfYear();
+                            $end = now()->addYear()->endOfYear();
+
+                            while ($start <= $end) {
+                                if ($start->isWeekend()) {
+                                    $disabledDates[] = $start->format('Y-m-d');
+                                }
+                                $start->addDay();
+                            }
+
+                            return $disabledDates;
+                        })
                         ->live()
                         ->required(),
                     Forms\Components\Select::make('color')
