@@ -12,7 +12,7 @@ class TimePolicy
      */
     public function viewAny(User $user): bool
     {
-        return auth()->user()->can('view_time');
+        return $user->can('view_time');
     }
 
     /**

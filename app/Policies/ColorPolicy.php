@@ -12,7 +12,7 @@ class ColorPolicy
      */
     public function viewAny(User $user): bool
     {
-        return auth()->user()->can('view_color');
+        return $user->can('view_color');
     }
 
     /**
