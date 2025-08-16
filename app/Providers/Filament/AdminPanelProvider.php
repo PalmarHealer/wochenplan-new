@@ -92,7 +92,7 @@ class AdminPanelProvider extends PanelProvider
                         ]);
                     })
                     ->rememberLogin(true)
-                    ->registration(true)
+                    ->registration(env('ALLOW_REGISTRATION', true))
                     ->userModelClass(User::class),
                 FilamentShieldPlugin::make()->gridColumns([
                     'default' => 1,
