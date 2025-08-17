@@ -47,7 +47,9 @@ class EditRole extends EditRecord
         $this->permissions->each(function ($permission) use ($permissionModels) {
             $permissionModels->push(Utils::getPermissionModel()::firstOrCreate([
                 'name' => $permission,
-                'guard_name' => $this->data['guard_name'],
+                'guard_name' => __('filament-shield::filament-shield.field.guard_name'),
+                // old code:
+                //'guard_name' => $this->data['guard_name'],
             ]));
         });
 
