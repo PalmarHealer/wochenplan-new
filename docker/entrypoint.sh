@@ -43,6 +43,8 @@ chown -R www-data:www-data "$APP_DIR"
 chmod -R u+rwx "$APP_DIR"
 chmod 664 "$APP_DIR/.env"
 
+git config --global --add safe.directory /var/www/html
+
 # Run first-run initialization if needed
 /usr/local/bin/first-run.sh || true
 

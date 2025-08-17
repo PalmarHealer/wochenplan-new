@@ -46,8 +46,6 @@ if [ -n "$REDIS_HOST" ]; then
   done
 fi
 
-git config --global --add safe.directory /var/www/html
-
 # Composer install (optimize autoloader)
 if [ -f "$APP_DIR/composer.json" ]; then
   su -s /bin/bash -c "cd '$APP_DIR' && composer install --no-interaction --prefer-dist --optimize-autoloader" "$APP_USER"
