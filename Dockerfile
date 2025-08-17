@@ -43,6 +43,9 @@ WORKDIR ${APP_DIR}
 # Copy application (use .dockerignore to exclude node_modules/vendor if desired)
 COPY --chown=www-data:www-data . ${APP_DIR}
 
+# Git add safe directory
+RUN git config --global --add safe.directory ${APP_DIR}
+
 # Nginx configuration
 COPY docker/nginx/wochenplan.conf /etc/nginx/sites-available/wochenplan.conf
 RUN rm -f /etc/nginx/sites-enabled/default \
