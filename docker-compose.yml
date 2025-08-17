@@ -9,6 +9,7 @@ services:
         environment:
             # If you want, you can set APP_KEY here; otherwise it will be generated on the first run.
             APP_NAME: Wochenplan
+            APP_URL: http://localhost
             APP_DEBUG: false
             APP_LOCALE: de
             APP_FAKER_LOCALE: de_DE
