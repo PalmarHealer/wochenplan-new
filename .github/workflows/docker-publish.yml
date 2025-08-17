@@ -19,7 +19,10 @@ on:
 #   - DOCKERHUB_REPOSITORY: Repository name on Docker Hub (default: wochenplan)
 #
 # The image will be pushed as: <DOCKERHUB_USERNAME>/<DOCKERHUB_REPOSITORY>:<tag>
-# Tags used: latest (on default branch), git sha, and git tag (if present).
+# Tags used:
+#   - latest (always overwritten by the newest build)
+#   - <d.m.Y> (date in Europe/Berlin, e.g., 17.08.2025)
+#   - <N> numeric sequence per day starting at 1 (e.g., :1, :2 on the same day)
 
 env:
   DOCKERHUB_REPOSITORY: wochenplan
@@ -61,6 +64,34 @@ jobs:
             type=sha
             type=ref,event=tag
 
+      - name: Determine daily sequence and compose tags
+        id: vars
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
+          DOCKERHUB_REPOSITORY: ${{ env.DOCKERHUB_REPOSITORY }}
+        run: |
+          set -e
+          TZ_EUROPE="Europe/Berlin"
+          DATE_TAG=$(TZ=$TZ_EUROPE date +'%d.%m.%Y')
+          TODAY=$(TZ=$TZ_EUROPE date +'%Y-%m-%d')
+          TOKEN=$(curl -s -H "Content-Type: application/json" -d "{\"username\": \"${DOCKERHUB_USERNAME}\", \"password\": \"${DOCKERHUB_PASSWORD}\"}" https://hub.docker.com/v2/users/login | python3 -c "import sys, json; print(json.load(sys.stdin).get('token',''))")
+          if [ -z "$TOKEN" ]; then
+            echo "Failed to obtain Docker Hub token" >&2
+            exit 1
+          fi
+          export TODAY
+          COUNT=$(curl -s -H "Authorization: JWT ${TOKEN}" "https://hub.docker.com/v2/repositories/${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}/tags?page_size=100" | python3 -c "import sys, json, re, os; today=os.environ.get('TODAY',''); data=json.load(sys.stdin); c=sum(1 for r in data.get('results',[]) if re.fullmatch(r'[0-9]+', r.get('name','')) and r.get('last_updated','').startswith(today)); print(c)")
+          if [ -z "$COUNT" ]; then COUNT=0; fi
+          SEQ=$((COUNT + 1))
+          {
+            echo "tags<<EOF"
+            echo "${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest"
+            echo "${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:${DATE_TAG}"
+            echo "${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:${SEQ}"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -68,10 +99,10 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.vars.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Echo image reference
         run: |
           echo "Pushed images:"
-          echo "${{ steps.meta.outputs.tags }}"
+          echo "${{ steps.vars.outputs.tags }}"
