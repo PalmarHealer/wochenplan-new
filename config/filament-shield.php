@@ -47,7 +47,7 @@ return [
 
     'entities' => [
         'pages' => true,
-        'widgets' => true,
+        'widgets' => false,
         'resources' => true,
         'custom_permissions' => false,
     ],
