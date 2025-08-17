@@ -102,9 +102,7 @@ class AbsenceResource extends Resource implements HasShieldPermissions
                     ->relationship('user', 'name'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
 
