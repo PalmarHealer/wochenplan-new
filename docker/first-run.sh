@@ -2,7 +2,7 @@
 set -euo pipefail
 
 APP_DIR=${APP_DIR:-/var/www/html}
-APP_USER=${APP_USER:-app}
+APP_USER="www-data"
 STAMP_FILE="$APP_DIR/.first_run_done"
 
 if [ -f "$STAMP_FILE" ]; then
@@ -46,6 +46,9 @@ if [ -n "$REDIS_HOST" ]; then
   done
 fi
 
+
+# Trust repository path for all users and the runtime user to avoid Git dubious ownership
+su -s /bin/bash -c "git config --global --add safe.directory '$APP_DIR'" "$APP_USER" || true
 # Composer install (optimize autoloader)
 if [ -f "$APP_DIR/composer.json" ]; then
   su -s /bin/bash -c "cd '$APP_DIR' && composer install --no-interaction --prefer-dist --optimize-autoloader" "$APP_USER"
