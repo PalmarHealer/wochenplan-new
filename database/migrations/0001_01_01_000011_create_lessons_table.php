@@ -20,11 +20,11 @@ return new class extends Migration
             $table->boolean('disabled')->default(false);
             $table->dateTime('date');
             $table->foreignId('color')->nullable()->constrained('colors')->nullOnDelete();
-            $table->foreignId('room')->constrained('rooms')->nullOnDelete();
-            $table->foreignId('lesson_time')->constrained('times')->nullOnDelete();
+            $table->foreignId('room')->nullable()->constrained('rooms')->nullOnDelete();
+            $table->foreignId('lesson_time')->nullable()->constrained('times')->nullOnDelete();
 
-            $table->foreignId('created_by')->constrained('users')->nullOnDelete();
-            $table->foreignId('updated_by')->constrained('users')->nullOnDelete();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
 
             $table->timestamps();
         });
