@@ -14,7 +14,7 @@ class ShieldSeeder extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $rolesWithPermissions = '[{
-            "name": "admin",
+            "name": "super_admin",
             "guard_name": "web",
             "permissions": [
                 "view_absence",

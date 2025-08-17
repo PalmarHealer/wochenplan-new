@@ -9,6 +9,12 @@
     - Redis 7
 - CI/CD: GitHub Actions workflow to build and publish Docker images to Docker Hub
 
+## Useful commands
+
+### Make new user:
+Create new User: ``php artisan make:filament-user``
+
+Elevate a user to Admin ``php artisan shield:super-admin``
 ## Project structure (high-level)
 - app/ … Laravel application code (models, controllers, Filament resources)
 - public/ … web root served by Nginx
