@@ -1,21 +1,18 @@
 ## Wochenplan 2.0
 
+Notes for installation:
+- clone the repo
+- composer install or update
+- php artisan migrate:fresh
+- php artisan db:seed
+- login with credentials from .env
+
 ### TODO:
 
 ---
 ### Dashboard:
 - Lesson view
 - Switch sorting from days
-
----
-### Day view:
-- Mittagessen API
----
-
-- Policies
-    - LayoutOverride
-- Resources
-    - LayoutOverride
 
 
 ---
