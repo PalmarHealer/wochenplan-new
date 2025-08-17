@@ -80,6 +80,9 @@ class AdminPanelProvider extends PanelProvider
 
 
                     ->createUserUsing(function (string $provider, SocialiteUserContract $oauthUser, FilamentSocialitePlugin $plugin) {
+
+                        if (!env('ALLOW_REGISTRATION', true)) return null;
+
                         $fullName = $oauthUser->getName() ?? $oauthUser->getNickname() ?? $oauthUser->getEmail();
                         $firstName = explode(' ', trim($fullName))[0] ?? 'Unbekannt';
 

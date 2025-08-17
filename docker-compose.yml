@@ -1,0 +1,77 @@
+version: "3.9"
+
+services:
+    app:
+        image: palmarhealer/wochenplan:latest
+        ports:
+            - "8080:80"   # Nginx HTTP
+            # - "2222:22" # SSH (optional; requires SSH_AUTHORIZED_KEYS_URL)
+        environment:
+            # If you want, you can set APP_KEY here; otherwise it will be generated on the first run.
+            APP_NAME: Wochenplan
+            APP_DEBUG: true
+            DB_CONNECTION: mysql
+            DB_HOST: db
+            DB_PORT: 3306
+            DB_DATABASE: wochenplan
+            DB_USERNAME: wochenplan
+            DB_PASSWORD: wochenplan
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+            QUEUE_CONNECTION: database
+            SESSION_DRIVER: database
+            CACHE_STORE: database
+            # URL to public SSH keys (e.g., https://github.com/<your-user>.keys). If empty or unset, SSH will be disabled.
+            SSH_AUTHORIZED_KEYS_URL: ""
+            # Admin bootstrap and app configuration
+            ADMIN_EMAIL: admin@admin.com
+            ADMIN_PASSWORD: admin
+            DAY_VIEW_DISPLAY_ALL_ABSENCE_NOTES: true
+            LUNCH_API_URL: ""
+            LUNCH_API_KEY: ""
+            APP_LOCALE: de
+            APP_FAKER_LOCALE: de_DE
+            AZURE_CLIENT_ID: ""
+            AZURE_CLIENT_SECRET: ""
+            AZURE_REDIRECT_URI: ""
+            AZURE_TENANT_ID: ""
+            AZURE_PROXY: ""
+            TRUSTED_PROXIES: ""
+        volumes:
+            # Only persist logs to keep the container stateless
+            - wochenplan-logs:/var/www/html/storage/logs
+        depends_on:
+            db:
+                condition: service_healthy
+            redis:
+                condition: service_started
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost/"]
+            interval: 15s
+            timeout: 5s
+            retries: 10
+
+    db:
+        image: mariadb:11.4
+        environment:
+            MYSQL_DATABASE: wochenplan
+            MYSQL_USER: wochenplan
+            MYSQL_PASSWORD: wochenplan
+            MYSQL_ROOT_PASSWORD: root
+        volumes:
+            - wochenplan-db-data:/var/lib/mysql
+        healthcheck:
+            test: ["CMD-SHELL", "mysqladmin ping -h localhost -proot || exit 1"]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+
+    redis:
+        image: redis:7-alpine
+        volumes:
+            - wochenplan-redis-data:/data
+
+volumes:
+    wochenplan-db-data:
+    wochenplan-redis-data:
+    wochenplan-logs:
