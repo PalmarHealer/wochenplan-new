@@ -73,8 +73,8 @@ su -s /bin/bash -c "cd '$APP_DIR' && php artisan db:seed --force" "$APP_USER" ||
 su -s /bin/bash -c "cd '$APP_DIR' && php artisan storage:link" "$APP_USER" || true
 
 # Permissions
-chown -R $APP_USER:www-data "$APP_DIR"
-chmod -R ug+rwX "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
+chown -R www-data:www-data "$APP_DIR"
+chmod -R u+rwx "$APP_DIR"
 
 # Mark as done
 touch "$STAMP_FILE"

@@ -56,11 +56,10 @@ services:
             AZURE_TENANT_ID:
             AZURE_PROXY:
         volumes:
-            # Only persist logs to keep the container stateless
-            - wochenplan-logs:/var/www/html/storage/logs
+            - app-data:/var/www/html/storage/logs
         depends_on:
             db:
-                condition: service_healthy
+                condition: service_started
             redis:
                 condition: service_started
         healthcheck:
@@ -77,19 +76,18 @@ services:
             MYSQL_PASSWORD: wochenplan
             MYSQL_ROOT_PASSWORD: root
         volumes:
-            - wochenplan-db-data:/var/lib/mysql
+            - db-data:/var/lib/mysql
         healthcheck:
             test: ["CMD-SHELL", "mysqladmin ping -h localhost -proot || exit 1"]
             interval: 10s
             timeout: 5s
             retries: 10
-
     redis:
         image: redis:7-alpine
         volumes:
-            - wochenplan-redis-data:/data
+            - redis-data:/data
 
 volumes:
-    wochenplan-db-data:
-    wochenplan-redis-data:
-    wochenplan-logs:
+    db-data:
+    redis-data:
+    app-data:

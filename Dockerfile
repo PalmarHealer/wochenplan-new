@@ -36,12 +36,12 @@ RUN curl -fsSL https://getcomposer.org/installer -o /tmp/composer-setup.php \
 # Create app user and prepare directories
 RUN useradd -m -d /home/${APP_USER} -s /bin/bash ${APP_USER} \
     && mkdir -p /var/run/sshd /run/php ${APP_DIR} \
-    && chown -R ${APP_USER}:www-data ${APP_DIR}
+    && chown -R www-data:www-data ${APP_DIR}
 
 WORKDIR ${APP_DIR}
 
 # Copy application (use .dockerignore to exclude node_modules/vendor if desired)
-COPY . ${APP_DIR}
+COPY --chown=www-data:www-data . ${APP_DIR}
 
 # Nginx configuration
 COPY docker/nginx/wochenplan.conf /etc/nginx/sites-available/wochenplan.conf
@@ -53,10 +53,9 @@ RUN sed -i 's#^;*listen = .*#listen = /run/php/php8.3-fpm.sock#' /etc/php/8.3/fp
     && sed -i 's#^;*clear_env = .*#clear_env = no#' /etc/php/8.3/fpm/pool.d/www.conf
 
 # SSH configuration
-RUN sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config \
-    && sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config \
-    && sed -i 's/^#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
-    && sed -i 's/^UsePAM .*/UsePAM yes/' /etc/ssh/sshd_config
+RUN sed -i 's/^PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config \
+    && sed -i 's/^PermitRootLogin .*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config \
+    && sed -i 's/^#PubkeyAuthentication .*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
 
 # Supervisor configuration
 COPY docker/supervisor/supervisord.conf /etc/supervisor/supervisord.conf
