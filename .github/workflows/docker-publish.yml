@@ -1,0 +1,77 @@
+name: Build and Publish Docker image (wochenplan)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    tags: [ "v*.*.*" ]
+  workflow_dispatch:
+
+# This workflow builds the Docker image and publishes it to Docker Hub.
+# It uses GitHub Environment-level secrets (recommended for deployments).
+#
+# REQUIRED SECRETS (create them under: GitHub Repo → Settings → Environments → production → Secrets):
+#   - DOCKERHUB_USERNAME: Your Docker Hub username.
+#     Where to get: https://hub.docker.com/ → top-right menu → Account Settings → Username
+#   - DOCKERHUB_TOKEN: A Docker Hub Access Token (recommended) or password.
+#     Where to get: https://hub.docker.com/settings/security → New Access Token
+#
+# OPTIONAL VARIABLES (add as Environment variables or Repo variables if desired):
+#   - DOCKERHUB_REPOSITORY: Repository name on Docker Hub (default: wochenplan)
+#
+# The image will be pushed as: <DOCKERHUB_USERNAME>/<DOCKERHUB_REPOSITORY>:<tag>
+# Tags used: latest (on default branch), git sha, and git tag (if present).
+
+env:
+  DOCKERHUB_REPOSITORY: wochenplan
+
+jobs:
+  docker:
+    name: Build & Push
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_REPOSITORY }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha
+            type=ref,event=tag
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Echo image reference
+        run: |
+          echo "Pushed images:"
+          echo "${{ steps.meta.outputs.tags }}"
