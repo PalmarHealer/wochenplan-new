@@ -79,7 +79,7 @@ Ports (host → container):
 
 Login with credentials configured in your .env (e.g., ADMIN_EMAIL and ADMIN_PASSWORD).
 
-## Roadmap / TODO (translated and structured)
+## Roadmap / TODO
 - Dashboard
     - Lesson view
     - Switch sorting by days
