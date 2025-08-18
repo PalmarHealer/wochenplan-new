@@ -1,9 +1,6 @@
 name: Build and Publish Docker image (wochenplan)
 
 on:
-  push:
-    branches: [ "main", "master" ]
-    tags: [ "v*.*.*" ]
   workflow_dispatch:
 
 # This workflow builds the Docker image and publishes it to Docker Hub.
