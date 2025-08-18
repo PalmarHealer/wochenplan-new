@@ -3,11 +3,6 @@ set -euo pipefail
 
 APP_DIR=${APP_DIR:-/var/www/html}
 APP_USER="www-data"
-STAMP_FILE="$APP_DIR/.first_run_done"
-
-if [ -f "$STAMP_FILE" ]; then
-  exit 0
-fi
 
 # Wait for MariaDB if configured
 DB_HOST=${DB_HOST:-}
@@ -46,14 +41,6 @@ if [ -n "$REDIS_HOST" ]; then
   done
 fi
 
-
-# Trust repository path for all users and the runtime user to avoid Git dubious ownership
-su -s /bin/bash -c "git config --global --add safe.directory '$APP_DIR'" "$APP_USER" || true
-# Composer install (optimize autoloader)
-if [ -f "$APP_DIR/composer.json" ]; then
-  su -s /bin/bash -c "cd '$APP_DIR' && composer install --no-interaction --prefer-dist --optimize-autoloader" "$APP_USER"
-fi
-
 # Ensure SQLite database file if using sqlite
 if [ "${DB_CONNECTION}" = "sqlite" ]; then
   if [ -d "$APP_DIR/database" ]; then
@@ -79,5 +66,3 @@ su -s /bin/bash -c "cd '$APP_DIR' && php artisan storage:link" "$APP_USER" || tr
 chown -R www-data:www-data "$APP_DIR"
 chmod -R u+rwx "$APP_DIR"
 
-# Mark as done
-touch "$STAMP_FILE"

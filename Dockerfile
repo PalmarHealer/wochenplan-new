@@ -46,6 +46,9 @@ COPY --chown=www-data:www-data . ${APP_DIR}
 # Git add safe directory
 RUN git config --global --add safe.directory ${APP_DIR}
 
+# Run composer install
+RUN cd /var/www/html && composer install --no-interaction --prefer-dist --optimize-autoloader
+
 # Nginx configuration
 COPY docker/nginx/wochenplan.conf /etc/nginx/sites-available/wochenplan.conf
 RUN rm -f /etc/nginx/sites-enabled/default \
@@ -64,10 +67,10 @@ RUN sed -i 's/^PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/ss
 COPY docker/supervisor/supervisord.conf /etc/supervisor/supervisord.conf
 COPY docker/supervisor/programs/*.conf /etc/supervisor/conf.d/
 
-# Entrypoint and first-run scripts
+# Entrypoint and db_setup scripts
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-COPY docker/first-run.sh /usr/local/bin/first-run.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/first-run.sh
+COPY docker/db_setup.sh /usr/local/bin/db_setup.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/db_setup.sh
 
 EXPOSE 80 22
 

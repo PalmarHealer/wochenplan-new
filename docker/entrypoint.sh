@@ -43,8 +43,8 @@ chown -R www-data:www-data "$APP_DIR"
 chmod -R u+rwx "$APP_DIR"
 chmod 664 "$APP_DIR/.env"
 
-# Run first-run initialization if needed
-/usr/local/bin/first-run.sh || true
+# Run php commands
+/usr/local/bin/db_setup.sh || true
 
 # Start all services via supervisord
 exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
