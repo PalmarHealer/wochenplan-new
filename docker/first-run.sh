@@ -69,8 +69,8 @@ if ! grep -q '^APP_KEY=' "$APP_DIR/.env" || grep -q '^APP_KEY=$' "$APP_DIR/.env"
 fi
 
 # Run the README first-deploy commands
-su -s /bin/bash -c "cd '$APP_DIR' && php artisan migrate" "$APP_USER" || true
-su -s /bin/bash -c "cd '$APP_DIR' && php artisan db:seed" "$APP_USER" || true
+su -s /bin/bash -c "cd '$APP_DIR' && php artisan migrate --force" "$APP_USER" || true
+su -s /bin/bash -c "cd '$APP_DIR' && php artisan db:seed --force" "$APP_USER" || true
 
 # Storage link
 su -s /bin/bash -c "cd '$APP_DIR' && php artisan storage:link" "$APP_USER" || true
