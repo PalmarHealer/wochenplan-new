@@ -183,13 +183,11 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                     ->label('Zeit')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('assignedUsers')
+                Tables\Columns\TextColumn::make('assignedUsers.name')
                     ->label('Zugewiesen')
                     ->sortable()
                     ->searchable()
-                    ->formatStateUsing(fn ($state, $record) =>
-                    $record->assignedUsers->pluck('name')->join(', ')
-                    ),
+                    ->separator(', '),
                 Tables\Columns\ColorColumn::make('colors.color')
                     ->label('Farbe')
                     ->sortable(),

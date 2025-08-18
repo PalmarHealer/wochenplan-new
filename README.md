@@ -15,8 +15,6 @@
   - Update roles bulk
 - Day view 
   - Add Modal on repeating lessons
-- Bugs:
-  - 500 error when searching for templates
 
 ## Roadmap
 - Plugins
