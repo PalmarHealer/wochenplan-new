@@ -13,8 +13,6 @@
 - Admin users
   - Filter by no role
   - Update roles bulk
-- Day view 
-  - Add Modal on repeating lessons
 
 ## Roadmap
 - Plugins
