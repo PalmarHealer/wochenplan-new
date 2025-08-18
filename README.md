@@ -9,21 +9,26 @@
     - Redis 7
 - CI/CD: GitHub Actions workflow to build and publish Docker images to Docker Hub
 
+## Roadmap / TODO
+- Dashboard
+    - Lesson view
+    - Switch sorting by days
+- Admin users
+  - Filter by no role
+  - Update roles bulk
+- Plugins
+    - Laravel PDF
+- Students should be able to express interest in offered activities.
+
+
 ## Useful commands
 
 ### Make new user:
 Create new User: ``php artisan make:filament-user``
 
 Elevate a user to Admin ``php artisan shield:super-admin``
-## Project structure (high-level)
-- app/ … Laravel application code (models, controllers, Filament resources)
-- public/ … web root served by Nginx
-- database/ … migrations, seeders
-- resources/ … views, assets
-- docker/ … container configuration (Nginx, Supervisor, entrypoint, first-run)
-- Dockerfile … image recipe (Ubuntu + PHP 8.3 + Nginx + SSH)
-- docker-compose.yml … local development stack
 
+commands have to be executed in the app container (if running on docker).
 ## Quick start (Docker)
 Prerequisites: Docker and Docker Compose installed.
 
@@ -84,16 +89,6 @@ Ports (host → container):
 - php artisan serve (or use your local Nginx/Apache + PHP-FPM)
 
 Login with credentials configured in your .env (e.g., ADMIN_EMAIL and ADMIN_PASSWORD).
-
-## Roadmap / TODO
-- Dashboard
-    - Lesson view
-    - Switch sorting by days
-
-## Features for later
-- Plugins
-    - Laravel PDF
-- Students should be able to express interest in offered activities.
 
 ## CI/CD (Docker Hub)
 This repo includes .github/workflows/docker-publish.yml which builds and pushes the image to Docker Hub as wochenplan.
