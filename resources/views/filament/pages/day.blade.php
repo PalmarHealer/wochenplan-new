@@ -3,7 +3,8 @@
         id="page-content"
         x-data="fullscreenHandler()"
         x-init="init()"
-        class="bg-gray-50 text-gray-950 dark:bg-gray-950 dark:text-white">
+        class="bg-gray-50 text-gray-950 dark:bg-gray-950 dark:text-white"
+        wire:poll.2000ms="checkForUpdate">
 
         <div
             class="mb-2 gap-2 flex z-10"

@@ -2,6 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\Absence;
+use App\Models\Color;
+use App\Models\Layout;
+use App\Models\LayoutDeviation;
+use App\Models\Lesson;
+use App\Models\LessonTemplate;
+use App\Observers\TouchesLastSeenObserver;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
@@ -26,6 +33,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register model observers to update last_seen
+        Lesson::observe(TouchesLastSeenObserver::class);
+        LessonTemplate::observe(TouchesLastSeenObserver::class);
+        Absence::observe(TouchesLastSeenObserver::class);
+        Color::observe(TouchesLastSeenObserver::class);
+        // Layout-related changes should also trigger updates
+        if (class_exists(Layout::class)) {
+            Layout::observe(TouchesLastSeenObserver::class);
+        }
+        if (class_exists(LayoutDeviation::class)) {
+            LayoutDeviation::observe(TouchesLastSeenObserver::class);
+        }
+
+        // Keep existing runtime behavior
         if (App::runningInConsole()) {
             return;
         }

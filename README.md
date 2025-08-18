@@ -9,13 +9,16 @@
     - Redis 7
 - CI/CD: GitHub Actions workflow to build and publish Docker images to Docker Hub
 
-## Roadmap / TODO
-- Dashboard
-    - Lesson view
-    - Switch sorting by days
+## TODO
 - Admin users
   - Filter by no role
   - Update roles bulk
+- Day view 
+  - Add Modal on repeating lessons
+- Bugs:
+  - 500 error when searching for templates
+
+## Roadmap
 - Plugins
     - Laravel PDF
 - Docker

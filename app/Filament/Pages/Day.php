@@ -9,6 +9,7 @@ use App\Models\Lesson;
 use App\Models\LessonTemplate;
 use App\Services\LayoutService;
 use App\Services\LunchService;
+use App\Services\LastSeenService;
 use Carbon\Carbon;
 use Exception;
 use Filament\Pages\Page;
@@ -45,8 +46,12 @@ class Day extends Page
 
     public bool $canCreate = false;
 
+    public ?string $lastSeenLoadedAt = null;
+
     public function mount(): void
     {
+        $this->lastSeenLoadedAt = app(LastSeenService::class)->current();
+
         $rawDay = $this->figureOutDay();
 
         $this->day = $rawDay->toDateString();
@@ -168,6 +173,26 @@ class Day extends Page
         $this->urlDay = $newDate->format('d.m.Y');
 
         $this->mount();
+    }
+
+    public function checkForUpdate(): void
+    {
+        $current = app(LastSeenService::class)->current();
+
+        if ($this->lastSeenLoadedAt === null) {
+            $this->lastSeenLoadedAt = $current;
+            return;
+        }
+
+        try {
+            if (\Carbon\Carbon::parse($current)->gt(\Carbon\Carbon::parse($this->lastSeenLoadedAt))) {
+                $this->lastSeenLoadedAt = $current;
+                $this->mount();
+            }
+        } catch (\Throwable $e) {
+            $this->lastSeenLoadedAt = $current;
+            $this->mount();
+        }
     }
 
     private function figureOutDay(): ?Carbon
