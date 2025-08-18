@@ -18,6 +18,8 @@
   - Update roles bulk
 - Plugins
     - Laravel PDF
+- Docker
+  - Rework container to update codebase on restart. DB should not be overridden during the process
 - Students should be able to express interest in offered activities.
 
 
