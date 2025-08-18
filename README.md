@@ -10,15 +10,12 @@
 - CI/CD: GitHub Actions workflow to build and publish Docker images to Docker Hub
 
 ## TODO
-- Admin users
-  - Filter by no role
-  - Update roles bulk
+- Docker
+    - Rework container to update codebase on restart. DB should not be overridden during the process
 
 ## Roadmap
 - Plugins
     - Laravel PDF
-- Docker
-  - Rework container to update codebase on restart. DB should not be overridden during the process
 - Students should be able to express interest in offered activities.
 
 

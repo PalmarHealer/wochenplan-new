@@ -132,21 +132,67 @@ class UserResource extends Resource
             ->filters([
                 SelectFilter::make('role')
                     ->label('Rolle')
-                    ->options(
-                        Role::all()->pluck('name', 'id')->mapWithKeys(function ($name, $id) {
+                    ->options(function () {
+                        $options = Role::all()->pluck('name', 'id')->mapWithKeys(function ($name, $id) {
                             $formatted = collect(explode('_', $name))
                                 ->map(fn ($word) => ucfirst($word))
                                 ->implode(' ');
                             return [$id => $formatted];
-                        })->toArray()
-                    )
+                        })->toArray();
+
+                        // Add option to filter users without any role
+                        return ['none' => 'Ohne Rolle'] + $options;
+                    })
                     ->query(function ($query, $state) {
-                        if (empty($state['value'])) return $query;
-                        return $query->whereHas('roles', fn ($q) => $q->where('id', $state));
+                        // Normalize state across Filament versions
+                        $value = is_array($state) ? ($state['value'] ?? null) : $state;
+
+                        if (blank($value)) {
+                            return $query;
+                        }
+
+                        if ($value === 'none') {
+                            return $query->whereDoesntHave('roles');
+                        }
+
+                        return $query->whereHas('roles', fn ($q) => $q->where('id', $value));
                     })
                     ->native(false),
             ])
             ->bulkActions([
+                Tables\Actions\BulkAction::make('assignRoles')
+                    ->label('Berechtigung vergeben')
+                    ->icon('tabler-user-plus')
+                    ->form([
+                        Forms\Components\Select::make('roles')
+                            ->label('Rolle auswählen')
+                            ->preload()
+                            ->searchable()
+                            ->options(
+                                // Use role names as values for assignRole()
+                                Role::all()->pluck('name', 'name')->mapWithKeys(function ($name) {
+                                    $formatted = collect(explode('_', $name))
+                                        ->map(fn ($word) => ucfirst($word))
+                                        ->implode(' ');
+                                    return [$name => $formatted];
+                                })->toArray()
+                            ),
+                    ])
+                    ->action(function ($records, array $data, Tables\Actions\BulkAction $action) {
+                        $roles = $data['roles'] ?? [];
+
+                        if (empty($roles)) {
+                            foreach ($records as $user) {
+                                $user->roles()->detach();
+                            }
+                        } else {
+                            foreach ($records as $user) {
+                                $user->syncRoles($roles);
+                            }
+                        }
+
+                        $action->deselectRecordsAfterCompletion();
+                    }),
                 Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
