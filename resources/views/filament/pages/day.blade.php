@@ -1,7 +1,7 @@
 <x-filament::page>
     <div
         id="page-content"
-        x-data="fullscreenHandler()"
+        x-data="mount()"
         x-init="init()"
         class="bg-gray-50 text-gray-950 dark:bg-gray-950 dark:text-white"
         wire:poll.2000ms="checkForUpdate">
@@ -96,7 +96,13 @@
                                         @endif
                                     "
                                     @if ($lesson['url'] ?? false)
-                                        onclick="window.location='{{ $lesson['url'] }}'"
+
+                                        @if($canCreateTemplates && ($lesson['url_template'] ?? false))
+                                            @click="openScopeModal('{{ $lesson['url'] }}', '{{ $lesson['url_template'] }}')"
+                                        @else
+                                            onclick="window.location='{{ $lesson['url'] }}'"
+                                        @endif
+
                                     @endif
                                 >
                                     @if(isset($lesson))
@@ -124,8 +130,8 @@
                                     @else
                                         {!! $this->replacePlaceholders($cell['displayName'] ?? '', $this->day) !!}
                                     @endif
-
                                 </td>
+
                             @endif
                         @endforeach
                     </tr>
@@ -133,12 +139,50 @@
                 </tbody>
             </table>
         </div>
+
+        <x-filament::modal
+            id="select-scope"
+            icon="tabler-switch-horizontal"
+            icon-color="info"
+            alignment="center"
+        >
+            <x-slot name="heading">
+                Zeitraum auswählen
+            </x-slot>
+
+            <x-slot name="description">
+                Möchtest du alle Wochen oder nur den heutigen Tag bearbeiten.
+            </x-slot>
+
+            <div class="flex gap-3">
+                <x-filament::button
+                    tag="a"
+                    x-bind:href="modal.templateUrl"
+                    color="gray"
+                    icon="tabler-calendar-repeat"
+                    class="w-1/2">
+                    Alle Wochen
+                </x-filament::button>
+                <x-filament::button
+                    tag="a"
+                    x-bind:href="modal.singleUrl"
+                    icon="tabler-calendar-dot"
+                    class="w-1/2">
+                    Nur heute
+                </x-filament::button>
+
+            </div>
+        </x-filament::modal>
     </div>
 
     <script>
-        function fullscreenHandler() {
+        function mount() {
             return {
                 isFullscreen: false,
+                modal: {
+                    singleUrl: null,
+                    templateUrl: null,
+                },
                 init() {
                     document.addEventListener('fullscreenchange', () => {
                         this.isFullscreen = !!document.fullscreenElement;
@@ -151,6 +195,13 @@
                     } else {
                         document.exitFullscreen();
                     }
+                },
+                openScopeModal(singleUrl, templateUrl) {
+                    console.log(singleUrl);
+                    console.log(templateUrl);
+                    this.modal.singleUrl = singleUrl;
+                    this.modal.templateUrl = templateUrl;
+                    this.$dispatch('open-modal', { id: 'select-scope' });
                 }
             };
         }

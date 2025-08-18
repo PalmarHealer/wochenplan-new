@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Resources\LessonResource;
+use App\Filament\Resources\LessonTemplateResource;
 use App\Models\Absence;
 use App\Models\Color;
 use App\Models\Lesson;
@@ -46,6 +47,8 @@ class Day extends Page
 
     public bool $canCreate = false;
 
+    public bool $canCreateTemplates = false;
+
     public ?string $lastSeenLoadedAt = null;
 
     public function mount(): void
@@ -58,7 +61,9 @@ class Day extends Page
 
         $this->lunch = app(LunchService::class)->getLunch($this->day);
 
-        $this->canCreate = auth()->user()->can('view_lesson') || auth()->user()->can('view_any_lesson');
+        $this->canCreate = auth()->user()->can('create_lesson') || auth()->user()->can('update_lesson');
+
+        $this->canCreateTemplates = auth()->user()->can('update_lesson::template');
 
         $this->dayLayout = app(LayoutService::class)->getLayoutForDate($this->day);
 
@@ -89,6 +94,7 @@ class Day extends Page
             $array['assigned_users'] = $template->assignedUsers->pluck('display_name', 'id')->toArray();;
             $user = auth()->user();
             if (($user->can('create_lesson') && $template->assignedUsers()->where('user_id', $user->id)->exists()) || $user->can('view_any_lesson')) {
+                $array['url_template'] = LessonTemplateResource::getUrl('edit', ['record' => $template->id]);
                 $array['url'] = LessonResource::getUrl('create', ['copy' => $template->id, 'date' => $this->day]);
             }
             return [$key => $array];
