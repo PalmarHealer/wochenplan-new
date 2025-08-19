@@ -127,16 +127,6 @@ class LessonResource extends Resource implements HasShieldPermissions
                             ]),
                     ]),
                 Section::make([
-                    LayoutSelector::make('layout')
-                        ->default($defaults['layout'] ?? '')
-                        ->label('Slot')
-                        ->columnSpanFull()
-                        ->required()
-                        ->layout(fn(Get $get) => app(LayoutService::class)->getLayoutForDate($get('date') ?? now()->toDateString()))
-                        ->reactive()
-                        ->colors($colors),
-                ]),
-                Section::make([
                     Forms\Components\DatePicker::make('date')
                         ->default(function() use ($defaults) {
                             $date = isset($defaults['date']) ?
@@ -175,6 +165,16 @@ class LessonResource extends Resource implements HasShieldPermissions
                         ->native(false)
                         ->preload(),
                 ])->columns(2),
+                Section::make([
+                    LayoutSelector::make('layout')
+                        ->default($defaults['layout'] ?? '')
+                        ->label('Slot')
+                        ->columnSpanFull()
+                        ->required()
+                        ->layout(fn(Get $get) => app(LayoutService::class)->getLayoutForDate($get('date') ?? now()->toDateString()))
+                        ->reactive()
+                        ->colors($colors),
+                ]),
                 Section::make([
                     Forms\Components\Select::make('assignedUsers')
                         ->default($defaults['assignedUsers'] ?? '')
