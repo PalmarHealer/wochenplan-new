@@ -78,15 +78,6 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                             ]),
                     ]),
                 Section::make([
-                    LayoutSelector::make('layout')
-                        ->label('Slot')
-                        ->columnSpanFull()
-                        ->required()
-                        ->layout(fn(Get $get) => app(LayoutService::class)->getLayoutByWeekday((int) ($get('weekday') ?? 6)))
-                        ->reactive()
-                        ->colors($colors),
-                ]),
-                Section::make([
                     Forms\Components\Select::make('weekday')
                         ->label('Tag')
                         ->native(false)
@@ -105,6 +96,15 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                         ->native(false)
                         ->preload(),
                 ])->columns(2),
+                Section::make([
+                    LayoutSelector::make('layout')
+                        ->label('Slot')
+                        ->columnSpanFull()
+                        ->required()
+                        ->layout(fn(Get $get) => app(LayoutService::class)->getLayoutByWeekday((int) ($get('weekday') ?? 6)))
+                        ->reactive()
+                        ->colors($colors),
+                ]),
                 Section::make([
                     Forms\Components\Select::make('assignedUsers')
                         ->label('Personen')
