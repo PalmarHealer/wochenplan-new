@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\AbsenceResource\Pages;
 
 use App\Filament\Resources\AbsenceResource;
+use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
@@ -21,10 +22,21 @@ class EditAbsence extends EditRecord
     {
         $data['updated_by'] = auth()->id();
 
-        $parts = explode(" - ", $data['date']);
+        $parts = explode(" - ", $data['date'] ?? '');
 
-        $data['start'] = $parts[0];
-        $data['end'] = $parts[1];
+        // Convert d.m.Y -> Y-m-d for DB storage
+        if (count($parts) === 2) {
+            try {
+                $data['start'] = Carbon::createFromFormat('d.m.Y', trim($parts[0]))->toDateString();
+            } catch (\Throwable) {
+                $data['start'] = null;
+            }
+            try {
+                $data['end'] = Carbon::createFromFormat('d.m.Y', trim($parts[1]))->toDateString();
+            } catch (\Throwable) {
+                $data['end'] = null;
+            }
+        }
 
         if (! auth()->user()->can('view_any_absence')) {
             $data['user_id'] = auth()->id();
@@ -35,8 +47,18 @@ class EditAbsence extends EditRecord
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        if (isset($data['start'], $data['end'])) {
-            $data['date'] = $data['start'] . ' - ' . $data['end'];
+        if (!empty($data['start']) && !empty($data['end'])) {
+            try {
+                $start = Carbon::parse($data['start'])->format('d.m.Y');
+            } catch (\Throwable) {
+                $start = (string) $data['start'];
+            }
+            try {
+                $end = Carbon::parse($data['end'])->format('d.m.Y');
+            } catch (\Throwable) {
+                $end = (string) $data['end'];
+            }
+            $data['date'] = $start . ' - ' . $end;
         }
 
         return $data;
