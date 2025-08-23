@@ -50,8 +50,8 @@ class Absence extends Model
     protected function casts(): array
     {
         return [
-            'start' => 'date:d.m.Y',
-            'end' => 'date:d.m.Y',
+            'start' => 'date',
+            'end' => 'date',
         ];
     }
 }
