@@ -90,11 +90,6 @@ class LayoutResource extends Resource
                             ->colors($colors),
                     ])->columns(3),
                 Section::make([
-                    Forms\Components\TextInput::make('notes')
-                        ->columnSpanFull()
-                        ->label('Notizen'),
-                ]),
-                Section::make([
                     Forms\Components\Select::make('weekdays')
                         ->label('Gültig für')
                         ->options([
@@ -107,6 +102,11 @@ class LayoutResource extends Resource
                         ->native(false)
                         ->multiple()
                         ->nullable(),
+                ]),
+                Section::make([
+                    Forms\Components\TextInput::make('notes')
+                        ->columnSpanFull()
+                        ->label('Notizen'),
                 ]),
             ]);
     }
