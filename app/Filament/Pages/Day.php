@@ -94,7 +94,7 @@ class Day extends Page
             $array['assigned_users'] = $template->assignedUsers->pluck('display_name', 'id')->toArray();;
             $user = auth()->user();
             if (($user->can('create_lesson') && $template->assignedUsers()->where('user_id', $user->id)->exists()) || $user->can('view_any_lesson')) {
-                $array['url_template'] = LessonTemplateResource::getUrl('edit', ['record' => $template->id]);
+                $array['url_template'] = LessonTemplateResource::getUrl('edit', ['record' => $template->id, 'date' => $this->day]);
                 $array['url'] = LessonResource::getUrl('create', ['copy' => $template->id, 'date' => $this->day]);
             }
             return [$key => $array];

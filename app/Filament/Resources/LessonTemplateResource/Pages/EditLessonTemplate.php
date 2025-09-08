@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\LessonTemplateResource\Pages;
 
+use App\Filament\Pages\Day;
 use App\Filament\Resources\LessonTemplateResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Carbon;
 
 class EditLessonTemplate extends EditRecord
 {
@@ -44,6 +46,11 @@ class EditLessonTemplate extends EditRecord
 
     protected function getRedirectUrl(): string
     {
+        if (isset($this->form->getState()['origin_day'])) {
+            $date = Carbon::parse($this->form->getState()['origin_day'])->format('d.m.Y');
+            return Day::getUrl(['date' => $date]);
+        }
+
         return $this->getResource()::getUrl('index');
     }
 }

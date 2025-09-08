@@ -42,9 +42,14 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
         $colors = Color::all()->pluck('color', 'id')->toArray();
         $colors['default'] = 'rgba(0, 0, 0, 0.10)';
 
+        $origin_day = request()->input('date') ?? null;
 
         return $form
             ->schema([
+                Forms\Components\Hidden::make('origin_day')
+                    ->afterStateHydrated(function (Forms\Components\Field $component) use ($origin_day) {
+                        $component->state($origin_day);
+                    }),
                 Section::make('Angebot details')
                     ->schema([
                         CustomRichEditor::make('name')
