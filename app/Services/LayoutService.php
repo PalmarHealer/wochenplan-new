@@ -14,12 +14,12 @@ class LayoutService
      */
     public function getLayoutForDate(string|Carbon $date): array
     {
-        $carbon = $date instanceof Carbon ? $date : Carbon::parse($date);
+        $carbonDate = $date instanceof Carbon ? $date : Carbon::parse($date);
 
         // 1) Check for a LayoutDeviation covering this date; newest wins on overlaps
         $deviation = LayoutDeviation::query()
-            ->where('start', '<=', $carbon->format('d.m.Y'))
-            ->where('end', '>=', $carbon->format('d.m.Y'))
+            ->whereDate('start', '<=', $carbonDate)
+            ->whereDate('end', '>=', $carbonDate)
             ->orderByDesc('updated_at')
             ->orderByDesc('id')
             ->with('layout')
@@ -35,7 +35,7 @@ class LayoutService
         }
 
         // 2) Fall back to weekday-based layout
-        $weekday = (int) $carbon->format('N');
+        $weekday = (int) $carbonDate->format('N');
         return $this->getLayoutByWeekday($weekday);
     }
 

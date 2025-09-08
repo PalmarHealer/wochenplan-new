@@ -15,14 +15,6 @@ class LayoutDeviation extends Model
         'updated_by',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'start' => 'date:d.m.Y',
-            'end' => 'date:d.m.Y',
-        ];
-    }
-
     public function layout(): BelongsTo
     {
         return $this->belongsTo(Layout::class);
@@ -36,5 +28,13 @@ class LayoutDeviation extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'start' => 'date',
+            'end' => 'date',
+        ];
     }
 }
