@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\AbsenceResource\Pages;
 
 use App\Filament\Resources\AbsenceResource;
+use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
@@ -36,7 +37,7 @@ class EditAbsence extends EditRecord
     protected function mutateFormDataBeforeFill(array $data): array
     {
         if (isset($data['start'], $data['end'])) {
-            $data['date'] = $data['start'] . ' - ' . $data['end'];
+            $data['date'] = Carbon::parse($data['start'])->format('d.m.Y') .' - ' . Carbon::parse($data['end'])->format('d.m.Y');
         }
 
         return $data;

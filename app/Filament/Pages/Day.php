@@ -117,8 +117,8 @@ class Day extends Page
         $this->lessons = $merged->values()->toArray();
 
         $rawAbsences = Absence::with(['user'])
-            ->where('start', '<=', $rawDay->format('d.m.Y'))
-            ->where('end', '>=', $rawDay->format('d.m.Y'))
+            ->whereDate('start', '<=', $rawDay)
+            ->whereDate('end', '>=', $rawDay)
             ->get();
 
         $this->absences = array_map(fn($entry) => [
