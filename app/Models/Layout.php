@@ -6,11 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Layout extends Model
 {
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'description',
@@ -18,31 +13,12 @@ class Layout extends Model
         'layout',
         'weekdays',
     ];
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [];
-
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'weekdays' => 'array',
         ];
     }
-
-    /**
-     * Ensure only one layout owns a given weekday (1-5) at a time.
-     * - Sanitize incoming weekdays on saving.
-     * - After saving, remove overlapping weekdays from other layouts quietly.
-     */
     protected static function booted(): void
     {
         static::saving(function (Layout $layout) {
