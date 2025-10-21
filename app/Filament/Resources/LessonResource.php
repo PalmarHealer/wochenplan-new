@@ -221,42 +221,52 @@ class LessonResource extends Resource implements HasShieldPermissions
                     ->label('Name')
                     ->sortable()
                     ->searchable()
-                    ->html(),
+                    ->html()
+                    ->limit(20),
                 Tables\Columns\TextColumn::make('description')
                     ->label('Beschreibung')
                     ->sortable()
                     ->searchable()
-                    ->html(),
+                    ->html()
+                    ->limit(50)
+                    ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('notes')
                     ->label('Notizen')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('date')
                     ->label('Datum')
                     ->sortable()
                     ->date("d.m.Y")
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('rooms.name')
                     ->label('Raum')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('times.name')
                     ->label('Zeit')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('assignedUsers.name')
                     ->label('Zugewiesen')
                     ->sortable()
                     ->searchable()
-                    ->separator(', '),
+                    ->separator(', ')
+                    ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\ColorColumn::make('colors.color')
                     ->label('Farbe')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\IconColumn::make('disabled')
                     ->label('Aktiviert')
                     ->sortable()
                     ->getStateUsing(fn ($record) => !$record->disabled)
-                    ->boolean(),
+                    ->boolean()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('creator.name')
                     ->label('Erstellt von')
                     ->sortable()
