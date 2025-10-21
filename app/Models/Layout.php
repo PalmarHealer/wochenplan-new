@@ -12,6 +12,7 @@ class Layout extends Model
         'notes',
         'layout',
         'weekdays',
+        'text_size',
     ];
     protected function casts(): array
     {

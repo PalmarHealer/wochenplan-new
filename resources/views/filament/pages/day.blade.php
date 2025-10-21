@@ -1,4 +1,10 @@
 <x-filament::page>
+    <style>
+        body {
+            font-size: {{ $textSize }}% !important;
+        }
+    </style>
+
     <div
         id="page-content"
         x-data="mount()"

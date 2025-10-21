@@ -16,8 +16,9 @@ return new class extends Migration
             $table->date('start');
             $table->date('end');
             $table->foreignId('layout_id')->constrained('layouts')->cascadeOnDelete();
-            $table->unsignedBigInteger('created_by')->nullable();
-            $table->unsignedBigInteger('updated_by')->nullable();
+
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
     }

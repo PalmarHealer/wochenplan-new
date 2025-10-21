@@ -46,6 +46,14 @@ class LayoutResource extends Resource
                             ->label('Name'),
                         Forms\Components\TextInput::make('description')
                             ->label('Beschreibung'),
+                        Forms\Components\TextInput::make('text_size')
+                            ->label('Textgröße')
+                            ->numeric()
+                            ->default(100)
+                            ->minValue(0)
+                            ->step(1)
+                            ->suffix('%')
+                            ->required(),
                     ]),
                 Section::make('Layout')
                     ->schema([

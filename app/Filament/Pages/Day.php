@@ -40,6 +40,8 @@ class Day extends Page
 
     public string $lunch = "";
 
+    public float $textSize = 100.0;
+
     #[\Livewire\Attributes\Url(as: 'date')]
     public ?string $urlDay = null;
 
@@ -65,7 +67,11 @@ class Day extends Page
 
         $this->canCreateTemplates = auth()->user()->can('update_lesson::template');
 
-        $this->dayLayout = app(LayoutService::class)->getLayoutForDate($this->day);
+        $layoutService = app(LayoutService::class);
+        $layout = $layoutService->getLayoutWithModelForDate($this->day);
+
+        $this->dayLayout = $layout['data'];
+        $this->textSize = $layout['model']?->text_size ?? 100.0;
 
         $this->colors = Color::all()->pluck('color', 'id')->toArray();
 

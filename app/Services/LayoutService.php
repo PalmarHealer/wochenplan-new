@@ -9,10 +9,10 @@ use Carbon\Carbon;
 class LayoutService
 {
     /**
-     * Return the layout array for a given date (Y-m-d|string|Carbon) by resolving its weekday.
-     * ISO-8601 weekday: 1 = Monday ... 7 = Sunday. We only consider 1-5.
+     * Return both the layout array and the Layout model for a given date in a single query.
+     * Returns ['data' => array, 'model' => Layout|null]
      */
-    public function getLayoutForDate(string|Carbon $date): array
+    public function getLayoutWithModelForDate(string|Carbon $date): array
     {
         $carbonDate = $date instanceof Carbon ? $date : Carbon::parse($date);
 
@@ -25,18 +25,49 @@ class LayoutService
             ->with('layout')
             ->first();
 
-        if ($deviation && $deviation->layout && ! empty($deviation->layout->layout)) {
-            $decoded = is_array($deviation->layout->layout)
-                ? $deviation->layout->layout
-                : json_decode($deviation->layout->layout, true);
-            if (is_array($decoded)) {
-                return $decoded;
-            }
+        if ($deviation && $deviation->layout) {
+            $layoutData = $deviation->layout->layout;
+            $decoded = is_array($layoutData) ? $layoutData : json_decode($layoutData, true);
+
+            return [
+                'data' => is_array($decoded) ? $decoded : [],
+                'model' => $deviation->layout,
+            ];
         }
 
         // 2) Fall back to weekday-based layout
         $weekday = (int) $carbonDate->format('N');
-        return $this->getLayoutByWeekday($weekday);
+
+        if ($weekday < 1 || $weekday > 5) {
+            return ['data' => [], 'model' => null];
+        }
+
+        $layoutModel = Layout::query()
+            ->whereJsonContains('weekdays', $weekday)
+            ->orderByDesc('updated_at')
+            ->first();
+
+        if (!$layoutModel) {
+            return ['data' => [], 'model' => null];
+        }
+
+        $decoded = is_array($layoutModel->layout)
+            ? $layoutModel->layout
+            : json_decode($layoutModel->layout, true);
+
+        return [
+            'data' => is_array($decoded) ? $decoded : [],
+            'model' => $layoutModel,
+        ];
+    }
+
+    /**
+     * Return the layout array for a given date (Y-m-d|string|Carbon) by resolving its weekday.
+     * ISO-8601 weekday: 1 = Monday ... 7 = Sunday. We only consider 1-5.
+     */
+    public function getLayoutForDate(string|Carbon $date): array
+    {
+        return $this->getLayoutWithModelForDate($date)['data'];
     }
 
     /**
@@ -80,5 +111,13 @@ class LayoutService
             ->whereJsonContains('weekdays', $weekday)
             ->orderByDesc('updated_at')
             ->first();
+    }
+
+    /**
+     * Get the Layout model instance for a given date, checking deviations first.
+     */
+    public function getLayoutModelForDate(string|Carbon $date): ?Layout
+    {
+        return $this->getLayoutWithModelForDate($date)['model'];
     }
 }
