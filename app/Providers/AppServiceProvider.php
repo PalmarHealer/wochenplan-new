@@ -4,10 +4,14 @@ namespace App\Providers;
 
 use App\Models\Absence;
 use App\Models\Color;
+use App\Models\DayPdf;
 use App\Models\Layout;
 use App\Models\LayoutDeviation;
 use App\Models\Lesson;
 use App\Models\LessonTemplate;
+use App\Observers\AbsenceObserver;
+use App\Observers\LessonObserver;
+use App\Observers\LessonTemplateObserver;
 use App\Observers\TouchesLastSeenObserver;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Redirect;
@@ -38,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
         LessonTemplate::observe(TouchesLastSeenObserver::class);
         Absence::observe(TouchesLastSeenObserver::class);
         Color::observe(TouchesLastSeenObserver::class);
+        DayPdf::observe(TouchesLastSeenObserver::class);
         // Layout-related changes should also trigger updates
         if (class_exists(Layout::class)) {
             Layout::observe(TouchesLastSeenObserver::class);
@@ -45,6 +50,11 @@ class AppServiceProvider extends ServiceProvider
         if (class_exists(LayoutDeviation::class)) {
             LayoutDeviation::observe(TouchesLastSeenObserver::class);
         }
+
+        // Register observers to mark PDFs as outdated
+        Lesson::observe(LessonObserver::class);
+        LessonTemplate::observe(LessonTemplateObserver::class);
+        Absence::observe(AbsenceObserver::class);
 
         // Keep existing runtime behavior
         if (App::runningInConsole()) {

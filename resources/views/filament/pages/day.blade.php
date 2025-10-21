@@ -65,6 +65,24 @@
                 x-show="isFullscreen"
                 wire:click="changeDay(1)"
             />
+
+            <x-filament::button
+                icon="tabler-download"
+                icon-position="after"
+                x-show="!isFullscreen"
+                wire:click="downloadPdf"
+                color="success"
+            >
+                PDF herunterladen
+            </x-filament::button>
+            <x-filament::icon-button
+                icon="tabler-download"
+                size="xl"
+                label="PDF herunterladen"
+                x-show="isFullscreen"
+                wire:click="downloadPdf"
+                color="success"
+            />
         </div>
 
         <div class="overflow-x-auto h-full">
