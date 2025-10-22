@@ -115,7 +115,7 @@
                                         @if($lesson['disabled'])
                                             <small>
                                                 <s>
-                                                    @foreach($lesson['assigned_users'] as $userName)
+                                                    @foreach($lesson['assigned_users'] as $userId => $userName)
                                                         {{ $userName }}@if(!$loop->last), @endif
                                                     @endforeach
                                                 </s>
@@ -124,14 +124,30 @@
                                             <strong><s>{!! $lesson['name'] ?? '' !!}</s></strong>
                                             <s>{!! $lesson['description'] ?? '' !!}</s>
                                         @else
+                                            @php
+                                                $absentUserIds = $lesson['absent_user_ids'] ?? [];
+                                                $allUsersAbsent = !empty($lesson['assigned_users']) &&
+                                                    count(array_intersect(array_keys($lesson['assigned_users']), $absentUserIds)) === count($lesson['assigned_users']);
+                                            @endphp
+
                                             <small>
-                                                @foreach($lesson['assigned_users'] as $userName)
-                                                    {{ $userName }}@if(!$loop->last), @endif
+                                                @foreach($lesson['assigned_users'] as $userId => $userName)
+                                                    @if(in_array($userId, $absentUserIds))
+                                                        <s>{{ $userName }}</s>
+                                                    @else
+                                                        {{ $userName }}
+                                                    @endif
+                                                    @if(!$loop->last), @endif
                                                 @endforeach
                                             </small>
 
-                                            <strong>{!! $lesson['name'] ?? '' !!}</strong>
-                                            {!! $lesson['description'] ?? '' !!}
+                                            @if($allUsersAbsent)
+                                                <strong><s>{!! $lesson['name'] ?? '' !!}</s></strong>
+                                                <s>{!! $lesson['description'] ?? '' !!}</s>
+                                            @else
+                                                <strong>{!! $lesson['name'] ?? '' !!}</strong>
+                                                {!! $lesson['description'] ?? '' !!}
+                                            @endif
                                         @endif
                                     @else
                                         {!! $this->replacePlaceholders($cell['displayName'] ?? '', $this->day) !!}
