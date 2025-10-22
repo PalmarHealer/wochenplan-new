@@ -179,11 +179,26 @@ class LessonResource extends Resource implements HasShieldPermissions
                     Forms\Components\Select::make('assignedUsers')
                         ->default($defaults['assignedUsers'] ?? '')
                         ->label('Personen')
-                        ->relationship('assignedUsers', 'name')
+                        ->relationship(
+                            name: 'assignedUsers',
+                            titleAttribute: 'name',
+                            modifyQueryUsing: function ($query, Get $get) {
+                                $query->whereDoesntHave('roles', function ($roleQuery) {
+                                    $roleQuery->where('name', 'super_admin');
+                                });
+                                if (!$get('show_all_users')) $query->whereHas('roles');
+                                return $query;
+                            }
+                        )
                         ->multiple()
                         ->preload()
                         ->disabled(! auth()->user()->can('view_any_lesson'))
                         ->visible(auth()->user()->can('view_any_lesson')),
+                    Forms\Components\Toggle::make('show_all_users')
+                        ->label('Alle Benutzer anzeigen')
+                        ->default(false)
+                        ->live()
+                        ->columnSpanFull(),
                 ])->visible(auth()->user()->can('view_any_lesson')),
                 Section::make([
                     Forms\Components\TextInput::make('notes')
