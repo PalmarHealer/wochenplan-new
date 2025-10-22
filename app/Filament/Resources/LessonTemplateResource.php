@@ -129,7 +129,7 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                         ->disabled(! auth()->user()->can('view_any_lesson::template'))
                         ->visible(auth()->user()->can('view_any_lesson::template')),
                     Forms\Components\Toggle::make('show_all_users')
-                        ->label('Alle Benutzer anzeigen')
+                        ->label('Alle Benutzer erlauben')
                         ->default(false)
                         ->live()
                         ->columnSpanFull(),
