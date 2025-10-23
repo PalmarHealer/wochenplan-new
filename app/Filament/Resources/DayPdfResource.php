@@ -27,7 +27,9 @@ class DayPdfResource extends Resource implements HasShieldPermissions
 
     protected static ?string $navigationLabel = "PDF-Exporte";
 
-    protected static ?int $navigationSort = 10;
+    protected static ?string $navigationGroup = 'Administration';
+
+    protected static ?int $navigationSort = 7;
 
     protected static ?string $label = 'PDF-Export';
 
@@ -40,15 +42,29 @@ class DayPdfResource extends Resource implements HasShieldPermissions
     {
         return $form
             ->schema([
-                Forms\Components\DatePicker::make('date')
-                    ->label('Datum')
-                    ->native(false)
-                    ->displayFormat('d.m.Y')
-                    ->format('Y-m-d')
-                    ->required(),
-                Forms\Components\Placeholder::make('info')
-                    ->label('Hinweis')
-                    ->content('Das PDF wird automatisch beim Speichern generiert.'),
+                Forms\Components\Section::make([
+                    Forms\Components\DatePicker::make('date')
+                        ->label('Datum')
+                        ->native(false)
+                        ->displayFormat('d.m.Y')
+                        ->format('Y-m-d')
+                        ->default(date('Y-m-d'))
+                        ->disabledDates(function () {
+                            $disabledDates = [];
+                            $start = now()->startOfYear();
+                            $end = now()->addYear()->endOfYear();
+
+                            while ($start <= $end) {
+                                if ($start->isWeekend()) {
+                                    $disabledDates[] = $start->format('Y-m-d');
+                                }
+                                $start->addDay();
+                            }
+
+                            return $disabledDates;
+                        })
+                        ->required(),
+                ])
             ]);
     }
 
@@ -61,18 +77,18 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                     ->date('d.m.Y')
                     ->sortable()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('creator.name')
+                    ->label('Erstellt von')
+                    ->sortable()
+                    ->toggleable(),
                 Tables\Columns\IconColumn::make('is_outdated')
-                    ->label('Veraltet')
+                    ->label('Aktuell')
                     ->boolean()
                     ->trueIcon('heroicon-o-x-circle')
                     ->falseIcon('heroicon-o-check-circle')
                     ->trueColor('danger')
                     ->falseColor('success')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('creator.name')
-                    ->label('Erstellt von')
-                    ->sortable()
-                    ->toggleable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
                     ->dateTime('d.m.Y H:i')
@@ -94,70 +110,99 @@ class DayPdfResource extends Resource implements HasShieldPermissions
             ])
             ->actions([
                 Tables\Actions\Action::make('download')
-                    ->label('Herunterladen')
-                    ->icon('heroicon-o-arrow-down-tray')
+                    ->label('')
+                    ->icon('tabler-download')
+                    ->iconButton()
                     ->action(function (DayPdf $record) {
                         $pdfService = app(PdfExportService::class);
                         $base64Content = $pdfService->getOrGeneratePdf($record->date);
                         $binaryContent = base64_decode($base64Content);
 
+                        $filename = $record->date->locale(config('app.locale'))->translatedFormat('l, d.m.Y') . '.pdf';
+
                         return Response::streamDownload(function () use ($binaryContent) {
                             echo $binaryContent;
-                        }, 'tagesplan-' . $record->date . '.pdf', ['Content-Type' => 'application/pdf']);
+                        }, $filename, ['Content-Type' => 'application/pdf']);
                     }),
-                Tables\Actions\Action::make('regenerate')
+            ])
+            ->recordAction('download')
+            ->recordUrl(null)
+            ->bulkActions([
+                Tables\Actions\BulkAction::make('download')
+                    ->label('Herunterladen')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->action(function (Collection $records) {
+                        $pdfService = app(PdfExportService::class);
+
+                        // If only one record, download as PDF directly
+                        if ($records->count() === 1) {
+                            $record = $records->first();
+                            $base64Content = $pdfService->getOrGeneratePdf($record->date);
+                            $binaryContent = base64_decode($base64Content);
+
+                            $filename = $record->date->locale(config('app.locale'))->translatedFormat('l, d.m.Y') . '.pdf';
+
+                            return Response::streamDownload(function () use ($binaryContent) {
+                                echo $binaryContent;
+                            }, $filename, ['Content-Type' => 'application/pdf']);
+                        }
+
+                        // Multiple records - create ZIP
+                        $sortedRecords = $records->sortBy('date');
+                        $firstDate = $sortedRecords->first()->date->format('d.m.Y');
+                        $lastDate = $sortedRecords->last()->date->format('d.m.Y');
+
+                        $zipFileName = 'Tagespläne ' . $firstDate . '-' . $lastDate . '.zip';
+
+                        $zipPath = storage_path('app/temp/' . $zipFileName);
+
+                        if (!file_exists(storage_path('app/temp'))) {
+                            mkdir(storage_path('app/temp'), 0755, true);
+                        }
+
+                        $zip = new ZipArchive();
+                        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+                            foreach ($sortedRecords as $record) {
+                                $base64Content = $pdfService->getOrGeneratePdf($record->date);
+                                $binaryContent = base64_decode($base64Content);
+
+                                $filename = $record->date->locale(config('app.locale'))->translatedFormat('l, d.m.Y') . '.pdf';
+
+                                $zip->addFromString($filename, $binaryContent);
+                            }
+                            $zip->close();
+
+                            return Response::download($zipPath, $zipFileName)->deleteFileAfterSend(true);
+                        }
+
+                        Notification::make()
+                            ->title('Fehler beim Erstellen der ZIP-Datei')
+                            ->danger()
+                            ->send();
+                    }),
+                Tables\Actions\BulkAction::make('regenerate')
                     ->label('Neu generieren')
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
                     ->requiresConfirmation()
-                    ->action(function (DayPdf $record) {
-                        $record->is_outdated = true;
-                        $record->save();
-
+                    ->modalHeading('PDFs neu generieren')
+                    ->modalDescription('Möchten Sie die ausgewählten PDFs wirklich neu generieren?')
+                    ->action(function (Collection $records) {
                         $pdfService = app(PdfExportService::class);
-                        $pdfService->getOrGeneratePdf($record->date);
+
+                        foreach ($records as $record) {
+                            $record->is_outdated = true;
+                            $record->save();
+                            $pdfService->getOrGeneratePdf($record->date);
+                        }
 
                         Notification::make()
-                            ->title('PDF wurde neu generiert')
+                            ->title(count($records) . ' PDF(s) wurden neu generiert')
                             ->success()
                             ->send();
-                    }),
-                Tables\Actions\DeleteAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\BulkAction::make('download_zip')
-                        ->label('Als ZIP herunterladen')
-                        ->icon('heroicon-o-archive-box-arrow-down')
-                        ->action(function (Collection $records) {
-                            $pdfService = app(PdfExportService::class);
-                            $zipFileName = 'tagesplaene-' . now()->format('Y-m-d-His') . '.zip';
-                            $zipPath = storage_path('app/temp/' . $zipFileName);
-
-                            // Create temp directory if it doesn't exist
-                            if (!file_exists(storage_path('app/temp'))) {
-                                mkdir(storage_path('app/temp'), 0755, true);
-                            }
-
-                            $zip = new ZipArchive();
-                            if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
-                                foreach ($records as $record) {
-                                    $base64Content = $pdfService->getOrGeneratePdf($record->date);
-                                    $binaryContent = base64_decode($base64Content);
-                                    $zip->addFromString('tagesplan-' . $record->date . '.pdf', $binaryContent);
-                                }
-                                $zip->close();
-
-                                return Response::download($zipPath, $zipFileName)->deleteFileAfterSend(true);
-                            }
-
-                            Notification::make()
-                                ->title('Fehler beim Erstellen der ZIP-Datei')
-                                ->danger()
-                                ->send();
-                        }),
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                    })
+                    ->deselectRecordsAfterCompletion(),
+                Tables\Actions\DeleteBulkAction::make(),
             ])
             ->defaultSort('date', 'desc');
     }

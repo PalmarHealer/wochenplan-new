@@ -23,7 +23,7 @@ class PdfExportService
         $dateString = $date->format('Y-m-d');
 
         // Check if PDF exists and is not outdated
-        $dayPdf = DayPdf::where('date', $dateString)->first();
+        $dayPdf = DayPdf::whereDate('date', $dateString)->first();
 
         if ($dayPdf && !$dayPdf->is_outdated) {
             return $dayPdf->pdf_content;
@@ -130,7 +130,8 @@ class PdfExportService
             'absences' => $absences,
         ])
             ->format('a4')
-            ->margins(10, 10, 10, 10);
+            ->landscape()
+            ->margins(2, 2, 2, 2);
 
         // Save to a temporary file and read the contents
         $tempPath = storage_path('app/temp/pdf-' . uniqid() . '.pdf');
@@ -154,7 +155,7 @@ class PdfExportService
     {
         $dateString = $date instanceof Carbon ? $date->format('Y-m-d') : $date;
 
-        DayPdf::where('date', $dateString)->update(['is_outdated' => true]);
+        DayPdf::whereDate('date', $dateString)->update(['is_outdated' => true]);
     }
 
     /**
@@ -164,6 +165,6 @@ class PdfExportService
     {
         $dateString = $date instanceof Carbon ? $date->format('Y-m-d') : $date;
 
-        return DayPdf::where('date', $dateString)->delete() > 0;
+        return DayPdf::whereDate('date', $dateString)->delete() > 0;
     }
 }
