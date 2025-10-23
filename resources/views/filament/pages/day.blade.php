@@ -33,6 +33,14 @@
                 x-show="isFullscreen"
                 @click="toggleFullscreen"
             />
+            <x-filament::button
+                icon="tabler-download"
+                icon-position="after"
+                x-show="!isFullscreen"
+                wire:click="downloadPdf"
+            >
+                PDF herunterladen
+            </x-filament::button>
 
             <x-filament::button
                 icon="tabler-arrow-narrow-left"
@@ -49,7 +57,6 @@
                 x-show="isFullscreen"
                 wire:click="changeDay(-1)"
             />
-
             <x-filament::button
                 icon="tabler-arrow-narrow-right"
                 icon-position="after"
@@ -64,24 +71,6 @@
                 label="Nächster Tag"
                 x-show="isFullscreen"
                 wire:click="changeDay(1)"
-            />
-
-            <x-filament::button
-                icon="tabler-download"
-                icon-position="after"
-                x-show="!isFullscreen"
-                wire:click="downloadPdf"
-                color="success"
-            >
-                PDF herunterladen
-            </x-filament::button>
-            <x-filament::icon-button
-                icon="tabler-download"
-                size="xl"
-                label="PDF herunterladen"
-                x-show="isFullscreen"
-                wire:click="downloadPdf"
-                color="success"
             />
         </div>
 

@@ -238,9 +238,12 @@ class Day extends Page
         $base64Content = $pdfService->getOrGeneratePdf($this->day);
         $binaryContent = base64_decode($base64Content);
 
+        $date = Carbon::parse($this->day);
+        $filename = $date->locale(config('app.locale'))->translatedFormat('l, d.m.Y') . '.pdf';
+
         return Response::streamDownload(function () use ($binaryContent) {
             echo $binaryContent;
-        }, 'tagesplan-' . $this->day . '.pdf', ['Content-Type' => 'application/pdf']);
+        }, $filename, ['Content-Type' => 'application/pdf']);
     }
 
 }
