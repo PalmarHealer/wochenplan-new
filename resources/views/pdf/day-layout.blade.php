@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tagesplan - {{ $date->translatedFormat('l, d.m.Y') }}</title>
+    <title>{{ $date->translatedFormat('l, d.m.Y') }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -11,21 +14,19 @@
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'DejaVu Sans', sans-serif;
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', 'Ubuntu', sans-serif;
             font-size: {{ $textSize }}%;
             color: black;
             background: white;
         }
 
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 1.5em;
-        }
-
         table {
             width: 100%;
+            height: 100%;
             border-collapse: collapse;
             table-layout: fixed;
         }
@@ -54,23 +55,9 @@
         s {
             text-decoration: line-through;
         }
-
-        .absences {
-            margin-top: 15px;
-            padding: 10px;
-            background: #f5f5f5;
-            border-radius: 5px;
-        }
-
-        .absences strong {
-            display: inline;
-            margin-right: 5px;
-        }
     </style>
 </head>
 <body>
-    <h1>{{ $date->translatedFormat('l, d.m.Y') }}</h1>
-
     <table>
         <tbody>
         @foreach ($layout as $row)
@@ -147,14 +134,5 @@
         @endforeach
         </tbody>
     </table>
-
-    @if(count($absences) > 0)
-        <div class="absences">
-            <strong>Abwesend:</strong>
-            @foreach($absences as $absence)
-                {{ $absence['display_name'] }}@if(!$loop->last), @endif
-            @endforeach
-        </div>
-    @endif
 </body>
 </html>
