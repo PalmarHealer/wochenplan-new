@@ -97,7 +97,7 @@
                                     @if (isset($cell['rowspan']) && $cell['rowspan'] > 1)
                                         rowspan="{{ $cell['rowspan'] }}"
                                     @endif
-                                    class="p-2 text-center align-middle @if($lesson['url'] ?? false) cursor-pointer @endif"
+                                    class="p-1 text-center align-middle @if($lesson['url'] ?? false) cursor-pointer @endif"
                                     style="
                                         color: black;
                                         border: 0.35vh solid white;
@@ -132,8 +132,11 @@
                                             <s>{!! $lesson['description'] ?? '' !!}</s>
                                         @else
                                             <small>
-                                                @foreach($lesson['assigned_users'] as $userName)
-                                                    {{ $userName }}@if(!$loop->last), @endif
+                                                @foreach($lesson['assigned_users'] as $userId => $userName)
+                                                    @php
+                                                        $isAbsent = collect($absences)->contains('id', $userId);
+                                                    @endphp
+                                                    @if($isAbsent)<s>@endif{{ $userName }}@if($isAbsent)</s>@endif@if(!$loop->last), @endif
                                                 @endforeach
                                             </small>
 
