@@ -28,6 +28,23 @@ RUN apt-get update \
        php8.3-redis \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Node.js 20 and npm
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Chromium for Browsershot/PDF generation
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       chromium-browser \
+       fonts-liberation \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Puppeteer globally and set environment variable to use system Chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+RUN npm install -g puppeteer
+
 # Install Composer
 RUN curl -fsSL https://getcomposer.org/installer -o /tmp/composer-setup.php \
     && php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer \
