@@ -99,11 +99,11 @@
                 Benutzer importieren
             </x-slot>
 
-                <x-slot name="description">
-                    Mehrere Benutzer schnell und einfach per CSV-Datei importieren.
-                </x-slot>
+            <x-slot name="description">
+                Mehrere Benutzer schnell und einfach per CSV-Datei importieren.
+            </x-slot>
 
-                <span>
+            <span>
                     Es ist möglich mehrere Benutzer gleichzeitig importieren, indem eine <code>.csv</code>-Datei mit den
                     entsprechenden Benutzerdaten hochgeladen wird.
         <br><br>
@@ -117,7 +117,7 @@
             Zur Benutzerliste
         </x-filament::link>.
     </span>
-            </x-filament::section>
-        @endif
+        </x-filament::section>
+    @endif
 
 </x-filament-panels::page>

@@ -113,11 +113,26 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                 Section::make([
                     Forms\Components\Select::make('assignedUsers')
                         ->label('Personen')
-                        ->relationship('assignedUsers', 'name')
+                        ->relationship(
+                            name: 'assignedUsers',
+                            titleAttribute: 'name',
+                            modifyQueryUsing: function ($query, Get $get) {
+                                $query->whereDoesntHave('roles', function ($roleQuery) {
+                                    $roleQuery->where('name', 'super_admin');
+                                });
+                                if (!$get('show_all_users')) $query->whereHas('roles');
+                                return $query;
+                            }
+                        )
                         ->multiple()
                         ->preload()
                         ->disabled(! auth()->user()->can('view_any_lesson::template'))
                         ->visible(auth()->user()->can('view_any_lesson::template')),
+                    Forms\Components\Toggle::make('show_all_users')
+                        ->label('Alle Benutzer erlauben')
+                        ->default(false)
+                        ->live()
+                        ->columnSpanFull(),
                 ])->visible(auth()->user()->can('view_any_lesson::template')),
                 Section::make([
                     Forms\Components\TextInput::make('notes')
@@ -243,11 +258,9 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                ]),
+                Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\RestoreBulkAction::make(),
+                Tables\Actions\ForceDeleteBulkAction::make(),
             ]);
     }
 

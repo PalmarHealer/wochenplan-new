@@ -96,10 +96,10 @@ class Day extends Page
             return $parentIds->contains($template->id);
         });
 
-        $templateLessons = $filteredTemplates->mapWithKeys(function ($template) {
+        $templateLessons = $filteredTemplates->mapWithKeys(function ($template) use ($rawDay) {
             $key = $template->room . '-' . $template->lesson_time;
             $array = $template->toArray();
-            $array['assigned_users'] = $template->assignedUsers->pluck('display_name', 'id')->toArray();;
+            $array['assigned_users'] = $template->assignedUsers->pluck('display_name', 'id')->toArray();
             $user = auth()->user();
             if (($user->can('create_lesson') && $template->assignedUsers()->where('user_id', $user->id)->exists()) || $user->can('view_any_lesson')) {
                 $array['url_template'] = LessonTemplateResource::getUrl('edit', ['record' => $template->id, 'date' => $this->day]);
@@ -108,7 +108,7 @@ class Day extends Page
             return [$key => $array];
         });
 
-        $lessonLessons = $rawLessons->mapWithKeys(function ($lesson) {
+        $lessonLessons = $rawLessons->mapWithKeys(function ($lesson) use ($rawDay) {
             $key = $lesson->room . '-' . $lesson->lesson_time;
             $array = $lesson->toArray();
             $array['assigned_users'] = $lesson->assignedUsers->pluck('display_name', 'id')->toArray();
@@ -118,11 +118,6 @@ class Day extends Page
             }
             return [$key => $array];
         });
-
-        if (empty($templateLessons->values()->toArray())) $merged = $lessonLessons;
-        else $merged = $templateLessons->merge($lessonLessons);
-
-        $this->lessons = $merged->values()->toArray();
 
         $rawAbsences = Absence::with(['user'])
             ->whereDate('start', '<=', $rawDay)
@@ -137,6 +132,18 @@ class Day extends Page
         $this->absences = array_values(array_unique($this->absences, SORT_REGULAR));
 
         usort($this->absences, fn($a, $b) => $b['id'] <=> $a['id']);
+
+        // Extract absent user IDs for checking in blade template
+        $absentUserIds = array_column($this->absences, 'id');
+
+        if (empty($templateLessons->values()->toArray())) $merged = $lessonLessons;
+        else $merged = $templateLessons->merge($lessonLessons);
+
+        // Add absent user IDs to each lesson
+        $this->lessons = $merged->map(function ($lesson) use ($absentUserIds) {
+            $lesson['absent_user_ids'] = $absentUserIds;
+            return $lesson;
+        })->values()->toArray();
 
         if (!env('DAY_VIEW_DISPLAY_ALL_ABSENCE_NOTES')) {
             $allUserIds = [];
