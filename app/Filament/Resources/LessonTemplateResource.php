@@ -258,11 +258,9 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                ]),
+                Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\RestoreBulkAction::make(),
+                Tables\Actions\ForceDeleteBulkAction::make(),
             ]);
     }
 
