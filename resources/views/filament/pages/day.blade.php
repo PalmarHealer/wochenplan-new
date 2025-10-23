@@ -33,6 +33,14 @@
                 x-show="isFullscreen"
                 @click="toggleFullscreen"
             />
+            <x-filament::button
+                icon="tabler-download"
+                icon-position="after"
+                x-show="!isFullscreen"
+                wire:click="downloadPdf"
+            >
+                PDF herunterladen
+            </x-filament::button>
 
             <x-filament::button
                 icon="tabler-arrow-narrow-left"
@@ -49,7 +57,6 @@
                 x-show="isFullscreen"
                 wire:click="changeDay(-1)"
             />
-
             <x-filament::button
                 icon="tabler-arrow-narrow-right"
                 icon-position="after"
@@ -90,7 +97,7 @@
                                     @if (isset($cell['rowspan']) && $cell['rowspan'] > 1)
                                         rowspan="{{ $cell['rowspan'] }}"
                                     @endif
-                                    class="p-2 text-center align-middle @if($lesson['url'] ?? false) cursor-pointer @endif"
+                                    class="p-1 text-center align-middle @if($lesson['url'] ?? false) cursor-pointer @endif"
                                     style="
                                         color: black;
                                         border: 0.35vh solid white;
@@ -132,12 +139,10 @@
 
                                             <small>
                                                 @foreach($lesson['assigned_users'] as $userId => $userName)
-                                                    @if(in_array($userId, $absentUserIds))
-                                                        <s>{{ $userName }}</s>
-                                                    @else
-                                                        {{ $userName }}
-                                                    @endif
-                                                    @if(!$loop->last), @endif
+                                                    @php
+                                                        $isAbsent = collect($absences)->contains('id', $userId);
+                                                    @endphp
+                                                    @if($isAbsent)<s>@endif{{ $userName }}@if($isAbsent)</s>@endif@if(!$loop->last), @endif
                                                 @endforeach
                                             </small>
 

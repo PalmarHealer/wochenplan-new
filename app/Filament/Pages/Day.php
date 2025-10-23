@@ -11,9 +11,11 @@ use App\Models\LessonTemplate;
 use App\Services\LayoutService;
 use App\Services\LunchService;
 use App\Services\LastSeenService;
+use App\Services\PdfExportService;
 use Carbon\Carbon;
 use Exception;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Response;
 
 class Day extends Page
 {
@@ -235,6 +237,20 @@ class Day extends Page
         }
 
         return $date;
+    }
+
+    public function downloadPdf()
+    {
+        $pdfService = app(PdfExportService::class);
+        $base64Content = $pdfService->getOrGeneratePdf($this->day);
+        $binaryContent = base64_decode($base64Content);
+
+        $date = Carbon::parse($this->day);
+        $filename = $date->locale(config('app.locale'))->translatedFormat('l, d.m.Y') . '.pdf';
+
+        return Response::streamDownload(function () use ($binaryContent) {
+            echo $binaryContent;
+        }, $filename, ['Content-Type' => 'application/pdf']);
     }
 
 }
