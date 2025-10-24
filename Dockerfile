@@ -33,7 +33,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Chromium dependencies for Browsershot/PDF generation
+# Install dependencies for Browsershot/PDF generation
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        wget \
@@ -57,7 +57,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Puppeteer globally (it will download Chromium automatically)
-RUN npm install -g puppeteer
+RUN npm install -g puppeteer --unsafe-perm=true --allow-root
 
 # Install Composer
 RUN curl -fsSL https://getcomposer.org/installer -o /tmp/composer-setup.php \

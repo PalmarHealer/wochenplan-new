@@ -7,6 +7,20 @@ APP_USER=${APP_USER:-app}
 # Ensure runtime directories
 mkdir -p /run/php /var/run/sshd
 
+# Set Chromium path from Puppeteer if not already set
+if [ -z "${LARAVEL_PDF_CHROME_PATH:-}" ]; then
+  CHROMIUM_PATH=$(NODE_PATH=/usr/lib/node_modules node -e "console.log(require('puppeteer').executablePath())" 2>/dev/null || echo "")
+  if [ -n "$CHROMIUM_PATH" ]; then
+    export LARAVEL_PDF_CHROME_PATH="$CHROMIUM_PATH"
+    export NODE_PATH=/usr/lib/node_modules
+    echo "Set LARAVEL_PDF_CHROME_PATH to: $CHROMIUM_PATH"
+
+    # Add to PHP-FPM environment
+    echo "env[LARAVEL_PDF_CHROME_PATH] = $CHROMIUM_PATH" >> /etc/php/8.3/fpm/pool.d/www.conf
+    echo "env[NODE_PATH] = /usr/lib/node_modules" >> /etc/php/8.3/fpm/pool.d/www.conf
+  fi
+fi
+
 # Setup SSH authorized_keys from URL if provided; otherwise disable sshd
 SSH_AUTHORIZED_KEYS_URL=${SSH_AUTHORIZED_KEYS_URL:-}
 SSHD_SUP_CONF="/etc/supervisor/conf.d/sshd.conf"
