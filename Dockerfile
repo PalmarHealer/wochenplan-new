@@ -33,16 +33,30 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Chromium for Browsershot/PDF generation
+# Install Chromium dependencies for Browsershot/PDF generation
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-       chromium-browser \
+       wget \
+       gnupg \
        fonts-liberation \
+       fonts-noto-color-emoji \
+       libnss3 \
+       libxss1 \
+       libasound2t64 \
+       libatk-bridge2.0-0 \
+       libatk1.0-0 \
+       libcups2 \
+       libdrm2 \
+       libgbm1 \
+       libgtk-3-0 \
+       libnspr4 \
+       libx11-xcb1 \
+       libxcomposite1 \
+       libxdamage1 \
+       libxrandr2 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Puppeteer globally and set environment variable to use system Chromium
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+# Install Puppeteer globally (it will download Chromium automatically)
 RUN npm install -g puppeteer
 
 # Install Composer
