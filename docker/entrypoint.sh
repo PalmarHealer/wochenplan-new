@@ -9,15 +9,30 @@ mkdir -p /run/php /var/run/sshd
 
 # Set Chromium path from Puppeteer if not already set
 if [ -z "${LARAVEL_PDF_CHROME_PATH:-}" ]; then
-  CHROMIUM_PATH=$(NODE_PATH=/usr/lib/node_modules node -e "console.log(require('puppeteer').executablePath())" 2>/dev/null || echo "")
-  if [ -n "$CHROMIUM_PATH" ]; then
+  # Try to get the Chrome path from Puppeteer's cache directory
+  PUPPETEER_CACHE_DIR=${PUPPETEER_CACHE_DIR:-/usr/local/share/puppeteer}
+
+  # Find the chrome executable in the Puppeteer cache
+  if [ -d "$PUPPETEER_CACHE_DIR" ]; then
+    CHROMIUM_PATH=$(find "$PUPPETEER_CACHE_DIR" -type f -name "chrome" -executable 2>/dev/null | head -n 1)
+  fi
+
+  # If not found, try using puppeteer's executablePath() method
+  if [ -z "$CHROMIUM_PATH" ]; then
+    CHROMIUM_PATH=$(node -e "console.log(require('puppeteer').executablePath())" 2>/dev/null || echo "")
+  fi
+
+  if [ -n "$CHROMIUM_PATH" ] && [ -f "$CHROMIUM_PATH" ]; then
     export LARAVEL_PDF_CHROME_PATH="$CHROMIUM_PATH"
-    export NODE_PATH=/usr/lib/node_modules
+    export PUPPETEER_EXECUTABLE_PATH="$CHROMIUM_PATH"
     echo "Set LARAVEL_PDF_CHROME_PATH to: $CHROMIUM_PATH"
 
     # Add to PHP-FPM environment
     echo "env[LARAVEL_PDF_CHROME_PATH] = $CHROMIUM_PATH" >> /etc/php/8.3/fpm/pool.d/www.conf
-    echo "env[NODE_PATH] = /usr/lib/node_modules" >> /etc/php/8.3/fpm/pool.d/www.conf
+    echo "env[PUPPETEER_EXECUTABLE_PATH] = $CHROMIUM_PATH" >> /etc/php/8.3/fpm/pool.d/www.conf
+    echo "env[PUPPETEER_CACHE_DIR] = $PUPPETEER_CACHE_DIR" >> /etc/php/8.3/fpm/pool.d/www.conf
+  else
+    echo "WARNING: Chrome executable not found. PDF generation may not work." >&2
   fi
 fi
 

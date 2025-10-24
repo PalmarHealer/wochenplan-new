@@ -56,8 +56,12 @@ RUN apt-get update \
        libxrandr2 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Puppeteer globally (it will download Chromium automatically)
-RUN npm install -g puppeteer --unsafe-perm=true --allow-root
+# Install Puppeteer globally with Chromium
+# Set cache directory for Puppeteer to a predictable location
+ENV PUPPETEER_CACHE_DIR=/usr/local/share/puppeteer
+RUN mkdir -p ${PUPPETEER_CACHE_DIR} \
+    && npm install -g puppeteer --unsafe-perm=true --allow-root \
+    && chmod -R 755 ${PUPPETEER_CACHE_DIR}
 
 # Install Composer
 RUN curl -fsSL https://getcomposer.org/installer -o /tmp/composer-setup.php \
