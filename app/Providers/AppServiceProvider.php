@@ -66,8 +66,6 @@ class AppServiceProvider extends ServiceProvider
             $event->extendSocialite('azure', Provider::class);
         });
 
-        if (Request::is('/')) {
-            Redirect::to('/dashboard')->send();
-        }
+        // Root redirect is now handled by routes/web.php
     }
 }
