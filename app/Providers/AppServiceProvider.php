@@ -60,7 +60,11 @@ class AppServiceProvider extends ServiceProvider
         if (App::runningInConsole()) {
             return;
         }
-        URL::forceScheme('https');
+
+        // Force HTTPS scheme only if configured (for apps behind reverse proxy, set FORCE_HTTPS=false)
+        if (config('app.force_https', true)) {
+            URL::forceScheme('https');
+        }
 
         Event::listen(function (SocialiteWasCalled $event) {
             $event->extendSocialite('azure', Provider::class);

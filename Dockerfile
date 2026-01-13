@@ -58,9 +58,10 @@ RUN apt-get update \
 
 # Install Puppeteer globally with Chromium
 # Set cache directory for Puppeteer to a predictable location
+# Use PUPPETEER_CACHE_DIR env var that Puppeteer actually respects
 ENV PUPPETEER_CACHE_DIR=/usr/local/share/puppeteer
 RUN mkdir -p ${PUPPETEER_CACHE_DIR} \
-    && npm install -g puppeteer --unsafe-perm=true --allow-root \
+    && PUPPETEER_CACHE_DIR=${PUPPETEER_CACHE_DIR} npm install -g puppeteer --unsafe-perm=true --allow-root \
     && chmod -R 755 ${PUPPETEER_CACHE_DIR}
 
 # Install Composer

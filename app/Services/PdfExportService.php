@@ -131,7 +131,16 @@ class PdfExportService
         ])
             ->format('a4')
             ->landscape()
-            ->margins(2, 2, 2, 2);
+            ->margins(2, 2, 2, 2)
+            ->withBrowsershot(function ($browsershot) {
+                $browsershot->addChromiumArguments([
+                    'disable-crash-reporter',
+                    'disable-crashpad',
+                    'disable-dev-shm-usage',
+                    'disable-setuid-sandbox',
+                    'disable-gpu',
+                ]);
+            });
 
         // Save to a temporary file and read the contents
         $tempPath = storage_path('app/temp/pdf-' . uniqid() . '.pdf');

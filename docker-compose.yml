@@ -1,7 +1,8 @@
-version: "3.9"
-
 services:
     app:
+        build:
+            context: .
+            dockerfile: Dockerfile
         image: palmarhealer/wochenplan:latest
         ports:
             - "8080:80"   # Nginx HTTP
@@ -13,6 +14,7 @@ services:
             APP_DEBUG: false
             APP_LOCALE: de
             APP_FAKER_LOCALE: de_DE
+            FORCE_HTTPS: false
 
             # Settings
             DAY_VIEW_DISPLAY_ALL_ABSENCE_NOTES: true
@@ -55,6 +57,10 @@ services:
             AZURE_REDIRECT_URI:
             AZURE_TENANT_ID:
             AZURE_PROXY:
+
+            # Puppeteer/Chrome configuration for PDF generation
+            PUPPETEER_CACHE_DIR: /usr/local/share/puppeteer
+            PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: false
         volumes:
             - app-data:/var/www/html/storage/logs
         depends_on:

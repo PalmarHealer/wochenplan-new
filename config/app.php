@@ -56,6 +56,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Force HTTPS Scheme
+    |--------------------------------------------------------------------------
+    |
+    | When set to true, all generated URLs will use HTTPS scheme. Set to false
+    | when running behind a reverse proxy that handles SSL termination.
+    |
+    */
+
+    'force_https' => env('FORCE_HTTPS', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
