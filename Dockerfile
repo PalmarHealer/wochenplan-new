@@ -86,7 +86,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get install -y --no-install-recommends nodejs \
     && docker-php-ext-install -j$(nproc) pdo_mysql mysqli zip bcmath intl mbstring xml \
     && pecl install redis && docker-php-ext-enable redis \
-    && apt-get purge -y --auto-remove libzip-dev libicu-dev libonig-dev libxml2-dev \
+    && apt-get purge -y --auto-remove \
+        libzip-dev \
+        libicu-dev \
+        libonig-dev \
+        libxml2-dev \
+    && apt-get install -y --no-install-recommends \
+        libzip5 \
+        libicu76 \
+        libonig5 \
+        libxml2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Puppeteer globally with Chromium
@@ -116,7 +125,11 @@ RUN rm -f /etc/nginx/sites-enabled/default \
 RUN sed -i 's#^;*listen = .*#listen = /run/php/php8.3-fpm.sock#' /usr/local/etc/php-fpm.d/www.conf \
     && sed -i 's#^;*clear_env = .*#clear_env = no#' /usr/local/etc/php-fpm.d/www.conf \
     && sed -i 's/^user = .*/user = www-data/' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/^group = .*/group = www-data/' /usr/local/etc/php-fpm.d/www.conf
+    && sed -i 's/^group = .*/group = www-data/' /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i 's/^;listen.owner = .*/listen.owner = www-data/' /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i 's/^;listen.group = .*/listen.group = www-data/' /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i 's/^;listen.mode = .*/listen.mode = 0660/' /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i 's#^listen = .*#listen = /run/php/php8.3-fpm.sock#' /usr/local/etc/php-fpm.d/zz-docker.conf
 
 # SSH configuration
 RUN sed -i 's/^PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config \

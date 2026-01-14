@@ -5,7 +5,7 @@ services:
             dockerfile: Dockerfile
         image: ghcr.io/palmarhealer/wochenplan-new:latest
         ports:
-            - "8080:80"   # Nginx HTTP
+            - "80:80"   # Nginx HTTP
             # - "2222:22" # SSH (optional; requires SSH_AUTHORIZED_KEYS_URL)
         environment:
             # If you want, you can set APP_KEY here; otherwise it will be generated on the first run.

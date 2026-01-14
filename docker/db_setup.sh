@@ -62,7 +62,7 @@ su -s /bin/bash -c "cd '$APP_DIR' && php artisan db:seed --force" "$APP_USER" ||
 # Storage link
 su -s /bin/bash -c "cd '$APP_DIR' && php artisan storage:link" "$APP_USER" || true
 
-# Permissions
-chown -R www-data:www-data "$APP_DIR"
-chmod -R u+rwx "$APP_DIR"
+# Permissions for writable directories only
+chown -R www-data:www-data "$APP_DIR/storage" "$APP_DIR/bootstrap/cache" 2>/dev/null || true
+chmod -R u+rwx "$APP_DIR/storage" "$APP_DIR/bootstrap/cache" 2>/dev/null || true
 

@@ -6,6 +6,7 @@ APP_USER=${APP_USER:-app}
 
 # Ensure runtime directories
 mkdir -p /run/php /var/run/sshd
+chown www-data:www-data /run/php
 
 # Set Chromium path from Puppeteer if not already set
 if [ -z "${LARAVEL_PDF_CHROME_PATH:-}" ]; then
@@ -68,11 +69,14 @@ if [ ! -f "$APP_DIR/.env" ] && [ -f "$APP_DIR/.env.example" ]; then
   cp "$APP_DIR/.env.example" "$APP_DIR/.env"
 fi
 
-# Ensure proper permissions and ownership for the entire app directory
+# Ensure proper permissions and ownership for writable directories only
 mkdir -p "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
-chown -R www-data:www-data "$APP_DIR"
-chmod -R u+rwx "$APP_DIR"
-chmod 664 "$APP_DIR/.env"
+chown -R www-data:www-data "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
+chmod -R u+rwx "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
+if [ -f "$APP_DIR/.env" ]; then
+  chown www-data:www-data "$APP_DIR/.env"
+  chmod 664 "$APP_DIR/.env"
+fi
 
 # Run php commands
 /usr/local/bin/db_setup.sh || true
