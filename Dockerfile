@@ -121,6 +121,9 @@ COPY docker/nginx/wochenplan.conf /etc/nginx/sites-available/wochenplan.conf
 RUN rm -f /etc/nginx/sites-enabled/default \
     && ln -s /etc/nginx/sites-available/wochenplan.conf /etc/nginx/sites-enabled/wochenplan.conf
 
+# Custom PHP configuration
+COPY docker/php/custom.ini /usr/local/etc/php/conf.d/custom.ini
+
 # PHP-FPM configuration tweaks
 RUN sed -i 's#^;*listen = .*#listen = /run/php/php8.3-fpm.sock#' /usr/local/etc/php-fpm.d/www.conf \
     && sed -i 's#^;*clear_env = .*#clear_env = no#' /usr/local/etc/php-fpm.d/www.conf \
