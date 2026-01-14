@@ -3,7 +3,7 @@ services:
         build:
             context: .
             dockerfile: Dockerfile
-        image: palmarhealer/wochenplan:latest
+        image: ghcr.io/palmarhealer/wochenplan-new:latest
         ports:
             - "8080:80"   # Nginx HTTP
             # - "2222:22" # SSH (optional; requires SSH_AUTHORIZED_KEYS_URL)

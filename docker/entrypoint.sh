@@ -27,10 +27,12 @@ if [ -z "${LARAVEL_PDF_CHROME_PATH:-}" ]; then
     export PUPPETEER_EXECUTABLE_PATH="$CHROMIUM_PATH"
     echo "Set LARAVEL_PDF_CHROME_PATH to: $CHROMIUM_PATH"
 
-    # Add to PHP-FPM environment
-    echo "env[LARAVEL_PDF_CHROME_PATH] = $CHROMIUM_PATH" >> /etc/php/8.3/fpm/pool.d/www.conf
-    echo "env[PUPPETEER_EXECUTABLE_PATH] = $CHROMIUM_PATH" >> /etc/php/8.3/fpm/pool.d/www.conf
-    echo "env[PUPPETEER_CACHE_DIR] = $PUPPETEER_CACHE_DIR" >> /etc/php/8.3/fpm/pool.d/www.conf
+    # Add to PHP-FPM environment (official PHP image path)
+    {
+      echo "env[LARAVEL_PDF_CHROME_PATH] = $CHROMIUM_PATH"
+      echo "env[PUPPETEER_EXECUTABLE_PATH] = $CHROMIUM_PATH"
+      echo "env[PUPPETEER_CACHE_DIR] = $PUPPETEER_CACHE_DIR"
+    } >> /usr/local/etc/php-fpm.d/www.conf
   else
     echo "WARNING: Chrome executable not found. PDF generation may not work." >&2
   fi
