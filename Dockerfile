@@ -1,98 +1,122 @@
 # syntax=docker/dockerfile:1.7
 
-FROM ubuntu:24.04
+# ============================================================================
+# Build stage: Install Composer dependencies
+# ============================================================================
+FROM php:8.3-fpm AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install build dependencies and PHP extensions
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    unzip \
+    libzip-dev \
+    libicu-dev \
+    libonig-dev \
+    libxml2-dev \
+    && docker-php-ext-install -j$(nproc) \
+        pdo_mysql \
+        mysqli \
+        zip \
+        bcmath \
+        intl \
+        mbstring \
+        xml \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /build
+
+# Copy only dependency files first (for better caching)
+COPY composer.json composer.lock ./
+
+# Install Composer dependencies
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+
+# Copy the rest of the application
+COPY . .
+
+# Run post-autoload scripts
+RUN composer dump-autoload --optimize
+
+# ============================================================================
+# Runtime stage: Final optimized image
+# ============================================================================
+FROM php:8.3-fpm
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    APP_USER=app \
-    APP_DIR=/var/www/html
+    APP_DIR=/var/www/html \
+    PUPPETEER_CACHE_DIR=/usr/local/share/puppeteer
 
-# System dependencies and PHP 8.3 (Ondrej PPA), Nginx, SSH, Supervisor, Git, unzip, curl
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-       ca-certificates \
-       apt-transport-https \
-       software-properties-common \
-       curl \
-       gnupg \
-       lsb-release \
-       unzip \
-       git \
-       supervisor \
-       nginx \
-       openssh-server \
-    && add-apt-repository ppa:ondrej/php -y \
+# Install build dependencies, build PHP extensions, then keep only runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libzip-dev \
+    libicu-dev \
+    libonig-dev \
+    libxml2-dev \
+    nginx \
+    supervisor \
+    openssh-server \
+    curl ca-certificates gnupg \
+    wget \
+    fonts-liberation \
+    fonts-noto-color-emoji \
+    libnss3 \
+    libxss1 \
+    libasound2t64 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcups2 \
+    libdrm2 \
+    libgbm1 \
+    libgtk-3-0 \
+    libnspr4 \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    git \
+    && mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
     && apt-get update \
-    && apt-get install -y --no-install-recommends \
-       php8.3-cli php8.3-fpm php8.3-mbstring php8.3-xml php8.3-curl \
-       php8.3-zip php8.3-bcmath php8.3-mysql php8.3-sqlite3 php8.3-intl \
-       php8.3-redis \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Node.js 20 and npm
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install dependencies for Browsershot/PDF generation
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-       wget \
-       gnupg \
-       fonts-liberation \
-       fonts-noto-color-emoji \
-       libnss3 \
-       libxss1 \
-       libasound2t64 \
-       libatk-bridge2.0-0 \
-       libatk1.0-0 \
-       libcups2 \
-       libdrm2 \
-       libgbm1 \
-       libgtk-3-0 \
-       libnspr4 \
-       libx11-xcb1 \
-       libxcomposite1 \
-       libxdamage1 \
-       libxrandr2 \
+    && docker-php-ext-install -j$(nproc) pdo_mysql mysqli zip bcmath intl mbstring xml \
+    && pecl install redis && docker-php-ext-enable redis \
+    && apt-get purge -y --auto-remove libzip-dev libicu-dev libonig-dev libxml2-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Puppeteer globally with Chromium
-# Set cache directory for Puppeteer to a predictable location
-# Use PUPPETEER_CACHE_DIR env var that Puppeteer actually respects
-ENV PUPPETEER_CACHE_DIR=/usr/local/share/puppeteer
 RUN mkdir -p ${PUPPETEER_CACHE_DIR} \
     && PUPPETEER_CACHE_DIR=${PUPPETEER_CACHE_DIR} npm install -g puppeteer --unsafe-perm=true --allow-root \
-    && chmod -R 755 ${PUPPETEER_CACHE_DIR}
+    && chmod -R 755 ${PUPPETEER_CACHE_DIR} \
+    && npm cache clean --force
 
-# Install Composer
-RUN curl -fsSL https://getcomposer.org/installer -o /tmp/composer-setup.php \
-    && php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer \
-    && rm /tmp/composer-setup.php
-
-# Create app user and prepare directories
-RUN useradd -m -d /home/${APP_USER} -s /bin/bash ${APP_USER} \
-    && mkdir -p /var/run/sshd /run/php ${APP_DIR} \
+# Create directories
+RUN mkdir -p /var/run/sshd /run/php ${APP_DIR} \
     && chown -R www-data:www-data ${APP_DIR}
 
 WORKDIR ${APP_DIR}
 
-# Copy application (use .dockerignore to exclude node_modules/vendor if desired)
-COPY --chown=www-data:www-data . ${APP_DIR}
+# Copy application from builder
+COPY --from=builder --chown=www-data:www-data /build ${APP_DIR}
 
-# Git add safe directory
+# Git safe directory configuration
 RUN git config --global --add safe.directory ${APP_DIR}
-
-# Run composer install
-RUN cd /var/www/html && composer install --no-interaction --prefer-dist --optimize-autoloader
 
 # Nginx configuration
 COPY docker/nginx/wochenplan.conf /etc/nginx/sites-available/wochenplan.conf
 RUN rm -f /etc/nginx/sites-enabled/default \
     && ln -s /etc/nginx/sites-available/wochenplan.conf /etc/nginx/sites-enabled/wochenplan.conf
 
-# PHP-FPM configuration tweaks (ensure correct socket path exists)
-RUN sed -i 's#^;*listen = .*#listen = /run/php/php8.3-fpm.sock#' /etc/php/8.3/fpm/pool.d/www.conf \
-    && sed -i 's#^;*clear_env = .*#clear_env = no#' /etc/php/8.3/fpm/pool.d/www.conf
+# PHP-FPM configuration tweaks
+RUN sed -i 's#^;*listen = .*#listen = /run/php/php8.3-fpm.sock#' /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i 's#^;*clear_env = .*#clear_env = no#' /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i 's/^user = .*/user = www-data/' /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i 's/^group = .*/group = www-data/' /usr/local/etc/php-fpm.d/www.conf
 
 # SSH configuration
 RUN sed -i 's/^PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config \
