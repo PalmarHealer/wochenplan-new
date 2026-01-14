@@ -62,21 +62,37 @@ jobs:
           # Convert repository name to lowercase for ghcr.io
           IMAGE_NAME_LOWER=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
 
-          # Fetch all tags from GitHub Container Registry
-          # Note: This uses GitHub's API to list package versions
-          LAST_VERSION=$(gh api \
+          # Initialize version
+          LAST_VERSION=-1
+
+          # Try to fetch package versions from org endpoint
+          RESPONSE=$(gh api \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             "/orgs/${{ github.repository_owner }}/packages/container/${{ github.event.repository.name }}/versions" \
-            --jq '[.[] | select(.metadata.container.tags[] | tonumber? != null) | .metadata.container.tags[] | tonumber] | max // -1' 2>/dev/null || echo "-1")
+            2>/dev/null || echo "[]")
 
-          # If the API call fails (e.g., package doesn't exist yet), try user endpoint instead
+          # Check if response is valid (not an error message)
+          if echo "$RESPONSE" | jq empty 2>/dev/null && [ "$(echo "$RESPONSE" | jq 'type')" = '"array"' ]; then
+            LAST_VERSION=$(echo "$RESPONSE" | jq '[.[] | select(.metadata.container.tags[] | tonumber? != null) | .metadata.container.tags[] | tonumber] | max // -1')
+          fi
+
+          # If package not found in org, try user endpoint
           if [ "$LAST_VERSION" = "-1" ]; then
-            LAST_VERSION=$(gh api \
+            RESPONSE=$(gh api \
               -H "Accept: application/vnd.github+json" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
               "/users/${{ github.repository_owner }}/packages/container/${{ github.event.repository.name }}/versions" \
-              --jq '[.[] | select(.metadata.container.tags[] | tonumber? != null) | .metadata.container.tags[] | tonumber] | max // -1' 2>/dev/null || echo "-1")
+              2>/dev/null || echo "[]")
+
+            if echo "$RESPONSE" | jq empty 2>/dev/null && [ "$(echo "$RESPONSE" | jq 'type')" = '"array"' ]; then
+              LAST_VERSION=$(echo "$RESPONSE" | jq '[.[] | select(.metadata.container.tags[] | tonumber? != null) | .metadata.container.tags[] | tonumber] | max // -1')
+            fi
+          fi
+
+          # Ensure LAST_VERSION is a valid number
+          if ! [[ "$LAST_VERSION" =~ ^-?[0-9]+$ ]]; then
+            LAST_VERSION=-1
           fi
 
           # Increment version (if no version found, start at 0)
