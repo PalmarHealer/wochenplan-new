@@ -2,9 +2,14 @@ name: Build and Publish Docker image (wochenplan)
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 0, 1, 2, etc.)'
+        required: true
+        type: string
 
 # This workflow builds the Docker image and publishes it to GitHub Container Registry.
-# It uses simple incremental versioning (0, 1, 2, etc.).
+# Version number is manually specified when triggering the workflow.
 #
 # AUTHENTICATION:
 #   - Uses the built-in GITHUB_TOKEN for authentication (no additional secrets needed)
@@ -12,7 +17,7 @@ on:
 # The image will be pushed as: ghcr.io/<owner>/<repository>:<tag>
 # Tags used:
 #   - latest (always overwritten by the newest build)
-#   - <N> incremental version number starting at 0 (e.g., :0, :1, :2, etc.)
+#   - <version> version number from input (e.g., :0, :1, :2, etc.)
 
 env:
   REGISTRY: ghcr.io
@@ -52,59 +57,19 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Determine next version number
+      - name: Prepare image tags
         id: vars
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -e
-
           # Convert repository name to lowercase for ghcr.io
           IMAGE_NAME_LOWER=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
+          VERSION="${{ github.event.inputs.version }}"
 
-          # Initialize version
-          LAST_VERSION=-1
-
-          # Try to fetch package versions from org endpoint
-          RESPONSE=$(gh api \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "/orgs/${{ github.repository_owner }}/packages/container/${{ github.event.repository.name }}/versions" \
-            2>/dev/null || echo "[]")
-
-          # Check if response is valid (not an error message)
-          if echo "$RESPONSE" | jq empty 2>/dev/null && [ "$(echo "$RESPONSE" | jq 'type')" = '"array"' ]; then
-            LAST_VERSION=$(echo "$RESPONSE" | jq '[.[] | select(.metadata.container.tags[] | tonumber? != null) | .metadata.container.tags[] | tonumber] | max // -1')
-          fi
-
-          # If package not found in org, try user endpoint
-          if [ "$LAST_VERSION" = "-1" ]; then
-            RESPONSE=$(gh api \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "/users/${{ github.repository_owner }}/packages/container/${{ github.event.repository.name }}/versions" \
-              2>/dev/null || echo "[]")
-
-            if echo "$RESPONSE" | jq empty 2>/dev/null && [ "$(echo "$RESPONSE" | jq 'type')" = '"array"' ]; then
-              LAST_VERSION=$(echo "$RESPONSE" | jq '[.[] | select(.metadata.container.tags[] | tonumber? != null) | .metadata.container.tags[] | tonumber] | max // -1')
-            fi
-          fi
-
-          # Ensure LAST_VERSION is a valid number
-          if ! [[ "$LAST_VERSION" =~ ^-?[0-9]+$ ]]; then
-            LAST_VERSION=-1
-          fi
-
-          # Increment version (if no version found, start at 0)
-          NEXT_VERSION=$((LAST_VERSION + 1))
-
-          echo "Last version: $LAST_VERSION"
-          echo "Next version: $NEXT_VERSION"
+          echo "Building version: $VERSION"
 
           {
             echo "tags<<EOF"
             echo "${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:latest"
-            echo "${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:${NEXT_VERSION}"
+            echo "${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:${VERSION}"
             echo "EOF"
           } >> $GITHUB_OUTPUT
 
@@ -120,5 +85,6 @@ jobs:
 
       - name: Echo image reference
         run: |
+          echo "Successfully pushed version: ${{ github.event.inputs.version }}"
           echo "Pushed images:"
           echo "${{ steps.vars.outputs.tags }}"
