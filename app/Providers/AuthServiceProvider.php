@@ -16,8 +16,8 @@ use App\Models\User;
 use App\Policies\AbsencePolicy;
 use App\Policies\ColorPolicy;
 use App\Policies\DayPdfPolicy;
-use App\Policies\LayoutPolicy;
 use App\Policies\LayoutDeviationPolicy;
+use App\Policies\LayoutPolicy;
 use App\Policies\LessonPolicy;
 use App\Policies\LessonTemplatePolicy;
 use App\Policies\RolePolicy;
@@ -44,7 +44,6 @@ class AuthServiceProvider extends ServiceProvider
 
         $this->registerPolicies();
     }
-
 
     protected $policies = [
         Absence::class => AbsencePolicy::class,

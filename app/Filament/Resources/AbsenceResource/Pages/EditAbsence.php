@@ -22,7 +22,7 @@ class EditAbsence extends EditRecord
     {
         $data['updated_by'] = auth()->id();
 
-        $parts = explode(" - ", $data['date']);
+        $parts = explode(' - ', $data['date']);
 
         $data['start'] = $parts[0];
         $data['end'] = $parts[1];
@@ -37,7 +37,7 @@ class EditAbsence extends EditRecord
     protected function mutateFormDataBeforeFill(array $data): array
     {
         if (isset($data['start'], $data['end'])) {
-            $data['date'] = Carbon::parse($data['start'])->format('d.m.Y') .' - ' . Carbon::parse($data['end'])->format('d.m.Y');
+            $data['date'] = Carbon::parse($data['start'])->format('d.m.Y').' - '.Carbon::parse($data['end'])->format('d.m.Y');
         }
 
         return $data;

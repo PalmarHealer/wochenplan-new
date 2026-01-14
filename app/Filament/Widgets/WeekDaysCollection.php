@@ -3,8 +3,8 @@
 namespace App\Filament\Widgets;
 
 use App\Services\LunchService;
-use Filament\Widgets\Widget;
 use Carbon\Carbon;
+use Filament\Widgets\Widget;
 
 class WeekDaysCollection extends Widget
 {
@@ -12,7 +12,7 @@ class WeekDaysCollection extends Widget
 
     protected static string $view = 'filament.widgets.weekDaysCollection';
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     protected function getViewData(): array
     {
@@ -41,7 +41,7 @@ class WeekDaysCollection extends Widget
                 'date' => $currentDay->format('d.m.'),
                 'lunch' => app(LunchService::class)->getLunch($currentDay),
                 'url' => $url,
-                'isToday' => $currentDay->isSameDay(Carbon::now())
+                'isToday' => $currentDay->isSameDay(Carbon::now()),
             ];
         }
 

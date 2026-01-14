@@ -12,7 +12,7 @@ class LessonTemplatePolicy
      */
     public function viewAny(User $user): bool
     {
-        return ($user->can('view_any_lesson::template') or $user->can('view_lesson::template'));
+        return $user->can('view_any_lesson::template') or $user->can('view_lesson::template');
     }
 
     /**
@@ -25,6 +25,7 @@ class LessonTemplatePolicy
                 return true;
             }
         }
+
         return false;
     }
 
@@ -46,6 +47,7 @@ class LessonTemplatePolicy
                 return true;
             }
         }
+
         return false;
     }
 
@@ -59,6 +61,7 @@ class LessonTemplatePolicy
                 return true;
             }
         }
+
         return false;
     }
 
@@ -72,6 +75,7 @@ class LessonTemplatePolicy
                 return true;
             }
         }
+
         return false;
     }
 
@@ -93,6 +97,7 @@ class LessonTemplatePolicy
                 return true;
             }
         }
+
         return false;
     }
 

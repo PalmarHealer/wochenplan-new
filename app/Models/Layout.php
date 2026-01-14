@@ -14,12 +14,14 @@ class Layout extends Model
         'weekdays',
         'text_size',
     ];
+
     protected function casts(): array
     {
         return [
             'weekdays' => 'array',
         ];
     }
+
     protected static function booted(): void
     {
         static::saving(function (Layout $layout) {
@@ -36,6 +38,7 @@ class Layout extends Model
 
             $days = array_values(array_unique(array_filter(array_map(function ($d) {
                 $i = (int) $d;
+
                 return ($i >= 1 && $i <= 5) ? $i : null;
             }, $days), fn ($v) => ! is_null($v))));
 

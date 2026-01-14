@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\DayPdfResource\Pages;
-use App\Filament\Resources\DayPdfResource\RelationManagers;
 use App\Models\DayPdf;
 use App\Services\PdfExportService;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
@@ -13,9 +12,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Response;
 use ZipArchive;
 
@@ -25,7 +22,7 @@ class DayPdfResource extends Resource implements HasShieldPermissions
 
     protected static ?string $navigationIcon = 'tabler-file-type-pdf';
 
-    protected static ?string $navigationLabel = "PDF-Exporte";
+    protected static ?string $navigationLabel = 'PDF-Exporte';
 
     protected static ?string $navigationGroup = 'Administration';
 
@@ -64,7 +61,7 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                             return $disabledDates;
                         })
                         ->required(),
-                ])
+                ]),
             ]);
     }
 
@@ -118,7 +115,7 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                         $base64Content = $pdfService->getOrGeneratePdf($record->date);
                         $binaryContent = base64_decode($base64Content);
 
-                        $filename = $record->date->locale(config('app.locale'))->translatedFormat('l, d.m.Y') . '.pdf';
+                        $filename = $record->date->locale(config('app.locale'))->translatedFormat('l, d.m.Y').'.pdf';
 
                         return Response::streamDownload(function () use ($binaryContent) {
                             echo $binaryContent;
@@ -140,7 +137,7 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                             $base64Content = $pdfService->getOrGeneratePdf($record->date);
                             $binaryContent = base64_decode($base64Content);
 
-                            $filename = $record->date->locale(config('app.locale'))->translatedFormat('l, d.m.Y') . '.pdf';
+                            $filename = $record->date->locale(config('app.locale'))->translatedFormat('l, d.m.Y').'.pdf';
 
                             return Response::streamDownload(function () use ($binaryContent) {
                                 echo $binaryContent;
@@ -152,21 +149,21 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                         $firstDate = $sortedRecords->first()->date->format('d.m.Y');
                         $lastDate = $sortedRecords->last()->date->format('d.m.Y');
 
-                        $zipFileName = 'Tagespläne ' . $firstDate . '-' . $lastDate . '.zip';
+                        $zipFileName = 'Tagespläne '.$firstDate.'-'.$lastDate.'.zip';
 
-                        $zipPath = storage_path('app/temp/' . $zipFileName);
+                        $zipPath = storage_path('app/temp/'.$zipFileName);
 
-                        if (!file_exists(storage_path('app/temp'))) {
+                        if (! file_exists(storage_path('app/temp'))) {
                             mkdir(storage_path('app/temp'), 0755, true);
                         }
 
-                        $zip = new ZipArchive();
+                        $zip = new ZipArchive;
                         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
                             foreach ($sortedRecords as $record) {
                                 $base64Content = $pdfService->getOrGeneratePdf($record->date);
                                 $binaryContent = base64_decode($base64Content);
 
-                                $filename = $record->date->locale(config('app.locale'))->translatedFormat('l, d.m.Y') . '.pdf';
+                                $filename = $record->date->locale(config('app.locale'))->translatedFormat('l, d.m.Y').'.pdf';
 
                                 $zip->addFromString($filename, $binaryContent);
                             }
@@ -197,7 +194,7 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                         }
 
                         Notification::make()
-                            ->title(count($records) . ' PDF(s) wurden neu generiert')
+                            ->title(count($records).' PDF(s) wurden neu generiert')
                             ->success()
                             ->send();
                     })

@@ -64,13 +64,13 @@ class ColorResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
                     ->dateTime()
-                    ->date("d.m.Y H:i")
+                    ->date('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Geändert am')
                     ->dateTime()
-                    ->date("d.m.Y H:i")
+                    ->date('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

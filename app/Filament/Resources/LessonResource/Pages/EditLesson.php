@@ -12,8 +12,9 @@ class EditLesson extends EditRecord
 {
     protected static string $resource = LessonResource::class;
 
-    public function getSubheading(): string {
-        return "nur für einen Tag";
+    public function getSubheading(): string
+    {
+        return 'nur für einen Tag';
     }
 
     protected function getHeaderActions(): array
@@ -27,11 +28,11 @@ class EditLesson extends EditRecord
                     } else {
                         $redirect = $this->getResource()::getUrl('index');
                     }
+
                     return redirect($redirect);
                 }),
         ];
     }
-
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
@@ -50,8 +51,8 @@ class EditLesson extends EditRecord
     {
 
         $data['layout'] = json_encode([
-            "room" => $data['room'],
-            "lesson_time" => $data['lesson_time']],
+            'room' => $data['room'],
+            'lesson_time' => $data['lesson_time']],
             true);
 
         return $data;
@@ -61,6 +62,7 @@ class EditLesson extends EditRecord
     {
         if (isset($this->form->getState()['origin_day'])) {
             $date = Carbon::parse($this->form->getState()['origin_day'])->format('d.m.Y');
+
             return Day::getUrl(['date' => $date]);
         }
 

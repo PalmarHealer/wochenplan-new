@@ -26,7 +26,7 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
 
     protected static ?string $navigationIcon = 'tabler-calendar-repeat';
 
-    protected static ?string $navigationLabel = "Wiederholendes Angebot";
+    protected static ?string $navigationLabel = 'Wiederholendes Angebot';
 
     protected static ?int $navigationSort = 3;
 
@@ -106,7 +106,7 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                         ->label('Slot')
                         ->columnSpanFull()
                         ->required()
-                        ->layout(fn(Get $get) => app(LayoutService::class)->getLayoutByWeekday((int) ($get('weekday') ?? 6)))
+                        ->layout(fn (Get $get) => app(LayoutService::class)->getLayoutByWeekday((int) ($get('weekday') ?? 6)))
                         ->reactive()
                         ->colors($colors),
                 ]),
@@ -120,7 +120,10 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                                 $query->whereDoesntHave('roles', function ($roleQuery) {
                                     $roleQuery->where('name', 'super_admin');
                                 });
-                                if (!$get('show_all_users')) $query->whereHas('roles');
+                                if (! $get('show_all_users')) {
+                                    $query->whereHas('roles');
+                                }
+
                                 return $query;
                             }
                         )
@@ -160,7 +163,6 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
             ]);
     }
 
-
     public static function table(Table $table): Table
     {
         return $table
@@ -196,6 +198,7 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                             6 => 'Samstag',
                             7 => 'Sonntag',
                         ];
+
                         return $days[$state] ?? 'Unbekannt';
                     })
                     ->searchable()
@@ -223,7 +226,7 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                 Tables\Columns\IconColumn::make('disabled')
                     ->label('Aktiviert')
                     ->sortable()
-                    ->getStateUsing(fn ($record) => !$record->disabled)
+                    ->getStateUsing(fn ($record) => ! $record->disabled)
                     ->boolean()
                     ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('creator.name')
@@ -238,12 +241,12 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
-                    ->dateTime("d.m.Y H:i")
+                    ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Geändert am')
-                    ->dateTime("d.m.Y H:i")
+                    ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

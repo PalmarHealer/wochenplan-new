@@ -2,7 +2,6 @@
 
 namespace App\Providers\Filament;
 
-
 use App\Filament\Pages\Dashboard;
 use App\Filament\Widgets\WeekDaysCollection;
 use App\Livewire\PersonalInfo;
@@ -43,6 +42,7 @@ class AdminPanelProvider extends PanelProvider
             $action->modalFooterActionsAlignment(Alignment::Right);
         });
     }
+
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -77,10 +77,11 @@ class AdminPanelProvider extends PanelProvider
                         return User::where('email', $oauthUser->getEmail())->first();
                     })
 
-
                     ->createUserUsing(function (string $provider, SocialiteUserContract $oauthUser, FilamentSocialitePlugin $plugin) {
 
-                        if (!env('ALLOW_REGISTRATION', true)) return null;
+                        if (! env('ALLOW_REGISTRATION', true)) {
+                            return null;
+                        }
 
                         $fullName = $oauthUser->getName() ?? $oauthUser->getNickname() ?? $oauthUser->getEmail();
                         $firstName = explode(' ', trim($fullName))[0] ?? 'Unbekannt';
@@ -99,7 +100,7 @@ class AdminPanelProvider extends PanelProvider
                 FilamentShieldPlugin::make()->gridColumns([
                     'default' => 1,
                     'sm' => 2,
-                    'lg' => 3
+                    'lg' => 3,
                 ])
                     ->sectionColumnSpan(1)
                     ->checkboxListColumns([
@@ -119,7 +120,7 @@ class AdminPanelProvider extends PanelProvider
                         'personal_info' => PersonalInfo::class,
                     ])
                     ->enableTwoFactorAuthentication()
-                    ->enableBrowserSessions()
+                    ->enableBrowserSessions(),
             ])
             ->sidebarCollapsibleOnDesktop()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')

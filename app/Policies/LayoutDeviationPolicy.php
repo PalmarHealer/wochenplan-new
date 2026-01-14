@@ -2,9 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\LayoutDeviation;
-use Illuminate\Auth\Access\HandlesAuthorization;
+use App\Models\User;
 
 class LayoutDeviationPolicy
 {

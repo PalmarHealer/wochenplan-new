@@ -67,7 +67,7 @@ class AbsenceObserver
     {
         DayPdf::whereBetween('date', [
             Carbon::parse($start)->toDateString(),
-            Carbon::parse($end)->toDateString()
+            Carbon::parse($end)->toDateString(),
         ])->update(['is_outdated' => true]);
     }
 }

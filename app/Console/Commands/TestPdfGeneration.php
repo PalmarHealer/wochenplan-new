@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class TestPdfGeneration extends Command
 {
@@ -55,10 +55,10 @@ class TestPdfGeneration extends Command
                 'colors' => [],
                 'absences' => [],
             ])
-            ->format('a4')
-            ->landscape()
-            ->margins(2, 2, 2, 2)
-            ->base64();
+                ->format('a4')
+                ->landscape()
+                ->margins(2, 2, 2, 2)
+                ->base64();
 
             $this->info('✓ Spatie Laravel PDF test successful!');
 
@@ -68,7 +68,7 @@ class TestPdfGeneration extends Command
 
             // First, ensure we have a user for the created_by field
             $user = \App\Models\User::first();
-            if (!$user) {
+            if (! $user) {
                 $this->error('No users found in database. Creating a test user...');
                 $user = \App\Models\User::create([
                     'name' => 'Test User',
@@ -83,10 +83,10 @@ class TestPdfGeneration extends Command
 
             $pdfContent = $pdfService->generatePdf($date);
             $this->info('✓ PdfExportService test successful!');
-            $this->info('PDF Content length: ' . strlen($pdfContent) . ' bytes');
+            $this->info('PDF Content length: '.strlen($pdfContent).' bytes');
 
             // Save to file for inspection
-            $outputPath = storage_path('app/test-pdf-' . $date->format('Y-m-d') . '.pdf');
+            $outputPath = storage_path('app/test-pdf-'.$date->format('Y-m-d').'.pdf');
             file_put_contents($outputPath, $pdfContent);
             $this->info("PDF saved to: {$outputPath}");
 
@@ -97,8 +97,8 @@ class TestPdfGeneration extends Command
 
         } catch (\Exception $e) {
             $this->error('PDF generation failed!');
-            $this->error('Error: ' . $e->getMessage());
-            $this->error('File: ' . $e->getFile() . ':' . $e->getLine());
+            $this->error('Error: '.$e->getMessage());
+            $this->error('File: '.$e->getFile().':'.$e->getLine());
             $this->error('');
             $this->error('Stack trace:');
             $this->error($e->getTraceAsString());

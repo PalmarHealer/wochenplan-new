@@ -2,11 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
-use Illuminate\Database\Eloquent\Builder;
-use Malzariey\FilamentDaterangepickerFilter\Fields\DateRangePicker;
 use App\Filament\Resources\AbsenceResource\Pages;
 use App\Models\Absence;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
@@ -15,6 +13,8 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Malzariey\FilamentDaterangepickerFilter\Fields\DateRangePicker;
 
 class AbsenceResource extends Resource implements HasShieldPermissions
 {
@@ -53,7 +53,7 @@ class AbsenceResource extends Resource implements HasShieldPermissions
                         ->preload()
                         ->default(auth()->id())
                         ->required(auth()->user()->can('view_any_absence'))
-                        ->disabled(! auth()->user()->can('view_any_absence'))
+                        ->disabled(! auth()->user()->can('view_any_absence')),
                 ])->columns(2),
             ]);
     }
@@ -64,11 +64,11 @@ class AbsenceResource extends Resource implements HasShieldPermissions
             ->columns([
                 Tables\Columns\TextColumn::make('start')
                     ->label('Start')
-                    ->date("d.m.Y")
+                    ->date('d.m.Y')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('end')
                     ->label('Ende')
-                    ->date("d.m.Y")
+                    ->date('d.m.Y')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Benutzer')
@@ -85,12 +85,12 @@ class AbsenceResource extends Resource implements HasShieldPermissions
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
-                    ->date("d.m.Y H:i")
+                    ->date('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Geändert am')
-                    ->date("d.m.Y H:i")
+                    ->date('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

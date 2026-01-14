@@ -39,6 +39,7 @@ class LayoutSelector extends Field
     public function getLayout(): array
     {
         $evaluated = $this->evaluate($this->layout);
+
         return is_array($evaluated) ? $evaluated : [];
     }
 }

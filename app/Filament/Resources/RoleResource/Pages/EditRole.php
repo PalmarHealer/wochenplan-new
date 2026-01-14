@@ -24,7 +24,7 @@ class EditRole extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $data['guard_name'] = "web";
+        $data['guard_name'] = 'web';
 
         $this->permissions = collect($data)
             ->filter(function ($permission, $key) {
@@ -47,9 +47,9 @@ class EditRole extends EditRecord
         $this->permissions->each(function ($permission) use ($permissionModels) {
             $permissionModels->push(Utils::getPermissionModel()::firstOrCreate([
                 'name' => $permission,
-                'guard_name' => "web",
+                'guard_name' => 'web',
                 // old code:
-                //'guard_name' => $this->data['guard_name'],
+                // 'guard_name' => $this->data['guard_name'],
             ]));
         });
 

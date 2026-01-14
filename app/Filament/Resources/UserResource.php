@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
-use Spatie\Permission\Models\Role;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
@@ -12,6 +11,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Spatie\Permission\Models\Role;
 
 class UserResource extends Resource
 {
@@ -35,7 +35,7 @@ class UserResource extends Resource
     public static function form(Form $form): Form
     {
 
-        $isCreate = $form->getOperation() === "create";
+        $isCreate = $form->getOperation() === 'create';
 
         return $form
             ->schema([
@@ -52,7 +52,7 @@ class UserResource extends Resource
                         ->password()
                         ->dehydrated(fn ($state) => filled($state))
                         ->required($isCreate)
-                        ->nullable(!$isCreate),
+                        ->nullable(! $isCreate),
                 ])->columns(2),
                 Section::make([
                     Forms\Components\TextInput::make('email')
@@ -115,17 +115,17 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('email_verified_at')
                     ->label('E-Mail verifiziert am')
                     ->dateTime()
-                    ->date("d.m.Y H:i")
+                    ->date('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
-                    ->dateTime("d.m.Y H:i")
+                    ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Geändert am')
-                    ->dateTime("d.m.Y H:i")
+                    ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -137,6 +137,7 @@ class UserResource extends Resource
                             $formatted = collect(explode('_', $name))
                                 ->map(fn ($word) => ucfirst($word))
                                 ->implode(' ');
+
                             return [$id => $formatted];
                         })->toArray();
 
@@ -174,6 +175,7 @@ class UserResource extends Resource
                                     $formatted = collect(explode('_', $name))
                                         ->map(fn ($word) => ucfirst($word))
                                         ->implode(' ');
+
                                     return [$name => $formatted];
                                 })->toArray()
                             ),

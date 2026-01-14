@@ -11,6 +11,7 @@ class CustomRichEditor extends RichEditor
     public static function make(string $name): static
     {
         $instance = parent::make($name);
+
         // Optional: Hier schon Standardwerte setzen
         return $instance;
     }

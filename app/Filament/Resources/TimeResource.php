@@ -5,8 +5,8 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\TimeResource\Pages;
 use App\Models\Time;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -56,12 +56,12 @@ class TimeResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
-                    ->dateTime("d.m.Y H:i")
+                    ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Geändert am')
-                    ->dateTime("d.m.Y H:i")
+                    ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

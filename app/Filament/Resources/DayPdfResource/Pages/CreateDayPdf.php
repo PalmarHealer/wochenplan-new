@@ -5,7 +5,6 @@ namespace App\Filament\Resources\DayPdfResource\Pages;
 use App\Filament\Resources\DayPdfResource;
 use App\Models\DayPdf;
 use App\Services\PdfExportService;
-use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
@@ -41,7 +40,7 @@ class CreateDayPdf extends CreateRecord
         $pdfService = app(PdfExportService::class);
         $binaryContent = $pdfService->generatePdf($data['date']);
 
-        $dayPdf = new DayPdf();
+        $dayPdf = new DayPdf;
         $dayPdf->date = $data['date'];
         $dayPdf->setPdfContentFromBinary($binaryContent);
         $dayPdf->is_outdated = false;

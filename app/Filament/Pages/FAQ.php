@@ -21,13 +21,12 @@ class FAQ extends Page
 
     public function getTitle(): string
     {
-        return "Hilfe/Anleitungen";
+        return 'Hilfe/Anleitungen';
     }
 
     protected ?string $subheading = 'In diesem Bereich findest du Anleitungen und Antworten zu häufig gestellten Fragen und bekannten Problemen.
     Diese Sammlung wird kontinuierlich erweitert. Wenn dir ein wiederkehrendes Problem oder eine häufige Frage auffällt,
     sende bitte eine Nachricht an support@nauren.de, damit der Inhalt entsprechend ergänzt werden kann.';
-
 
     protected static string $view = 'filament.pages.faq';
 }

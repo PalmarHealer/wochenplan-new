@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\RoleResource\Pages;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use BezhanSalleh\FilamentShield\Forms\ShieldSelectAllToggle;
-use App\Filament\Resources\RoleResource\Pages;
 use BezhanSalleh\FilamentShield\Support\Utils;
 use BezhanSalleh\FilamentShield\Traits\HasShieldFormComponents;
 use Filament\Facades\Filament;
@@ -54,7 +54,7 @@ class RoleResource extends Resource implements HasShieldPermissions
                                     ->required()
                                     ->maxLength(255),
 
-                                //Forms\Components\TextInput::make('guard_name')
+                                // Forms\Components\TextInput::make('guard_name')
                                 //    ->label(__('filament-shield::filament-shield.field.guard_name'))
                                 //    ->default(Utils::getFilamentAuthGuard())
                                 //    ->nullable()
@@ -106,12 +106,12 @@ class RoleResource extends Resource implements HasShieldPermissions
                     ->colors(['success']),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
-                    ->dateTime("d.m.Y H:i")
+                    ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Geändert am')
-                    ->dateTime("d.m.Y H:i")
+                    ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

@@ -14,13 +14,12 @@ use App\Observers\LessonObserver;
 use App\Observers\LessonTemplateObserver;
 use App\Observers\TouchesLastSeenObserver;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Event;
-use SocialiteProviders\Manager\SocialiteWasCalled;
 use SocialiteProviders\Azure\Provider;
+use SocialiteProviders\Manager\SocialiteWasCalled;
 
 class AppServiceProvider extends ServiceProvider
 {

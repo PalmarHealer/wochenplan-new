@@ -14,7 +14,7 @@ class CreateAbsence extends CreateRecord
         $data['created_by'] = auth()->id();
         $data['updated_by'] = auth()->id();
 
-        $parts = explode(" - ", $data['date']);
+        $parts = explode(' - ', $data['date']);
 
         $data['start'] = $parts[0];
         $data['end'] = $parts[1];
@@ -25,6 +25,7 @@ class CreateAbsence extends CreateRecord
 
         return $data;
     }
+
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');

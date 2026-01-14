@@ -4,7 +4,6 @@ namespace App\Observers;
 
 use App\Models\DayPdf;
 use App\Models\LessonTemplate;
-use Carbon\Carbon;
 
 class LessonTemplateObserver
 {
@@ -66,9 +65,12 @@ class LessonTemplateObserver
         $driver = config('database.default');
         $connectionDriver = config("database.connections.{$driver}.driver");
 
-        if ($connectionDriver === 'sqlite') DayPdf::whereRaw('cast(strftime(\'%w\', date) as integer) = ?', [($weekday % 7)])
+        if ($connectionDriver === 'sqlite') {
+            DayPdf::whereRaw('cast(strftime(\'%w\', date) as integer) = ?', [($weekday % 7)])
                 ->update(['is_outdated' => true]);
-        else DayPdf::whereRaw('DAYOFWEEK(date) = ?', [($weekday % 7) + 1])
+        } else {
+            DayPdf::whereRaw('DAYOFWEEK(date) = ?', [($weekday % 7) + 1])
                 ->update(['is_outdated' => true]);
+        }
     }
 }

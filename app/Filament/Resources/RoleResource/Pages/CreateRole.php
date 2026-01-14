@@ -16,7 +16,7 @@ class CreateRole extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['guard_name'] = "web";
+        $data['guard_name'] = 'web';
 
         $this->permissions = collect($data)
             ->filter(function ($permission, $key) {
@@ -40,9 +40,9 @@ class CreateRole extends CreateRecord
             $permissionModels->push(Utils::getPermissionModel()::firstOrCreate([
                 /** @phpstan-ignore-next-line */
                 'name' => $permission,
-                'guard_name' => "web",
+                'guard_name' => 'web',
                 // old code:
-                //'guard_name' => $this->data['guard_name'],
+                // 'guard_name' => $this->data['guard_name'],
             ]));
         });
 

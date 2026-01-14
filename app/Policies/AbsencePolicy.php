@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Absence;
+use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class AbsencePolicy
@@ -15,7 +15,7 @@ class AbsencePolicy
      */
     public function viewAny(User $user): bool
     {
-        return ($user->can('view_any_absence') or $user->can('view_absence'));
+        return $user->can('view_any_absence') or $user->can('view_absence');
     }
 
     /**
@@ -24,7 +24,9 @@ class AbsencePolicy
     public function view(User $user, Absence $absence): bool
     {
         if ($user->can('view_absence')) {
-            if ($absence->user_id === $user->id or $user->can('view_any_absence')) return true;
+            if ($absence->user_id === $user->id or $user->can('view_any_absence')) {
+                return true;
+            }
         }
 
         return false;
@@ -44,7 +46,9 @@ class AbsencePolicy
     public function update(User $user, Absence $absence): bool
     {
         if ($user->can('update_absence')) {
-            if ($absence->user_id === $user->id or $user->can('view_any_absence')) return true;
+            if ($absence->user_id === $user->id or $user->can('view_any_absence')) {
+                return true;
+            }
         }
 
         return false;
@@ -56,7 +60,9 @@ class AbsencePolicy
     public function delete(User $user, Absence $absence): bool
     {
         if ($user->can('delete_absence')) {
-            if ($absence->user_id === $user->id or $user->can('view_any_absence')) return true;
+            if ($absence->user_id === $user->id or $user->can('view_any_absence')) {
+                return true;
+            }
         }
 
         return false;

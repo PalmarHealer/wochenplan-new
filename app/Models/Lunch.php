@@ -10,6 +10,7 @@ class Lunch extends Model
         'date',
         'lunch',
     ];
+
     protected function casts(): array
     {
         return [

@@ -25,7 +25,7 @@ class PdfExportService
         // Check if PDF exists and is not outdated
         $dayPdf = DayPdf::whereDate('date', $dateString)->first();
 
-        if ($dayPdf && !$dayPdf->is_outdated) {
+        if ($dayPdf && ! $dayPdf->is_outdated) {
             return $dayPdf->pdf_content;
         }
 
@@ -40,7 +40,7 @@ class PdfExportService
             $dayPdf->save();
         } else {
             // Create new PDF record
-            $dayPdf = new DayPdf();
+            $dayPdf = new DayPdf;
             $dayPdf->date = $dateString;
             $dayPdf->setPdfContentFromBinary($pdfContent);
             $dayPdf->is_outdated = false;
@@ -84,16 +84,18 @@ class PdfExportService
         });
 
         $templateLessons = $filteredTemplates->mapWithKeys(function ($template) {
-            $key = $template->room . '-' . $template->lesson_time;
+            $key = $template->room.'-'.$template->lesson_time;
             $array = $template->toArray();
             $array['assigned_users'] = $template->assignedUsers->pluck('display_name', 'id')->toArray();
+
             return [$key => $array];
         });
 
         $lessonLessons = $rawLessons->mapWithKeys(function ($lesson) {
-            $key = $lesson->room . '-' . $lesson->lesson_time;
+            $key = $lesson->room.'-'.$lesson->lesson_time;
             $array = $lesson->toArray();
             $array['assigned_users'] = $lesson->assignedUsers->pluck('display_name', 'id')->toArray();
+
             return [$key => $array];
         });
 
@@ -114,9 +116,9 @@ class PdfExportService
             ->whereDate('end', '>=', $date)
             ->get();
 
-        $absences = array_map(fn($entry) => [
+        $absences = array_map(fn ($entry) => [
             'id' => $entry['user']['id'],
-            'display_name' => $entry['user']['display_name']
+            'display_name' => $entry['user']['display_name'],
         ], $rawAbsences->toArray());
 
         $absences = array_values(array_unique($absences, SORT_REGULAR));
@@ -143,10 +145,10 @@ class PdfExportService
             });
 
         // Save to a temporary file and read the contents
-        $tempPath = storage_path('app/temp/pdf-' . uniqid() . '.pdf');
+        $tempPath = storage_path('app/temp/pdf-'.uniqid().'.pdf');
 
         // Ensure temp directory exists
-        if (!file_exists(storage_path('app/temp'))) {
+        if (! file_exists(storage_path('app/temp'))) {
             mkdir(storage_path('app/temp'), 0755, true);
         }
 

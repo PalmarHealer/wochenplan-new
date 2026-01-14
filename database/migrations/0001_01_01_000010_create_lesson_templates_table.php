@@ -30,7 +30,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-
         Schema::create('lesson_template_user', function (Blueprint $table) {
             $table->id();
             $table->foreignId('lesson_template_id')->constrained()->cascadeOnDelete();

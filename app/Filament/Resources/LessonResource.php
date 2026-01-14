@@ -28,12 +28,11 @@ class LessonResource extends Resource implements HasShieldPermissions
 
     protected static ?string $navigationIcon = 'tabler-calendar-dot';
 
-    protected static ?string $navigationLabel = "Angebote";
+    protected static ?string $navigationLabel = 'Angebote';
 
     protected static ?int $navigationSort = 2;
 
     protected static ?string $label = 'Angebot';
-
 
     public static function getPluralLabel(): string
     {
@@ -44,8 +43,6 @@ class LessonResource extends Resource implements HasShieldPermissions
     {
         $colors = Color::all()->pluck('color', 'id')->toArray();
         $colors['default'] = 'rgba(0, 0, 0, 0.10)';
-
-
 
         $request = request();
         $defaults = [];
@@ -70,9 +67,13 @@ class LessonResource extends Resource implements HasShieldPermissions
             }
         }
 
-        if ($request->has('room')) $defaults['room'] = $request->input('room');
+        if ($request->has('room')) {
+            $defaults['room'] = $request->input('room');
+        }
 
-        if ($request->has('time')) $defaults['time'] = $request->input('time');
+        if ($request->has('time')) {
+            $defaults['time'] = $request->input('time');
+        }
 
         if ($request->has('date')) {
             $defaults['date'] = $request->input('date');
@@ -128,7 +129,7 @@ class LessonResource extends Resource implements HasShieldPermissions
                     ]),
                 Section::make([
                     Forms\Components\DatePicker::make('date')
-                        ->default(function() use ($defaults) {
+                        ->default(function () use ($defaults) {
                             $date = isset($defaults['date']) ?
                                 Carbon::parse($defaults['date']) :
                                 now();
@@ -136,6 +137,7 @@ class LessonResource extends Resource implements HasShieldPermissions
                             while ($date->isWeekend()) {
                                 $date->addDay();
                             }
+
                             return $date;
                         })
                         ->label('Datum')
@@ -171,7 +173,7 @@ class LessonResource extends Resource implements HasShieldPermissions
                         ->label('Slot')
                         ->columnSpanFull()
                         ->required()
-                        ->layout(fn(Get $get) => app(LayoutService::class)->getLayoutForDate($get('date') ?? now()->toDateString()))
+                        ->layout(fn (Get $get) => app(LayoutService::class)->getLayoutForDate($get('date') ?? now()->toDateString()))
                         ->reactive()
                         ->colors($colors),
                 ]),
@@ -186,7 +188,10 @@ class LessonResource extends Resource implements HasShieldPermissions
                                 $query->whereDoesntHave('roles', function ($roleQuery) {
                                     $roleQuery->where('name', 'super_admin');
                                 });
-                                if (!$get('show_all_users')) $query->whereHas('roles');
+                                if (! $get('show_all_users')) {
+                                    $query->whereHas('roles');
+                                }
+
                                 return $query;
                             }
                         )
@@ -218,7 +223,7 @@ class LessonResource extends Resource implements HasShieldPermissions
                     ])
                     ->icons([
                         true => 'heroicon-o-x-mark',
-                            false => 'heroicon-o-check',
+                        false => 'heroicon-o-check',
                     ])
                     ->colors([
                         true => 'warning',
@@ -226,7 +231,6 @@ class LessonResource extends Resource implements HasShieldPermissions
                     ]),
             ]);
     }
-
 
     public static function table(Table $table): Table
     {
@@ -253,7 +257,7 @@ class LessonResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('date')
                     ->label('Datum')
                     ->sortable()
-                    ->date("d.m.Y")
+                    ->date('d.m.Y')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('rooms.name')
@@ -279,7 +283,7 @@ class LessonResource extends Resource implements HasShieldPermissions
                 Tables\Columns\IconColumn::make('disabled')
                     ->label('Aktiviert')
                     ->sortable()
-                    ->getStateUsing(fn ($record) => !$record->disabled)
+                    ->getStateUsing(fn ($record) => ! $record->disabled)
                     ->boolean()
                     ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('creator.name')
@@ -294,12 +298,12 @@ class LessonResource extends Resource implements HasShieldPermissions
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
-                    ->dateTime("d.m.Y H:i")
+                    ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Geändert am')
-                    ->dateTime("d.m.Y H:i")
+                    ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -312,10 +316,10 @@ class LessonResource extends Resource implements HasShieldPermissions
                         false => 'Aktiviert',
                     ]),
             ])
-            //->actions([
+            // ->actions([
             //    Tables\Actions\ViewAction::make(),
             //    Tables\Actions\EditAction::make(),
-            //])
+            // ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
             ]);
@@ -347,7 +351,6 @@ class LessonResource extends Resource implements HasShieldPermissions
         return $query->whereRaw('1 = 0');
     }
 
-
     public static function getPermissionPrefixes(): array
     {
         return [
@@ -365,7 +368,7 @@ class LessonResource extends Resource implements HasShieldPermissions
         return [
             'index' => Pages\ListLessons::route('/'),
             'create' => Pages\CreateLesson::route('/create'),
-            //'view' => Pages\ViewLesson::route('/{record}'),
+            // 'view' => Pages\ViewLesson::route('/{record}'),
             'edit' => Pages\EditLesson::route('/{record}/edit'),
         ];
     }

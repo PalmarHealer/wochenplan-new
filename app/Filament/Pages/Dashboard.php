@@ -8,6 +8,6 @@ class Dashboard extends \Filament\Pages\Dashboard
 
     public static function getRoutePath(): string
     {
-        return "dashboard";
+        return 'dashboard';
     }
 }

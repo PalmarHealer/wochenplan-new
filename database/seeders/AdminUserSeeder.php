@@ -3,11 +3,11 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use BezhanSalleh\FilamentShield\Support\Utils;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Contracts\Permission;
 use Spatie\Permission\Contracts\Role;
 use Spatie\Permission\PermissionRegistrar;
-use BezhanSalleh\FilamentShield\Support\Utils;
 
 class AdminUserSeeder extends Seeder
 {
@@ -19,6 +19,7 @@ class AdminUserSeeder extends Seeder
 
         if (blank($email) || blank($password)) {
             $this->command?->warn('ADMIN_EMAIL or ADMIN_PASSWORD not set in .env; skipping AdminUserSeeder.');
+
             return;
         }
 

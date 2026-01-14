@@ -47,7 +47,7 @@ class LayoutService
             ->orderByDesc('updated_at')
             ->first();
 
-        if (!$layoutModel) {
+        if (! $layoutModel) {
             return ['data' => [], 'model' => null];
         }
 
@@ -95,6 +95,7 @@ class LayoutService
         }
 
         $decoded = is_array($layout) ? $layout : json_decode($layout, true);
+
         return is_array($decoded) ? $decoded : [];
     }
 

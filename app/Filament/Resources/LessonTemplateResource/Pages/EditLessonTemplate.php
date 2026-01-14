@@ -12,8 +12,9 @@ class EditLessonTemplate extends EditRecord
 {
     protected static string $resource = LessonTemplateResource::class;
 
-    public function getSubheading(): string {
-        return "für alle Wochen";
+    public function getSubheading(): string
+    {
+        return 'für alle Wochen';
     }
 
     protected function getHeaderActions(): array
@@ -37,8 +38,8 @@ class EditLessonTemplate extends EditRecord
     {
 
         $data['layout'] = json_encode([
-            "room" => $data['room'],
-            "lesson_time" => $data['lesson_time']],
+            'room' => $data['room'],
+            'lesson_time' => $data['lesson_time']],
             true);
 
         return $data;
@@ -48,6 +49,7 @@ class EditLessonTemplate extends EditRecord
     {
         if (isset($this->form->getState()['origin_day'])) {
             $date = Carbon::parse($this->form->getState()['origin_day'])->format('d.m.Y');
+
             return Day::getUrl(['date' => $date]);
         }
 

@@ -5,13 +5,13 @@ namespace App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource;
 use App\Models\User;
 use Filament\Actions;
+use Filament\Forms\Components\FileUpload;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
-use Filament\Forms\Components\FileUpload;
-use Filament\Notifications\Notification;
 
 class ListUsers extends ListRecords
 {
@@ -35,6 +35,7 @@ class ListUsers extends ListRecords
                             ->danger()
                             ->send();
                         Storage::disk('public')->delete($filePath);
+
                         return;
                     }
 
@@ -45,6 +46,7 @@ class ListUsers extends ListRecords
                             ->danger()
                             ->send();
                         Storage::disk('public')->delete($filePath);
+
                         return;
                     }
 
@@ -55,6 +57,7 @@ class ListUsers extends ListRecords
                                 ->title('Die Datei konnte nicht geöffnet werden.')
                                 ->danger()
                                 ->send();
+
                             return;
                         }
 
@@ -65,19 +68,24 @@ class ListUsers extends ListRecords
                                 ->danger()
                                 ->send();
                             fclose($handle);
+
                             return;
                         }
 
                         $count = 0;
                         while (($row = fgetcsv($handle, 0, ';')) !== false) {
-                            if (count($row) < 3) continue;
+                            if (count($row) < 3) {
+                                continue;
+                            }
                             [$firstName, $lastName, $email] = $row;
-                            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) continue;
+                            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                                continue;
+                            }
 
                             $user = User::firstOrNew(['email' => $email]);
                             $user->display_name = $firstName;
-                            $user->name = $firstName . ' ' . $lastName;
-                            if (!$user->exists) {
+                            $user->name = $firstName.' '.$lastName;
+                            if (! $user->exists) {
                                 $user->password = Hash::make(Str::random(32));
                                 $user->save();
                                 $count++;
@@ -85,7 +93,7 @@ class ListUsers extends ListRecords
                         }
 
                         Notification::make()
-                            ->title($count . ' Benutzer erfolgreich importiert.')
+                            ->title($count.' Benutzer erfolgreich importiert.')
                             ->success()
                             ->send();
                     } finally {

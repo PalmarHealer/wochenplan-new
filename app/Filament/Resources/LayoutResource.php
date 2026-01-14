@@ -144,16 +144,17 @@ class LayoutResource extends Resource
                     ->getStateUsing(function ($record) {
                         $map = [1 => 'Montag', 2 => 'Dienstag', 3 => 'Mittwoch', 4 => 'Donnerstag', 5 => 'Freitag'];
                         $days = is_array($record->weekdays) ? $record->weekdays : [];
-                        return array_values(array_map(fn($d) => $map[$d] ?? (string) $d, $days));
+
+                        return array_values(array_map(fn ($d) => $map[$d] ?? (string) $d, $days));
                     }),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
-                    ->dateTime("d.m.Y H:i")
+                    ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Geändert am')
-                    ->dateTime("d.m.Y H:i")
+                    ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

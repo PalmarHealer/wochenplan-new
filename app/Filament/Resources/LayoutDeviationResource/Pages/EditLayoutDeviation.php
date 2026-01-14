@@ -34,7 +34,7 @@ class EditLayoutDeviation extends EditRecord
     protected function mutateFormDataBeforeFill(array $data): array
     {
         if (isset($data['start'], $data['end'])) {
-            $data['date'] = Carbon::parse($data['start'])->format('d.m.Y') .' - ' . Carbon::parse($data['end'])->format('d.m.Y');
+            $data['date'] = Carbon::parse($data['start'])->format('d.m.Y').' - '.Carbon::parse($data['end'])->format('d.m.Y');
         }
 
         return $data;

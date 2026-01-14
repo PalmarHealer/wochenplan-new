@@ -120,4 +120,114 @@
         </x-filament::section>
     @endif
 
+    @if(auth()->user()->can('layout.edit'))
+        <x-filament::section
+            icon="tabler-alert-triangle"
+            collapsible
+            collapsed
+            persist-collapsed
+            id="lunch-not-current">
+            <x-slot name="heading">
+                Mittagessen nicht aktuell
+            </x-slot>
+
+            <x-slot name="description">
+                Das Mittagessen für einen bestimmten Tag ist nicht korrekt.
+            </x-slot>
+
+            <div>
+                <p class="mb-4">
+                    Leider kann das System nicht automatisch erkennen, ob das Mittagessen für einen bestimmten Tag aktuell ist.
+                    Das Mittagessen wird beim ersten Abruf gecacht und danach nicht mehr automatisch aktualisiert.
+                </p>
+
+                <p class="mb-4">
+                    Wenn das Mittagessen für einen Tag nicht korrekt ist, kannst du es hier manuell löschen.
+                    Beim nächsten Abruf wird es dann automatisch von der API neu geladen.
+                </p>
+
+                <div class="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
+                    <form id="clear-lunch-form" class="flex gap-3 items-end">
+                        @csrf
+                        <div class="flex-1">
+                            <label for="lunch-date" class="block text-sm font-medium mb-2">
+                                Datum auswählen
+                            </label>
+                            <input
+                                type="date"
+                                id="lunch-date"
+                                name="date"
+                                required
+                                class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 focus:border-primary-500 focus:ring-primary-500"
+                            />
+                        </div>
+                        <x-filament::button
+                            type="submit"
+                            color="danger"
+                            size="md">
+                            Löschen
+                        </x-filament::button>
+                    </form>
+
+                    <div id="lunch-message" class="mt-3 hidden">
+                        <div class="rounded-lg p-3 text-sm" id="lunch-message-content"></div>
+                    </div>
+                </div>
+            </div>
+        </x-filament::section>
+
+        @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const form = document.getElementById('clear-lunch-form');
+                const messageDiv = document.getElementById('lunch-message');
+                const messageContent = document.getElementById('lunch-message-content');
+
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(form);
+                    const date = formData.get('date');
+
+                    try {
+                        const response = await fetch('{{ route('lunch.clear') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('[name="_token"]').value,
+                            },
+                            body: JSON.stringify({ date: date })
+                        });
+
+                        const data = await response.json();
+
+                        // Show message
+                        messageDiv.classList.remove('hidden');
+                        messageContent.textContent = data.message;
+
+                        if (data.success) {
+                            messageContent.parentElement.classList.remove('bg-red-100', 'text-red-700', 'dark:bg-red-900', 'dark:text-red-200');
+                            messageContent.parentElement.classList.add('bg-green-100', 'text-green-700', 'dark:bg-green-900', 'dark:text-green-200');
+                        } else {
+                            messageContent.parentElement.classList.remove('bg-green-100', 'text-green-700', 'dark:bg-green-900', 'dark:text-green-200');
+                            messageContent.parentElement.classList.add('bg-red-100', 'text-red-700', 'dark:bg-red-900', 'dark:text-red-200');
+                        }
+
+                        // Hide message after 5 seconds
+                        setTimeout(() => {
+                            messageDiv.classList.add('hidden');
+                        }, 5000);
+
+                    } catch (error) {
+                        messageDiv.classList.remove('hidden');
+                        messageContent.textContent = 'Ein Fehler ist aufgetreten: ' + error.message;
+                        messageContent.parentElement.classList.remove('bg-green-100', 'text-green-700', 'dark:bg-green-900', 'dark:text-green-200');
+                        messageContent.parentElement.classList.add('bg-red-100', 'text-red-700', 'dark:bg-red-900', 'dark:text-red-200');
+                    }
+                });
+            });
+        </script>
+        @endpush
+    @endif
+
 </x-filament-panels::page>

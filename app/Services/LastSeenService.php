@@ -33,11 +33,12 @@ class LastSeenService
     public function current(): string
     {
         $value = DB::table('last_seen')->value('date');
-        if (!$value) {
+        if (! $value) {
             $now = Carbon::now();
             DB::table('last_seen')->insert([
                 'date' => $now,
             ]);
+
             return $now->toDateTimeString();
         }
 
