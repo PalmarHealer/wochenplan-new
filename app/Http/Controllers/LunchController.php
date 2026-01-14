@@ -15,7 +15,7 @@ class LunchController
     public function clear(Request $request): JsonResponse
     {
         // Check permission
-        if (! auth()->user()->can('layout.edit')) {
+        if (! auth()->user()->can('edit_layout')) {
             return response()->json([
                 'success' => false,
                 'message' => 'Keine Berechtigung für diese Aktion',

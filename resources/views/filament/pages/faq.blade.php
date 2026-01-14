@@ -120,7 +120,7 @@
         </x-filament::section>
     @endif
 
-    @if(auth()->user()->can('layout.edit'))
+    @if(auth()->user()->can('edit_layout'))
         <x-filament::section
             icon="tabler-alert-triangle"
             collapsible
