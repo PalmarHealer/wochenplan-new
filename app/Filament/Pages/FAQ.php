@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Services\LunchService;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -40,9 +41,9 @@ class FAQ extends Page implements HasForms
     public function clearLunchAction(): Action
     {
         return Action::make('clearLunch')
-            ->label('Löschen')
-            ->icon('tabler-trash')
-            ->color('danger')
+            ->label('Tag neuladen')
+            ->icon('tabler-database-search')
+            ->color('warning')
             ->form([
                 DatePicker::make('date')
                     ->label('Datum auswählen')
@@ -51,25 +52,26 @@ class FAQ extends Page implements HasForms
                     ->displayFormat('d.m.Y')
                     ->closeOnDateSelection(),
             ])
-            ->modalHeading('Mittagessen löschen')
+            ->modalHeading('Mittagessen leeren')
             ->modalDescription('Wähle das Datum aus, für das das Mittagessen gelöscht werden soll. Es wird beim nächsten Abruf neu von der API geladen.')
-            ->modalSubmitActionLabel('Löschen')
+            ->modalSubmitActionLabel('Leeren')
             ->action(function (array $data, LunchService $lunchService) {
                 $date = $data['date'];
+                $formattedDate = Carbon::parse($date)->format('d.m.Y');
 
                 $cleared = $lunchService->clearLunch($date);
 
                 if ($cleared) {
                     Notification::make()
                         ->success()
-                        ->title('Erfolgreich gelöscht')
-                        ->body('Mittagessen für '.$date.' wurde gelöscht und wird beim nächsten Abruf neu geladen.')
+                        ->title('Erfolgreich geleert')
+                        ->body('Mittagessen für '.$formattedDate.' wurde geleert und wird beim nächsten Abruf neu geladen.')
                         ->send();
                 } else {
                     Notification::make()
                         ->warning()
                         ->title('Nicht gefunden')
-                        ->body('Kein Mittagessen für '.$date.' gefunden.')
+                        ->body('Kein Mittagessen für '.$formattedDate.' gefunden.')
                         ->send();
                 }
             })

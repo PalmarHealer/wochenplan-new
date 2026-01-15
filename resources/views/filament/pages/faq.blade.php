@@ -142,7 +142,7 @@
                 </p>
 
                 <p class="mb-4">
-                    Wenn das Mittagessen für einen Tag nicht korrekt ist, kannst du es hier manuell löschen.
+                    Wenn das Mittagessen für einen Tag nicht korrekt ist, kannst du es hier manuell leeren.
                     Beim nächsten Abruf wird es dann automatisch von der API neu geladen.
                 </p>
 
