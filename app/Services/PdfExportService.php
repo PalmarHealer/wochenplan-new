@@ -123,6 +123,12 @@ class PdfExportService
 
         $absences = array_values(array_unique($absences, SORT_REGULAR));
 
+        // Set up writable directory for Chrome user data
+        $userDataDir = storage_path('app/chrome-data');
+        if (! file_exists($userDataDir)) {
+            mkdir($userDataDir, 0777, true);
+        }
+
         $pdf = Pdf::view('pdf.day-layout', [
             'date' => $date,
             'layout' => $layout,
@@ -134,14 +140,26 @@ class PdfExportService
             ->format('a4')
             ->landscape()
             ->margins(2, 2, 2, 2)
-            ->withBrowsershot(function ($browsershot) {
-                $browsershot->addChromiumArguments([
-                    'disable-crash-reporter',
-                    'disable-crashpad',
-                    'disable-dev-shm-usage',
-                    'disable-setuid-sandbox',
-                    'disable-gpu',
-                ]);
+            ->withBrowsershot(function ($browsershot) use ($userDataDir) {
+                if ($chromePath = config('laravel-pdf.browsershot.chrome_path')) {
+                    $browsershot->setChromePath($chromePath);
+                }
+
+                $browsershot
+                    ->noSandbox()
+                    ->setEnvironmentOptions([
+                        'HOME' => $userDataDir,
+                        'XDG_CONFIG_HOME' => $userDataDir,
+                        'XDG_CACHE_HOME' => $userDataDir,
+                        'TMPDIR' => $userDataDir,
+                    ])
+                    ->addChromiumArguments([
+                        'disable-dev-shm-usage',
+                        'disable-gpu',
+                        'headless=new',
+                        'user-data-dir='.$userDataDir,
+                        'crash-dumps-dir='.$userDataDir,
+                    ]);
             });
 
         // Save to a temporary file and read the contents

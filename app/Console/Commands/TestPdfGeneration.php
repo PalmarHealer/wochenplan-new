@@ -39,9 +39,26 @@ class TestPdfGeneration extends Command
             $this->info('Test 1: Simple Browsershot test...');
             $testHtml = '<html><body><h1>Test PDF</h1><p>This is a test.</p></body></html>';
 
-            $pdf = \Spatie\Browsershot\Browsershot::html($testHtml)
-                ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
-                ->pdf();
+            // Set up writable directories for Chrome
+            $userDataDir = storage_path('app/chrome-data');
+            if (! file_exists($userDataDir)) {
+                mkdir($userDataDir, 0777, true);
+            }
+
+            $browsershot = \Spatie\Browsershot\Browsershot::html($testHtml)
+                ->noSandbox()
+                ->addChromiumArguments([
+                    'disable-dev-shm-usage',
+                    'disable-gpu',
+                    'headless=new',
+                    'user-data-dir='.$userDataDir,
+                ]);
+
+            if ($chromePath = config('laravel-pdf.browsershot.chrome_path')) {
+                $browsershot->setChromePath($chromePath);
+            }
+
+            $pdf = $browsershot->pdf();
 
             $this->info('✓ Simple Browsershot test successful!');
 
@@ -58,6 +75,20 @@ class TestPdfGeneration extends Command
                 ->format('a4')
                 ->landscape()
                 ->margins(2, 2, 2, 2)
+                ->withBrowsershot(function ($browsershot) use ($userDataDir) {
+                    if ($chromePath = config('laravel-pdf.browsershot.chrome_path')) {
+                        $browsershot->setChromePath($chromePath);
+                    }
+
+                    $browsershot
+                        ->noSandbox()
+                        ->addChromiumArguments([
+                            'disable-dev-shm-usage',
+                            'disable-gpu',
+                            'headless=new',
+                            'user-data-dir='.$userDataDir,
+                        ]);
+                })
                 ->base64();
 
             $this->info('✓ Spatie Laravel PDF test successful!');
