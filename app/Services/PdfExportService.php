@@ -147,6 +147,7 @@ class PdfExportService
 
                 $browsershot
                     ->noSandbox()
+                    ->deviceScaleFactor(2)
                     ->setEnvironmentOptions([
                         'HOME' => $userDataDir,
                         'XDG_CONFIG_HOME' => $userDataDir,

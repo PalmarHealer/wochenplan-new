@@ -33,11 +33,9 @@
 
         table {
             width: 100%;
-            height: 100%;
-            max-height: 100vh;
+            height: 100vh;
             border-collapse: collapse;
             table-layout: fixed;
-            page-break-inside: avoid;
         }
 
         tbody {
@@ -45,23 +43,22 @@
         }
 
         tr {
-            page-break-inside: avoid;
-            page-break-after: auto;
-            min-height: 2.5rem;
-            height: 2.5rem;
+            width: auto;
         }
 
         td {
-            padding: 4px;
+            width: auto;
+            padding: 2px 3px;
             border: 2px solid white;
             text-align: center;
             vertical-align: middle;
             word-wrap: break-word;
             overflow-wrap: break-word;
             hyphens: auto;
-            font-size: 0.95em;
-            line-height: 1.2;
-            max-height: fit-content;
+            font-size: 0.85em;
+            line-height: 1.1;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         td small {
