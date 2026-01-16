@@ -22,6 +22,8 @@ class DayPdfResource extends Resource implements HasShieldPermissions
 
     protected static ?string $navigationIcon = 'tabler-file-type-pdf';
 
+    protected static ?string $slug = 'pdf';
+
     protected static ?string $navigationLabel = 'PDF-Exporte';
 
     protected static ?string $navigationGroup = 'Administration';
