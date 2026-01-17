@@ -179,6 +179,19 @@ class PdfExportService
     }
 
     /**
+     * Get existing PDF for a specific date without regenerating
+     * Returns base64 encoded PDF content or null if not found
+     */
+    public function getExistingPdf(string|Carbon $date): ?string
+    {
+        $dateString = $date instanceof Carbon ? $date->format('Y-m-d') : $date;
+
+        $dayPdf = DayPdf::whereDate('date', $dateString)->first();
+
+        return $dayPdf?->pdf_content;
+    }
+
+    /**
      * Mark PDFs as outdated for a specific date
      */
     public function markAsOutdated(string|Carbon $date): void

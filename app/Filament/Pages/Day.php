@@ -251,10 +251,28 @@ class Day extends Page
     public function downloadPdf()
     {
         $pdfService = app(PdfExportService::class);
-        $base64Content = $pdfService->getOrGeneratePdf($this->day);
-        $binaryContent = base64_decode($base64Content);
-
         $date = Carbon::parse($this->day);
+        $isInPast = $date->isBefore(Carbon::today());
+
+        if ($isInPast) {
+            // Past dates: never regenerate from Day page, only serve existing PDF
+            $base64Content = $pdfService->getExistingPdf($this->day);
+
+            if (! $base64Content) {
+                \Filament\Notifications\Notification::make()
+                    ->title('PDF nicht verfügbar')
+                    ->body('Für dieses Datum existiert keine PDF.')
+                    ->danger()
+                    ->send();
+
+                return null;
+            }
+        } else {
+            // Today or future dates: auto-regenerate if outdated
+            $base64Content = $pdfService->getOrGeneratePdf($this->day);
+        }
+
+        $binaryContent = base64_decode($base64Content);
         $filename = $date->locale(config('app.locale'))->translatedFormat('l, d.m.Y').'.pdf';
 
         return Response::streamDownload(function () use ($binaryContent) {
