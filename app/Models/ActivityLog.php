@@ -36,24 +36,40 @@ class ActivityLog extends Model
 
     // Action categories
     public const CATEGORY_AUTH = 'auth';
+
     public const CATEGORY_DATA = 'data';
+
     public const CATEGORY_NAVIGATION = 'navigation';
+
     public const CATEGORY_INTERACTION = 'interaction';
+
     public const CATEGORY_SYSTEM = 'system';
+
     public const CATEGORY_SECURITY = 'security';
 
     // Common actions
     public const ACTION_LOGIN = 'login';
+
     public const ACTION_LOGIN_FAILED = 'login_failed';
+
     public const ACTION_LOGOUT = 'logout';
+
     public const ACTION_CREATE = 'create';
+
     public const ACTION_UPDATE = 'update';
+
     public const ACTION_DELETE = 'delete';
+
     public const ACTION_VIEW = 'view';
+
     public const ACTION_VISIT = 'visit';
+
     public const ACTION_CLICK = 'click';
+
     public const ACTION_EXPORT = 'export';
+
     public const ACTION_IMPORT = 'import';
+
     public const ACTION_DOWNLOAD = 'download';
 
     public function user(): BelongsTo

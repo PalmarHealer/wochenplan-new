@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Listeners\LogFailedLogin;
+use App\Listeners\LogSuccessfulLogin;
+use App\Listeners\LogSuccessfulLogout;
 use App\Models\Absence;
 use App\Models\Color;
 use App\Models\DayPdf;
@@ -9,9 +12,6 @@ use App\Models\Layout;
 use App\Models\LayoutDeviation;
 use App\Models\Lesson;
 use App\Models\LessonTemplate;
-use App\Listeners\LogFailedLogin;
-use App\Listeners\LogSuccessfulLogin;
-use App\Listeners\LogSuccessfulLogout;
 use App\Models\Room;
 use App\Models\Time;
 use App\Models\User;
