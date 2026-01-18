@@ -34,6 +34,15 @@ class ActivityLog extends Model
         'is_suspicious' => 'boolean',
     ];
 
+    /**
+     * Set the URL attribute with truncation for extremely long URLs
+     */
+    public function setUrlAttribute(?string $value): void
+    {
+        // TEXT columns can handle up to 65,535 characters, but truncate at 10,000 for safety
+        $this->attributes['url'] = $value ? substr($value, 0, 10000) : null;
+    }
+
     // Action categories
     public const CATEGORY_AUTH = 'auth';
 

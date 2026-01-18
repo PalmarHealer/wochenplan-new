@@ -113,7 +113,7 @@ class ActivityLogResource extends Resource
                     ->label('Benutzer')
                     ->sortable()
                     ->searchable()
-                    ->placeholder('System/Unknown')
+                    ->placeholder('System')
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('action')
