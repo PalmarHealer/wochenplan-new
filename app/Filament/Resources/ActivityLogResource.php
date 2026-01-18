@@ -37,7 +37,8 @@ class ActivityLogResource extends Resource
                             ->disabled(),
                         Forms\Components\TextInput::make('user.display_name')
                             ->label('Benutzer')
-                            ->disabled(),
+                            ->disabled()
+                            ->default(fn ($record) => $record?->user?->display_name ?? 'System'),
                         Forms\Components\TextInput::make('ip_address')
                             ->label('IP-Adresse')
                             ->disabled(),
@@ -56,7 +57,8 @@ class ActivityLogResource extends Resource
                             ->disabled(),
                         Forms\Components\TextInput::make('resource_label')
                             ->label('Ressourcen-Label')
-                            ->disabled(),
+                            ->disabled()
+                            ->formatStateUsing(fn ($state) => preg_replace('/^[^:]+:\s*/', '', $state ?? '')),
                     ])->columns(3),
 
                 Forms\Components\Section::make('Request')
@@ -76,10 +78,12 @@ class ActivityLogResource extends Resource
 
                 Forms\Components\Section::make('Content')
                     ->schema([
-                        Forms\Components\KeyValue::make('content')
+                        Forms\Components\Textarea::make('content')
                             ->label('Inhalt')
                             ->disabled()
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->rows(10)
+                            ->formatStateUsing(fn ($state) => $state ? json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : ''),
                     ])
                     ->collapsed()
                     ->visible(fn ($record) => ! empty($record?->content)),
@@ -153,12 +157,14 @@ class ActivityLogResource extends Resource
                     ->searchable()
                     ->limit(50)
                     ->wrap()
-                    ->toggleable(),
+                    ->toggleable()
+                    ->formatStateUsing(fn ($state) => preg_replace('/^[^:]+:\s*/', '', $state ?? '')),
 
                 Tables\Columns\TextColumn::make('resource_type')
                     ->label('Ressourcentyp')
                     ->searchable()
                     ->limit(40)
+                    ->html()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('method')
@@ -263,6 +269,10 @@ class ActivityLogResource extends Resource
                                 fn (Builder $query, $date): Builder => $query->whereDate('timestamp', '<=', $date),
                             );
                     }),
+            ])
+            ->headerActions([
+                Tables\Actions\ExportAction::make()
+                    ->exporter(\App\Filament\Exports\ActivityLogExporter::class),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()
