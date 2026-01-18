@@ -191,6 +191,7 @@ class ActivityLogResource extends Resource
                     ->label('Verdächtig')
                     ->boolean()
                     ->trueColor('danger')
+                    ->falseColor('success')
                     ->sortable()
                     ->toggleable(),
 
