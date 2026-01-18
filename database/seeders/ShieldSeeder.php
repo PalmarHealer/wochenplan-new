@@ -23,6 +23,8 @@ class ShieldSeeder extends Seeder
                 "update_absence",
                 "delete_absence",
                 "delete_any_absence",
+                "view_activity::log",
+                "view_any_activity::log",
                 "view_color",
                 "create_color",
                 "update_color",

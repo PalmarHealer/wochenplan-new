@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Absence;
+use App\Models\ActivityLog;
 use App\Models\Color;
 use App\Models\DayPdf;
 use App\Models\Layout;
@@ -14,6 +15,7 @@ use App\Models\Room;
 use App\Models\Time;
 use App\Models\User;
 use App\Policies\AbsencePolicy;
+use App\Policies\ActivityLogPolicy;
 use App\Policies\ColorPolicy;
 use App\Policies\DayPdfPolicy;
 use App\Policies\LayoutDeviationPolicy;
@@ -47,6 +49,7 @@ class AuthServiceProvider extends ServiceProvider
 
     protected $policies = [
         Absence::class => AbsencePolicy::class,
+        ActivityLog::class => ActivityLogPolicy::class,
         DayPdf::class => DayPdfPolicy::class,
         Lesson::class => LessonPolicy::class,
         LessonTemplate::class => LessonTemplatePolicy::class,
