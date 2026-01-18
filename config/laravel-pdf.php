@@ -23,6 +23,7 @@ return [
          * Other Browsershot configuration options.
          */
         'write_options_to_file' => env('LARAVEL_PDF_WRITE_OPTIONS_TO_FILE', false),
-        'no_sandbox' => env('LARAVEL_PDF_NO_SANDBOX', true),
+        // Security: Only disable sandbox in containerized environments where required
+        'no_sandbox' => env('LARAVEL_PDF_NO_SANDBOX', false),
     ],
 ];

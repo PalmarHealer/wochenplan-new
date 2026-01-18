@@ -34,18 +34,18 @@ class ListUsers extends ListRecords
                             ->title('Nur CSV-Dateien sind erlaubt.')
                             ->danger()
                             ->send();
-                        Storage::disk('public')->delete($filePath);
+                        Storage::disk('local')->delete($filePath);
 
                         return;
                     }
 
-                    $fullPath = Storage::disk('public')->path($filePath);
+                    $fullPath = Storage::disk('local')->path($filePath);
                     if ($fullPath === false) {
                         Notification::make()
                             ->title('Die Datei konnte nicht geöffnet werden.')
                             ->danger()
                             ->send();
-                        Storage::disk('public')->delete($filePath);
+                        Storage::disk('local')->delete($filePath);
 
                         return;
                     }
@@ -98,15 +98,18 @@ class ListUsers extends ListRecords
                             ->send();
                     } finally {
                         fclose($handle);
-                        Storage::disk('public')->delete($filePath);
+                        Storage::disk('local')->delete($filePath);
                     }
                 })
                 ->form([
                     FileUpload::make('csvFile')
                         ->label(false)
                         ->required()
-                        ->directory('imports'),
-
+                        ->acceptedFileTypes(['text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel'])
+                        ->maxSize(5120) // 5MB max
+                        ->disk('local') // Use private storage, not public
+                        ->directory('imports')
+                        ->visibility('private'),
                 ]),
 
             Actions\CreateAction::make(),

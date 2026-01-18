@@ -126,7 +126,7 @@ class PdfExportService
         // Set up writable directory for Chrome user data
         $userDataDir = storage_path('app/chrome-data');
         if (! file_exists($userDataDir)) {
-            mkdir($userDataDir, 0777, true);
+            mkdir($userDataDir, 0755, true); // Secure permissions (owner rwx, group/others rx)
         }
 
         $pdf = Pdf::view('pdf.day-layout', [
@@ -146,7 +146,6 @@ class PdfExportService
                 }
 
                 $browsershot
-                    ->noSandbox()
                     ->deviceScaleFactor(2)
                     ->setEnvironmentOptions([
                         'HOME' => $userDataDir,
@@ -161,6 +160,12 @@ class PdfExportService
                         'user-data-dir='.$userDataDir,
                         'crash-dumps-dir='.$userDataDir,
                     ]);
+
+                // Only disable sandbox if explicitly configured (e.g., in Docker containers)
+                // Running with sandbox enabled is more secure
+                if (config('laravel-pdf.browsershot.no_sandbox', false)) {
+                    $browsershot->noSandbox();
+                }
             });
 
         // Save to a temporary file and read the contents
