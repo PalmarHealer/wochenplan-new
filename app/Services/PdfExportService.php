@@ -158,14 +158,10 @@ class PdfExportService
                         'disable-gpu',
                         'headless=new',
                         'user-data-dir='.$userDataDir,
-                        'crash-dumps-dir='.$userDataDir,
+                        'disable-software-rasterizer',
+                        'use-gl=swiftshader',
                     ]);
 
-                // Only disable sandbox if explicitly configured (e.g., in Docker containers)
-                // Running with sandbox enabled is more secure
-                if (config('laravel-pdf.browsershot.no_sandbox', false)) {
-                    $browsershot->noSandbox();
-                }
             });
 
         // Save to a temporary file and read the contents

@@ -10,7 +10,7 @@ services:
         environment:
             # Laravel application key for encryption
             # Leave empty to auto-generate on first run (will be printed in logs)
-            # APP_KEY:
+            APP_KEY: base64:/Si5vcnXtiW0DYRLDPlh4enrdeaZ3r58dXSaxXRuNI0=
             APP_NAME: Wochenplan
             APP_URL: http://localhost
             APP_DEBUG: false
@@ -53,11 +53,13 @@ services:
             AZURE_TENANT_ID:
             AZURE_PROXY:
 
-            # Puppeteer/Chrome configuration for PDF generation
-            PUPPETEER_CACHE_DIR: /usr/local/share/puppeteer
-            PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: false
+        # Security: Add capabilities for Chromium sandbox to work properly
+        cap_add:
+            - SYS_ADMIN
+        security_opt:
+            - seccomp:unconfined
         volumes:
-            - app-storage-logs:/var/www/html/storage/logs:rw
+            - app-logs:/var/www/html/storage/logs:rw
             - nginx-logs:/var/log/nginx:rw
         depends_on:
             db:
@@ -69,6 +71,7 @@ services:
             interval: 15s
             timeout: 5s
             retries: 10
+        restart: unless-stopped
 
     db:
         image: mariadb:11.4
@@ -84,13 +87,16 @@ services:
             interval: 10s
             timeout: 5s
             retries: 10
+        restart: unless-stopped
+
     redis:
         image: redis:7-alpine
         volumes:
             - redis-data:/data
+        restart: unless-stopped
 
 volumes:
     db-data:
     redis-data:
-    app-storage-logs:
+    app-logs:
     nginx-logs:
