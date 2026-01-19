@@ -37,8 +37,8 @@ class ActivityLogResource extends Resource
                             ->disabled(),
                         Forms\Components\TextInput::make('user.display_name')
                             ->label('Benutzer')
-                            ->disabled()
-                            ->default(fn ($record) => $record?->user?->display_name ?? 'System'),
+                            ->placeholder('System')
+                            ->disabled(),
                         Forms\Components\TextInput::make('ip_address')
                             ->label('IP-Adresse')
                             ->disabled(),
@@ -74,7 +74,9 @@ class ActivityLogResource extends Resource
                             ->label('User-Agent')
                             ->disabled()
                             ->columnSpanFull(),
-                    ]),
+                    ])
+                    ->collapsed()
+                    ->persistCollapsed(),
 
                 Forms\Components\Section::make('Content')
                     ->schema([
@@ -85,7 +87,9 @@ class ActivityLogResource extends Resource
                             ->rows(10)
                             ->formatStateUsing(fn ($state) => $state ? json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : ''),
                     ])
+                    ->collapsible()
                     ->collapsed()
+                    ->persistCollapsed()
                     ->visible(fn ($record) => ! empty($record?->content)),
 
                 Forms\Components\Section::make('Security')
