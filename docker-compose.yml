@@ -33,13 +33,6 @@ services:
             DB_USERNAME: wochenplan
             DB_PASSWORD: wochenplan
 
-            # Redis
-            REDIS_HOST: redis
-            REDIS_PORT: 6379
-            QUEUE_CONNECTION: database
-            SESSION_DRIVER: database
-            CACHE_STORE: database
-
             # URL to public SSH keys (e.g., https://github.com/<your-user>.keys). If empty or unset, SSH will be disabled.
             SSH_AUTHORIZED_KEYS_URL:
 
