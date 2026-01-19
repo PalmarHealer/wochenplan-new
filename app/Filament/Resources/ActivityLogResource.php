@@ -274,15 +274,6 @@ class ActivityLogResource extends Resource
                             );
                     }),
             ])
-            ->headerActions([
-                Tables\Actions\ExportAction::make()
-                    ->exporter(\App\Filament\Exports\ActivityLogExporter::class),
-            ])
-            ->actions([
-                Tables\Actions\ViewAction::make()
-                    ->modalHeading(fn ($record) => 'Activity Log Details')
-                    ->modalWidth('5xl'),
-            ])
             ->poll('30s'); // Auto-refresh every 30 seconds
     }
 
