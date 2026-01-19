@@ -12,13 +12,6 @@ class ListActivityLogs extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [
-            Actions\Action::make('export')
-                ->label('Export CSV')
-                ->icon('tabler-download')
-                ->action(function () {
-                    // Export logic could be added here
-                }),
-        ];
+        return [];
     }
 }

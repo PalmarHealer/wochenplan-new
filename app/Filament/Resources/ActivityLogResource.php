@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ActivityLogResource\Pages;
 use App\Models\ActivityLog;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -11,7 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class ActivityLogResource extends Resource
+class ActivityLogResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = ActivityLog::class;
 
@@ -35,9 +36,9 @@ class ActivityLogResource extends Resource
                         Forms\Components\TextInput::make('action_category')
                             ->label('Kategorie')
                             ->disabled(),
-                        Forms\Components\TextInput::make('user.display_name')
+                        Forms\Components\TextInput::make('user_display_name')
                             ->label('Benutzer')
-                            ->placeholder('System')
+                            ->formatStateUsing(fn ($record) => $record?->user?->display_name ?? 'System')
                             ->disabled(),
                         Forms\Components\TextInput::make('ip_address')
                             ->label('IP-Adresse')
@@ -80,12 +81,128 @@ class ActivityLogResource extends Resource
 
                 Forms\Components\Section::make('Content')
                     ->schema([
-                        Forms\Components\Textarea::make('content')
-                            ->label('Inhalt')
-                            ->disabled()
-                            ->columnSpanFull()
-                            ->rows(10)
-                            ->formatStateUsing(fn ($state) => $state ? json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : ''),
+                        Forms\Components\Placeholder::make('changes_display')
+                            ->label('Änderungen')
+                            ->content(function ($record) {
+                                // For update actions, show changes
+                                if (!empty($record?->changes)) {
+                                    $html = '<div style="font-family: monospace; font-size: 13px;">';
+                                    $hasChanges = false;
+
+                                    foreach ($record->changes as $field => $change) {
+                                        // Skip updated_at field
+                                        if ($field === 'updated_at') {
+                                            continue;
+                                        }
+
+                                        $oldValue = $change['before'] ?? null;
+                                        $newValue = $change['after'] ?? null;
+
+                                        // Skip if both values are null
+                                        if ($oldValue === null && $newValue === null) {
+                                            continue;
+                                        }
+
+                                        $hasChanges = true;
+
+                                        // Format values for display
+                                        $oldDisplay = $oldValue === null ? 'null' : (is_array($oldValue) ? json_encode($oldValue, JSON_UNESCAPED_UNICODE) : (string) $oldValue);
+                                        $newDisplay = $newValue === null ? 'null' : (is_array($newValue) ? json_encode($newValue, JSON_UNESCAPED_UNICODE) : (string) $newValue);
+
+                                        // Truncate if too long
+                                        if (strlen($oldDisplay) > 100) {
+                                            $oldDisplay = substr($oldDisplay, 0, 100) . '...';
+                                        }
+                                        if (strlen($newDisplay) > 100) {
+                                            $newDisplay = substr($newDisplay, 0, 100) . '...';
+                                        }
+
+                                        $html .= '<div style="margin-bottom: 12px;">';
+                                        $html .= '<strong style="color: #6b7280;">' . htmlspecialchars($field) . ':</strong><br>';
+                                        $html .= '<span style="color: #dc2626; text-decoration: line-through;">' . htmlspecialchars($oldDisplay) . '</span>';
+                                        $html .= ' <span style="color: #6b7280;">→</span> ';
+                                        $html .= '<span style="color: #16a34a;">' . htmlspecialchars($newDisplay) . '</span>';
+                                        $html .= '</div>';
+                                    }
+
+                                    if (!$hasChanges) {
+                                        return 'Keine relevanten Änderungen';
+                                    }
+
+                                    $html .= '</div>';
+                                    return new \Illuminate\Support\HtmlString($html);
+                                }
+
+                                // For create actions, show the created data
+                                if ($record?->action === 'create' && !empty($record?->content['after'])) {
+                                    $data = $record->content['after'];
+                                    $html = '<div style="font-family: monospace; font-size: 13px;">';
+                                    $html .= '<strong style="color: #16a34a;">Erstellte Daten:</strong><br><br>';
+
+                                    foreach ($data as $field => $value) {
+                                        if (in_array($field, ['id', 'created_at', 'updated_at'])) {
+                                            continue;
+                                        }
+
+                                        $display = $value === null ? 'null' : (is_array($value) ? json_encode($value, JSON_UNESCAPED_UNICODE) : (string) $value);
+
+                                        if (strlen($display) > 100) {
+                                            $display = substr($display, 0, 100) . '...';
+                                        }
+
+                                        $html .= '<div style="margin-bottom: 8px;">';
+                                        $html .= '<strong style="color: #6b7280;">' . htmlspecialchars($field) . ':</strong> ';
+                                        $html .= '<span style="color: #16a34a;">' . htmlspecialchars($display) . '</span>';
+                                        $html .= '</div>';
+                                    }
+
+                                    $html .= '</div>';
+                                    return new \Illuminate\Support\HtmlString($html);
+                                }
+
+                                // For delete actions, show the deleted data
+                                if ($record?->action === 'delete' && !empty($record?->content['before'])) {
+                                    $data = $record->content['before'];
+                                    $html = '<div style="font-family: monospace; font-size: 13px;">';
+                                    $html .= '<strong style="color: #dc2626;">Gelöschte Daten:</strong><br><br>';
+
+                                    foreach ($data as $field => $value) {
+                                        if (in_array($field, ['id', 'created_at', 'updated_at'])) {
+                                            continue;
+                                        }
+
+                                        $display = $value === null ? 'null' : (is_array($value) ? json_encode($value, JSON_UNESCAPED_UNICODE) : (string) $value);
+
+                                        if (strlen($display) > 100) {
+                                            $display = substr($display, 0, 100) . '...';
+                                        }
+
+                                        $html .= '<div style="margin-bottom: 8px;">';
+                                        $html .= '<strong style="color: #6b7280;">' . htmlspecialchars($field) . ':</strong> ';
+                                        $html .= '<span style="color: #dc2626;">' . htmlspecialchars($display) . '</span>';
+                                        $html .= '</div>';
+                                    }
+
+                                    $html .= '</div>';
+                                    return new \Illuminate\Support\HtmlString($html);
+                                }
+
+                                return 'Keine Daten verfügbar';
+                            })
+                            ->columnSpanFull(),
+
+                        Forms\Components\Section::make('Raw Data')
+                            ->schema([
+                                Forms\Components\Textarea::make('content')
+                                    ->label('Raw JSON')
+                                    ->disabled()
+                                    ->columnSpanFull()
+                                    ->rows(10)
+                                    ->formatStateUsing(fn ($state) => $state ? json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : ''),
+                            ])
+                            ->collapsed()
+                            ->persistCollapsed()
+                            ->collapsible(),
                     ])
                     ->collapsible()
                     ->collapsed()
@@ -156,6 +273,13 @@ class ActivityLogResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
+                Tables\Columns\TextColumn::make('resource_type')
+                    ->label('Ressourcentyp')
+                    ->searchable()
+                    ->limit(40)
+                    ->html()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('resource_label')
                     ->label('Ressource')
                     ->searchable()
@@ -163,13 +287,6 @@ class ActivityLogResource extends Resource
                     ->wrap()
                     ->toggleable()
                     ->formatStateUsing(fn ($state) => preg_replace('/^[^:]+:\s*/', '', $state ?? '')),
-
-                Tables\Columns\TextColumn::make('resource_type')
-                    ->label('Ressourcentyp')
-                    ->searchable()
-                    ->limit(40)
-                    ->html()
-                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('method')
                     ->label('HTTP-Methode')
@@ -274,6 +391,11 @@ class ActivityLogResource extends Resource
                             );
                     }),
             ])
+            ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->modalHeading(fn ($record) => 'Activity Log Details')
+                    ->modalWidth('5xl'),
+            ])
             ->poll('30s'); // Auto-refresh every 30 seconds
     }
 
@@ -302,5 +424,12 @@ class ActivityLogResource extends Resource
     public static function canDelete($record): bool
     {
         return false; // Logs should be immutable
+    }
+
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view'
+        ];
     }
 }
