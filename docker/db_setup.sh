@@ -50,17 +50,33 @@ if [ "${DB_CONNECTION}" = "sqlite" ]; then
   fi
 fi
 
-# Generate APP_KEY if missing
-if ! grep -q '^APP_KEY=' "$APP_DIR/.env" || grep -q '^APP_KEY=$' "$APP_DIR/.env"; then
-  su -s /bin/bash -c "cd '$APP_DIR' && php artisan key:generate --force" "$APP_USER" || true
+# Generate APP_KEY if missing (check environment variable, not .env file)
+if [ -z "${APP_KEY:-}" ] || [ "$APP_KEY" = "" ]; then
+  echo "=========================================="
+  echo "APP_KEY not set - Generating new APP_KEY"
+  echo "=========================================="
+
+  # Generate key
+  NEW_APP_KEY="base64:$(openssl rand -base64 32)"
+
+  # Save to a file that supervisor will source
+  echo "export APP_KEY='${NEW_APP_KEY}'" > /tmp/app_env.sh
+  chmod 644 /tmp/app_env.sh
+
+  # Source it for current shell
+  export APP_KEY="${NEW_APP_KEY}"
+
+  echo "IMPORTANT: Copy this APP_KEY to your docker-compose.yml for persistence:"
+  echo ""
+  echo "APP_KEY: ${NEW_APP_KEY}"
+  echo ""
+  echo "=========================================="
+  sleep 3
 fi
 
 # Run the README first-deploy commands
 su -s /bin/bash -c "cd '$APP_DIR' && php artisan migrate --force" "$APP_USER" || true
 su -s /bin/bash -c "cd '$APP_DIR' && php artisan db:seed --force" "$APP_USER" || true
-
-# Storage link
-su -s /bin/bash -c "cd '$APP_DIR' && php artisan storage:link" "$APP_USER" || true
 
 # Permissions for writable directories only
 chown -R www-data:www-data "$APP_DIR/storage" "$APP_DIR/bootstrap/cache" 2>/dev/null || true

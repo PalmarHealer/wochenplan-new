@@ -5,35 +5,25 @@ APP_DIR=${APP_DIR:-/var/www/html}
 APP_USER=${APP_USER:-app}
 
 # Ensure runtime directories
-mkdir -p /run/php /var/run/sshd
+mkdir -p /run/php /run/nginx /var/run/sshd /var/lib/nginx/logs /var/lib/nginx/tmp/client_body
 chown www-data:www-data /run/php
+chown -R www-data:www-data /var/lib/nginx
+
+# Note: /run/nginx ownership kept as root for nginx master process
+
+# Source APP_KEY if it was generated
+if [ -f /tmp/app_env.sh ]; then
+  source /tmp/app_env.sh
+  echo "Loaded generated APP_KEY from /tmp/app_env.sh"
+fi
 
 # Set Chromium path from Puppeteer if not already set
 if [ -z "${LARAVEL_PDF_CHROME_PATH:-}" ]; then
-  # Try to get the Chrome path from Puppeteer's cache directory
-  PUPPETEER_CACHE_DIR=${PUPPETEER_CACHE_DIR:-/usr/local/share/puppeteer}
-
-  # Find the chrome executable in the Puppeteer cache
-  if [ -d "$PUPPETEER_CACHE_DIR" ]; then
-    CHROMIUM_PATH=$(find "$PUPPETEER_CACHE_DIR" -type f -name "chrome" -executable 2>/dev/null | head -n 1)
-  fi
-
-  # If not found, try using puppeteer's executablePath() method
-  if [ -z "$CHROMIUM_PATH" ]; then
-    CHROMIUM_PATH=$(node -e "console.log(require('puppeteer').executablePath())" 2>/dev/null || echo "")
-  fi
-
-  if [ -n "$CHROMIUM_PATH" ] && [ -f "$CHROMIUM_PATH" ]; then
-    export LARAVEL_PDF_CHROME_PATH="$CHROMIUM_PATH"
-    export PUPPETEER_EXECUTABLE_PATH="$CHROMIUM_PATH"
-    echo "Set LARAVEL_PDF_CHROME_PATH to: $CHROMIUM_PATH"
-
-    # Add to PHP-FPM environment (official PHP image path)
-    {
-      echo "env[LARAVEL_PDF_CHROME_PATH] = $CHROMIUM_PATH"
-      echo "env[PUPPETEER_EXECUTABLE_PATH] = $CHROMIUM_PATH"
-      echo "env[PUPPETEER_CACHE_DIR] = $PUPPETEER_CACHE_DIR"
-    } >> /usr/local/etc/php-fpm.d/www.conf
+  # Use system Chromium on Alpine
+  if [ -f "/usr/bin/chromium-browser" ]; then
+    export LARAVEL_PDF_CHROME_PATH="/usr/bin/chromium-browser"
+    export PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium-browser"
+    echo "Set LARAVEL_PDF_CHROME_PATH to: /usr/bin/chromium-browser"
   else
     echo "WARNING: Chrome executable not found. PDF generation may not work." >&2
   fi
@@ -60,26 +50,18 @@ if [ -n "${SSH_AUTHORIZED_KEYS_URL}" ]; then
     rm -f "$SSHD_SUP_CONF" || true
   fi
 else
-  echo "SSH_AUTHORIZED_KEYS_URL not set. Disabling sshd." >&2
+  echo "SSH_AUTHORIZED_KEYS_URL not set. Disabling sshd."
   rm -f "$SSHD_SUP_CONF" || true
 fi
 
-# Ensure .env exists
-if [ ! -f "$APP_DIR/.env" ] && [ -f "$APP_DIR/.env.example" ]; then
-  cp "$APP_DIR/.env.example" "$APP_DIR/.env"
-fi
 
-# Ensure proper permissions and ownership for writable directories only
-mkdir -p "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
-chown -R www-data:www-data "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
-chmod -R u+rwx "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
-if [ -f "$APP_DIR/.env" ]; then
-  chown www-data:www-data "$APP_DIR/.env"
-  chmod 664 "$APP_DIR/.env"
-fi
-
-# Run php commands
+# Run php commands (this sources APP_KEY if generated)
 /usr/local/bin/db_setup.sh || true
+
+# If APP_KEY was generated, make sure supervisor knows about it
+if [ -f /tmp/app_env.sh ]; then
+  source /tmp/app_env.sh
+fi
 
 # Start all services via supervisord
 exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
