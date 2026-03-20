@@ -24,7 +24,7 @@ Schedule::command('pdf:generate yesterday')
 
 Schedule::command('pdf:generate today')
     ->weekdays()
-    ->at('01:00')
+    ->at('01:05')
     ->withoutOverlapping()
     ->onOneServer()
     ->runInBackground();

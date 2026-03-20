@@ -183,10 +183,13 @@ class DayPdfResource extends Resource implements HasShieldPermissions
 
                         $zip = new ZipArchive;
                         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+                            $missingDates = [];
                             foreach ($sortedRecords as $record) {
                                 $base64Content = $pdfService->getExistingPdf($record->date);
 
                                 if (! $base64Content) {
+                                    $missingDates[] = $record->date->format('d.m.Y');
+
                                     continue;
                                 }
 
@@ -197,6 +200,14 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                                 $zip->addFromString($filename, $binaryContent);
                             }
                             $zip->close();
+
+                            if ($missingDates !== []) {
+                                Notification::make()
+                                    ->title('Einige PDFs fehlen')
+                                    ->body('Folgende Daten konnten nicht hinzugefügt werden: '.implode(', ', $missingDates))
+                                    ->warning()
+                                    ->send();
+                            }
 
                             return Response::download($zipPath, $zipFileName)->deleteFileAfterSend(true);
                         }
