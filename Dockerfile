@@ -99,7 +99,7 @@ RUN apk add --no-cache --virtual .build-deps \
     && apk del --no-cache .build-deps
 
 # Install Puppeteer (will use system Chromium)
-RUN npm install -g puppeteer@21 --unsafe-perm=true \
+RUN PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm install -g puppeteer@21 --unsafe-perm=true \
         --omit=dev \
         --omit=optional \
     && echo 'export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true' >> /etc/profile.d/puppeteer.sh \

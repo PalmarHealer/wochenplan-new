@@ -111,6 +111,7 @@ jobs:
   docker-build:
     name: Docker Build Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs:
       - pint
       - php-lint
