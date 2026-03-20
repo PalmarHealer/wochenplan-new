@@ -36,10 +36,9 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
                         Forms\Components\TextInput::make('action_category')
                             ->label('Kategorie')
                             ->disabled(),
-                        Forms\Components\TextInput::make('user_display_name')
+                        Forms\Components\Placeholder::make('user_display_name')
                             ->label('Benutzer')
-                            ->formatStateUsing(fn ($record) => $record?->user?->display_name ?? 'System')
-                            ->disabled(),
+                            ->content(fn (?ActivityLog $record) => $record?->user?->display_name ?? 'System'),
                         Forms\Components\TextInput::make('ip_address')
                             ->label('IP-Adresse')
                             ->disabled(),
@@ -393,8 +392,7 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()
-                    ->modalHeading(fn ($record) => 'Activity Log Details')
-                    ->modalWidth('5xl'),
+                    ->label('Ansehen'),
             ])
             ->poll('30s'); // Auto-refresh every 30 seconds
     }
@@ -408,6 +406,7 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
     {
         return [
             'index' => Pages\ListActivityLogs::route('/'),
+            'view' => Pages\ViewActivityLog::route('/{record}'),
         ];
     }
 
