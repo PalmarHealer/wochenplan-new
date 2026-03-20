@@ -82,10 +82,44 @@
     </style>
 </head>
 <body>
+    @php
+        $columnWidths = [];
+        $rowHeights = [];
+
+        foreach ($layout as $rowIndex => $row) {
+            foreach ($row as $colIndex => $cell) {
+                if (! isset($columnWidths[$colIndex]) && isset($cell['colWidth']) && is_numeric($cell['colWidth']) && (int) $cell['colWidth'] > 0) {
+                    $columnWidths[$colIndex] = (int) $cell['colWidth'];
+                }
+            }
+
+            foreach ($row as $cell) {
+                if (isset($cell['rowHeight']) && is_numeric($cell['rowHeight']) && (int) $cell['rowHeight'] > 0) {
+                    $rowHeights[$rowIndex] = (int) $cell['rowHeight'];
+                    break;
+                }
+            }
+        }
+    @endphp
     <table>
+        @if(!empty($layout) && !empty($layout[0]))
+            <colgroup>
+                @foreach($layout[0] as $colIndex => $unused)
+                    <col
+                        @if(isset($columnWidths[$colIndex]))
+                            style="width: {{ $columnWidths[$colIndex] }}px;"
+                        @endif
+                    >
+                @endforeach
+            </colgroup>
+        @endif
         <tbody>
-        @foreach ($layout as $row)
-            <tr>
+        @foreach ($layout as $rowIndex => $row)
+            <tr
+                @if(isset($rowHeights[$rowIndex]))
+                    style="height: {{ $rowHeights[$rowIndex] }}px;"
+                @endif
+            >
                 @foreach ($row as $cell)
                     @if (!isset($cell['hidden']))
                         @php

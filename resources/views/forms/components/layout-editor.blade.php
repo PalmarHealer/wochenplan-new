@@ -19,25 +19,92 @@
         x-effect="handleUpdates()"
         x-init="init()"
     >
-        <div class="flex flex-wrap gap-2 mb-2 mt-1">
+        <div class="flex flex-wrap items-end gap-2 mb-2 mt-1">
             <x-filament::button
                 icon="tabler-row-insert-top"
                 icon-position="after"
-                @click="addRow()"
+                color="gray"
+                @click="addRowAtSelection('after')"
             >
-                Zeile einfügen
+                Zeile unten einfügen
             </x-filament::button>
 
             <x-filament::button
                 icon="tabler-column-insert-left"
                 icon-position="after"
-                @click="addColumn()"
+                color="gray"
+                @click="addColumnAtSelection('after')"
             >
-                Spalte einfügen
+                Spalte rechts einfügen
+            </x-filament::button>
+            <x-filament::button
+                icon="tabler-row-insert-bottom"
+                icon-position="after"
+                color="gray"
+                @click="addRowAtSelection('before')"
+            >
+                Zeile oben einfügen
+            </x-filament::button>
+            <x-filament::button
+                icon="tabler-column-insert-right"
+                icon-position="after"
+                color="gray"
+                @click="addColumnAtSelection('before')"
+            >
+                Spalte links einfügen
+            </x-filament::button>
+            <x-filament::button
+                icon="tabler-row-remove"
+                icon-position="after"
+                color="danger"
+                @click="deleteSelectedRow()"
+            >
+                Zeile löschen
+            </x-filament::button>
+            <x-filament::button
+                icon="tabler-column-remove"
+                icon-position="after"
+                color="danger"
+                @click="deleteSelectedColumn()"
+            >
+                Spalte löschen
+            </x-filament::button>
+            <x-filament::button
+                icon="tabler-arrow-up"
+                icon-position="after"
+                color="gray"
+                @click="moveSelectedRow('up')"
+            >
+                Zeile hoch
+            </x-filament::button>
+            <x-filament::button
+                icon="tabler-arrow-down"
+                icon-position="after"
+                color="gray"
+                @click="moveSelectedRow('down')"
+            >
+                Zeile runter
+            </x-filament::button>
+            <x-filament::button
+                icon="tabler-arrow-left"
+                icon-position="after"
+                color="gray"
+                @click="moveSelectedColumn('left')"
+            >
+                Spalte links
+            </x-filament::button>
+            <x-filament::button
+                icon="tabler-arrow-right"
+                icon-position="after"
+                color="gray"
+                @click="moveSelectedColumn('right')"
+            >
+                Spalte rechts
             </x-filament::button>
             <x-filament::button
                 icon="tabler-arrows-join"
                 icon-position="after"
+                color="gray"
                 @click="mergeCells()"
             >
                 Zellen verbinden
@@ -45,6 +112,7 @@
             <x-filament::button
                 icon="tabler-arrows-split"
                 icon-position="after"
+                color="gray"
                 @click="splitCells()"
             >
                 Zellen teilen
@@ -54,6 +122,7 @@
             <x-filament::button
                 icon="tabler-align-left"
                 icon-position="after"
+                color="gray"
                 @click="setAlignment('left')"
             >
                 Linksbündig
@@ -61,6 +130,7 @@
             <x-filament::button
                 icon="tabler-align-center"
                 icon-position="after"
+                color="gray"
                 @click="setAlignment('center')"
             >
                 Zentriert
@@ -68,13 +138,47 @@
             <x-filament::button
                 icon="tabler-align-right"
                 icon-position="after"
+                color="gray"
                 @click="setAlignment('right')"
             >
                 Rechtsbündig
             </x-filament::button>
+            <div class="flex items-center gap-2">
+                <label class="text-xs">Spaltenbreite (px)</label>
+                <input
+                    type="number"
+                    min="20"
+                    class="fi-input block w-28 rounded-lg border-none bg-white/50 text-xs ring-1 ring-gray-950/10 dark:bg-white/5 dark:ring-white/20"
+                    x-model.number="columnWidthInput"
+                />
+                <x-filament::button
+                    size="sm"
+                    color="gray"
+                    @click="applyColumnWidth()"
+                >
+                    Setzen
+                </x-filament::button>
+            </div>
+            <div class="flex items-center gap-2">
+                <label class="text-xs">Zeilenhöhe (px)</label>
+                <input
+                    type="number"
+                    min="20"
+                    class="fi-input block w-28 rounded-lg border-none bg-white/50 text-xs ring-1 ring-gray-950/10 dark:bg-white/5 dark:ring-white/20"
+                    x-model.number="rowHeightInput"
+                />
+                <x-filament::button
+                    size="sm"
+                    color="gray"
+                    @click="applyRowHeight()"
+                >
+                    Setzen
+                </x-filament::button>
+            </div>
             <x-filament::button
                 icon="tabler-upload"
                 icon-position="after"
+                color="gray"
                 @click="importLayout()"
             >
                 Layout importieren
@@ -83,6 +187,7 @@
             <x-filament::button
                 icon="tabler-download"
                 icon-position="after"
+                color="gray"
                 @click="exportLayout()"
             >
                 Layout exportieren
@@ -105,15 +210,15 @@
         <table
             class="table-auto w-full border border-gray-400 text-xs bg-white dark:bg-white/5"
             @mouseleave="endSelection(false)">
-            <colgroup>
-                <template x-for="(col, colIndex) in layout[0]" :key="colIndex">
-                    <col :style="colIndex === 1 ? 'max-width: 20%; width: 20%;' : ''">
+            <colgroup x-show="layout.length && layout[0]?.length">
+                <template x-for="colIndex in (layout[0]?.length || 0)" :key="colIndex">
+                    <col :style="getColumnStyle(colIndex - 1)">
                 </template>
             </colgroup>
 
             <tbody>
             <template x-for="(row, rowIndex) in layout" :key="rowIndex">
-                <tr class="h-10">
+                <tr :style="getRowStyle(rowIndex)">
                     <template x-for="(cell, colIndex) in row" :key="colIndex">
                         <td
                             x-show="!cell?.hidden"
@@ -171,6 +276,8 @@
                 oldSelectedColor: null,
                 oldSelectedRoom: null,
                 oldSelectedTime: null,
+                rowHeightInput: null,
+                columnWidthInput: null,
 
                 importLayout() {
                     const json = prompt("Layout-JSON einfügen:");
@@ -197,6 +304,8 @@
                     } catch (e) {
                         console.log('Layout could not be loaded:', parsedArray);
                     }
+
+                    this.refreshSizeInputsFromSelection();
 
                 },
 
@@ -261,6 +370,7 @@
                         this.selectedColor = cell.color;
                         this.selectedRoom = cell.room;
                         this.selectedTime = cell.time;
+                        this.refreshSizeInputsFromSelection();
 
                         if (focusTable) this.focusTable();
                     }
@@ -299,6 +409,7 @@
 
                 selectSingleCell(row, col) {
                     this.selectedCells = [[row, col]];
+                    this.refreshSizeInputsFromSelection();
                 },
 
                 updateState() {
@@ -336,34 +447,346 @@
                     this.updateState();
                 },
 
-                addRow() {
-                    const columnCount = this.layout[0]?.length || 1;
-                    const newRow = [];
+                createCell() {
+                    return {
+                        displayName: ``,
+                        alignment: null,
+                        color: null,
+                        room: null,
+                        time: null,
+                    };
+                },
 
-                    for (let col = 0; col < columnCount; col++) {
-                        newRow.push({
-                            displayName: ``,
-                            alignment: null,
-                            color: null,
-                            room: null,
-                            time: null,
-                        });
+                getColumnStyle(colIndex) {
+                    const width = this.getColumnWidth(colIndex);
+                    return width ? `width: ${width}px;` : '';
+                },
+
+                getRowStyle(rowIndex) {
+                    const height = this.getRowHeight(rowIndex);
+                    return height ? `height: ${height}px; min-height: ${height}px;` : '';
+                },
+
+                getActiveCellCoordinates() {
+                    if (!this.selectedCells.length) return null;
+                    const [row, col] = this.selectedCells[0];
+                    const cell = this.layout[row]?.[col];
+                    if (!cell) return null;
+                    if (cell.hidden && Array.isArray(cell.mergedTo)) return cell.mergedTo;
+
+                    return [row, col];
+                },
+
+                getColumnWidth(colIndex) {
+                    if (colIndex < 0) return null;
+                    for (let row = 0; row < this.layout.length; row++) {
+                        const value = Number(this.layout[row]?.[colIndex]?.colWidth);
+                        if (Number.isFinite(value) && value > 0) return value;
                     }
 
-                    this.layout.push(newRow);
+                    return null;
+                },
+
+                getRowHeight(rowIndex) {
+                    if (rowIndex < 0 || rowIndex >= this.layout.length) return null;
+                    for (let col = 0; col < (this.layout[rowIndex]?.length ?? 0); col++) {
+                        const value = Number(this.layout[rowIndex]?.[col]?.rowHeight);
+                        if (Number.isFinite(value) && value > 0) return value;
+                    }
+
+                    return null;
+                },
+
+                setColumnWidth(colIndex, width) {
+                    if (colIndex < 0) return;
+                    const normalized = Number(width);
+                    const value = Number.isFinite(normalized) && normalized > 0 ? Math.round(normalized) : null;
+
+                    for (let row = 0; row < this.layout.length; row++) {
+                        if (!this.layout[row]?.[colIndex]) continue;
+                        if (value === null) delete this.layout[row][colIndex].colWidth;
+                        else this.layout[row][colIndex].colWidth = value;
+                    }
+                },
+
+                setRowHeight(rowIndex, height) {
+                    if (rowIndex < 0 || rowIndex >= this.layout.length) return;
+                    const normalized = Number(height);
+                    const value = Number.isFinite(normalized) && normalized > 0 ? Math.round(normalized) : null;
+
+                    for (let col = 0; col < this.layout[rowIndex].length; col++) {
+                        if (!this.layout[rowIndex]?.[col]) continue;
+                        if (value === null) delete this.layout[rowIndex][col].rowHeight;
+                        else this.layout[rowIndex][col].rowHeight = value;
+                    }
+                },
+
+                applyColumnWidth() {
+                    const active = this.getActiveCellCoordinates();
+                    if (!active) return;
+                    const colIndex = active[1];
+                    this.setColumnWidth(colIndex, this.columnWidthInput);
                     this.updateState();
                 },
 
-                addColumn() {
+                applyRowHeight() {
+                    const active = this.getActiveCellCoordinates();
+                    if (!active) return;
+                    const rowIndex = active[0];
+                    this.setRowHeight(rowIndex, this.rowHeightInput);
+                    this.updateState();
+                },
+
+                refreshSizeInputsFromSelection() {
+                    const active = this.getActiveCellCoordinates();
+                    if (!active) return;
+
+                    this.columnWidthInput = this.getColumnWidth(active[1]);
+                    this.rowHeightInput = this.getRowHeight(active[0]);
+                },
+
+                getMergeAnchors() {
+                    const anchors = [];
                     for (let row = 0; row < this.layout.length; row++) {
-                        this.layout[row].push({
-                            displayName: ``,
-                            alignment: null,
-                            color: null,
-                            room: null,
-                            time: null,
-                        });
+                        for (let col = 0; col < (this.layout[row]?.length ?? 0); col++) {
+                            const cell = this.layout[row]?.[col];
+                            if (!cell || cell.hidden) continue;
+                            const rowspan = Math.max(1, Number(cell.rowspan) || 1);
+                            const colspan = Math.max(1, Number(cell.colspan) || 1);
+                            if (rowspan > 1 || colspan > 1) {
+                                anchors.push({ row, col, rowspan, colspan });
+                            }
+                        }
                     }
+
+                    return anchors;
+                },
+
+                clearMergeFlags() {
+                    for (let row = 0; row < this.layout.length; row++) {
+                        for (let col = 0; col < (this.layout[row]?.length ?? 0); col++) {
+                            const cell = this.layout[row]?.[col];
+                            if (!cell) continue;
+                            delete cell.hidden;
+                            delete cell.mergedTo;
+                            delete cell.rowspan;
+                            delete cell.colspan;
+                        }
+                    }
+                },
+
+                applyAnchorsAndRebuild(anchors) {
+                    this.clearMergeFlags();
+                    const rowCount = this.layout.length;
+                    const colCount = this.layout[0]?.length ?? 0;
+
+                    for (const anchor of anchors) {
+                        if (anchor.row < 0 || anchor.col < 0 || anchor.row >= rowCount || anchor.col >= colCount) continue;
+                        const cell = this.layout[anchor.row]?.[anchor.col];
+                        if (!cell) continue;
+
+                        const maxRowspan = Math.max(1, Math.min(anchor.rowspan, rowCount - anchor.row));
+                        const maxColspan = Math.max(1, Math.min(anchor.colspan, colCount - anchor.col));
+
+                        if (maxRowspan > 1) cell.rowspan = maxRowspan;
+                        if (maxColspan > 1) cell.colspan = maxColspan;
+                    }
+
+                    for (let row = 0; row < rowCount; row++) {
+                        for (let col = 0; col < colCount; col++) {
+                            const cell = this.layout[row]?.[col];
+                            if (!cell || cell.hidden) continue;
+                            const rowspan = Math.max(1, Number(cell.rowspan) || 1);
+                            const colspan = Math.max(1, Number(cell.colspan) || 1);
+                            if (rowspan === 1 && colspan === 1) continue;
+
+                            for (let r = row; r < row + rowspan; r++) {
+                                for (let c = col; c < col + colspan; c++) {
+                                    if (r === row && c === col) continue;
+                                    const target = this.layout[r]?.[c];
+                                    if (!target) continue;
+                                    target.hidden = true;
+                                    target.mergedTo = [row, col];
+                                }
+                            }
+                        }
+                    }
+                },
+
+                addRowAtSelection(position = 'after') {
+                    const columnCount = this.layout[0]?.length || 1;
+                    if (!this.layout.length) {
+                        this.layout = [Array.from({ length: columnCount }, () => this.createCell())];
+                    }
+
+                    const active = this.getActiveCellCoordinates();
+                    const selectedRow = active ? active[0] : this.layout.length - 1;
+                    const insertIndex = position === 'before' ? selectedRow : selectedRow + 1;
+
+                    const anchors = this.getMergeAnchors().map(anchor => {
+                        if (anchor.row >= insertIndex) anchor.row += 1;
+                        else if (anchor.row + anchor.rowspan - 1 >= insertIndex) anchor.rowspan += 1;
+
+                        return anchor;
+                    });
+
+                    const newRow = [];
+                    for (let col = 0; col < columnCount; col++) {
+                        const cell = this.createCell();
+                        const inheritedWidth = this.getColumnWidth(col);
+                        if (inheritedWidth) cell.colWidth = inheritedWidth;
+                        newRow.push(cell);
+                    }
+
+                    this.layout.splice(insertIndex, 0, newRow);
+                    this.applyAnchorsAndRebuild(anchors);
+                    this.clearSelection();
+                    this.selectSingleCell(insertIndex, 0);
+                    this.updateState();
+                },
+
+                addColumnAtSelection(position = 'after') {
+                    const rowCount = this.layout.length || 1;
+                    if (!this.layout.length) this.layout = [Array.from({ length: 1 }, () => this.createCell())];
+                    const active = this.getActiveCellCoordinates();
+                    const selectedCol = active ? active[1] : (this.layout[0]?.length ?? 1) - 1;
+                    const insertIndex = position === 'before' ? selectedCol : selectedCol + 1;
+
+                    const anchors = this.getMergeAnchors().map(anchor => {
+                        if (anchor.col >= insertIndex) anchor.col += 1;
+                        else if (anchor.col + anchor.colspan - 1 >= insertIndex) anchor.colspan += 1;
+
+                        return anchor;
+                    });
+
+                    for (let row = 0; row < rowCount; row++) {
+                        if (!this.layout[row]) this.layout[row] = [];
+                        const cell = this.createCell();
+                        const inheritedHeight = this.getRowHeight(row);
+                        if (inheritedHeight) cell.rowHeight = inheritedHeight;
+                        this.layout[row].splice(insertIndex, 0, cell);
+                    }
+
+                    this.applyAnchorsAndRebuild(anchors);
+                    this.clearSelection();
+                    this.selectSingleCell(0, insertIndex);
+                    this.updateState();
+                },
+
+                deleteSelectedRow() {
+                    if (!this.layout.length) return;
+                    const active = this.getActiveCellCoordinates();
+                    const deleteRow = active ? active[0] : this.layout.length - 1;
+                    if (this.layout.length <= 1) return;
+
+                    const anchors = [];
+                    for (const anchor of this.getMergeAnchors()) {
+                        const endRow = anchor.row + anchor.rowspan - 1;
+                        if (anchor.row === deleteRow) continue;
+                        if (anchor.row > deleteRow) anchor.row -= 1;
+                        else if (anchor.row < deleteRow && deleteRow <= endRow) {
+                            anchor.rowspan -= 1;
+                        }
+                        if (anchor.rowspan > 1 || anchor.colspan > 1) anchors.push(anchor);
+                    }
+
+                    this.layout.splice(deleteRow, 1);
+                    this.applyAnchorsAndRebuild(anchors);
+                    const rowAfterDelete = Math.max(0, deleteRow - 1);
+                    this.clearSelection();
+                    this.selectSingleCell(rowAfterDelete, 0);
+                    this.updateState();
+                },
+
+                deleteSelectedColumn() {
+                    const colCount = this.layout[0]?.length ?? 0;
+                    if (colCount <= 1) return;
+                    const active = this.getActiveCellCoordinates();
+                    const deleteCol = active ? active[1] : colCount - 1;
+
+                    const anchors = [];
+                    for (const anchor of this.getMergeAnchors()) {
+                        const endCol = anchor.col + anchor.colspan - 1;
+                        if (anchor.col === deleteCol) continue;
+                        if (anchor.col > deleteCol) anchor.col -= 1;
+                        else if (anchor.col < deleteCol && deleteCol <= endCol) {
+                            anchor.colspan -= 1;
+                        }
+                        if (anchor.rowspan > 1 || anchor.colspan > 1) anchors.push(anchor);
+                    }
+
+                    for (let row = 0; row < this.layout.length; row++) {
+                        this.layout[row].splice(deleteCol, 1);
+                    }
+
+                    this.applyAnchorsAndRebuild(anchors);
+                    const colAfterDelete = Math.max(0, deleteCol - 1);
+                    this.clearSelection();
+                    this.selectSingleCell(0, colAfterDelete);
+                    this.updateState();
+                },
+
+                moveSelectedRow(direction) {
+                    if (this.layout.length < 2) return;
+                    const active = this.getActiveCellCoordinates();
+                    if (!active) return;
+                    const from = active[0];
+                    const to = direction === 'up' ? from - 1 : from + 1;
+                    if (to < 0 || to >= this.layout.length) return;
+
+                    const anchors = this.getMergeAnchors().filter(anchor => {
+                        const end = anchor.row + anchor.rowspan - 1;
+                        const intersectsFrom = from >= anchor.row && from <= end;
+                        const intersectsTo = to >= anchor.row && to <= end;
+                        if (anchor.rowspan > 1 && (intersectsFrom || intersectsTo)) return false;
+
+                        return true;
+                    }).map(anchor => {
+                        if (anchor.row === from) anchor.row = to;
+                        else if (anchor.row === to) anchor.row = from;
+                        return anchor;
+                    });
+
+                    const rowA = this.layout[from];
+                    this.layout[from] = this.layout[to];
+                    this.layout[to] = rowA;
+                    this.applyAnchorsAndRebuild(anchors);
+                    this.clearSelection();
+                    this.selectSingleCell(to, active[1]);
+                    this.updateState();
+                },
+
+                moveSelectedColumn(direction) {
+                    const colCount = this.layout[0]?.length ?? 0;
+                    if (colCount < 2) return;
+                    const active = this.getActiveCellCoordinates();
+                    if (!active) return;
+                    const from = active[1];
+                    const to = direction === 'left' ? from - 1 : from + 1;
+                    if (to < 0 || to >= colCount) return;
+
+                    const anchors = this.getMergeAnchors().filter(anchor => {
+                        const end = anchor.col + anchor.colspan - 1;
+                        const intersectsFrom = from >= anchor.col && from <= end;
+                        const intersectsTo = to >= anchor.col && to <= end;
+                        if (anchor.colspan > 1 && (intersectsFrom || intersectsTo)) return false;
+
+                        return true;
+                    }).map(anchor => {
+                        if (anchor.col === from) anchor.col = to;
+                        else if (anchor.col === to) anchor.col = from;
+                        return anchor;
+                    });
+
+                    for (let row = 0; row < this.layout.length; row++) {
+                        const rowData = this.layout[row];
+                        const colA = rowData[from];
+                        rowData[from] = rowData[to];
+                        rowData[to] = colA;
+                    }
+                    this.applyAnchorsAndRebuild(anchors);
+                    this.clearSelection();
+                    this.selectSingleCell(active[0], to);
                     this.updateState();
                 },
 
