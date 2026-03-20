@@ -3,6 +3,9 @@ name: CI
 on:
   push:
 
+permissions:
+  contents: read
+
 jobs:
   quality-and-tests:
     name: Pint, Lint, Quality & Tests
