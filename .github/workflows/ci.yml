@@ -45,7 +45,7 @@ jobs:
       - name: Run PHP Lint
         run: find app bootstrap config database routes tests -name "*.php" -print0 | xargs -0 -n1 php -l
 
-  quality:
+  composer-validation:
     name: Composer Quality
     runs-on: ubuntu-latest
 
@@ -59,7 +59,7 @@ jobs:
           php-version: '8.3'
           coverage: none
 
-      - name: Run code quality checks
+      - name: Validate composer configuration
         run: composer validate
 
   tests:
@@ -105,7 +105,7 @@ jobs:
       - name: Install Node dependencies
         run: npm ci
 
-      - name: Build frontend assets
+      - name: Run frontend build
         run: npm run build
 
   docker-build:
@@ -114,7 +114,7 @@ jobs:
     needs:
       - pint
       - php-lint
-      - quality
+      - composer-validation
       - tests
       - frontend-build
 
