@@ -104,7 +104,7 @@
     <table>
         @if(!empty($layout) && !empty($layout[0]))
             <colgroup>
-                @foreach($layout[0] as $colIndex => $unused)
+                @foreach($layout[0] as $colIndex => $_cell)
                     <col
                         @if(isset($columnWidths[$colIndex]))
                             style="width: {{ $columnWidths[$colIndex] }}px;"

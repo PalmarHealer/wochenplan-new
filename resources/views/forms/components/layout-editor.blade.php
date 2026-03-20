@@ -38,7 +38,7 @@
                 Spalte rechts einfügen
             </x-filament::button>
             <x-filament::button
-                icon="tabler-row-insert-bottom"
+                icon="tabler-row-insert-top"
                 icon-position="after"
                 color="gray"
                 @click="addRowAtSelection('before')"
@@ -46,7 +46,7 @@
                 Zeile oben einfügen
             </x-filament::button>
             <x-filament::button
-                icon="tabler-column-insert-right"
+                icon="tabler-column-insert-left"
                 icon-position="after"
                 color="gray"
                 @click="addColumnAtSelection('before')"
@@ -211,8 +211,8 @@
             class="table-auto w-full border border-gray-400 text-xs bg-white dark:bg-white/5"
             @mouseleave="endSelection(false)">
             <colgroup x-show="layout.length && layout[0]?.length">
-                <template x-for="colIndex in (layout[0]?.length || 0)" :key="colIndex">
-                    <col :style="getColumnStyle(colIndex - 1)">
+                <template x-for="(col, colIndex) in (layout[0] || [])" :key="colIndex">
+                    <col :style="getColumnStyle(colIndex)">
                 </template>
             </colgroup>
 
@@ -457,6 +457,11 @@
                     };
                 },
 
+                ensureLayoutExists() {
+                    if (this.layout.length) return;
+                    this.layout = [[this.createCell()]];
+                },
+
                 getColumnStyle(colIndex) {
                     const width = this.getColumnWidth(colIndex);
                     return width ? `width: ${width}px;` : '';
@@ -614,10 +619,8 @@
                 },
 
                 addRowAtSelection(position = 'after') {
+                    this.ensureLayoutExists();
                     const columnCount = this.layout[0]?.length || 1;
-                    if (!this.layout.length) {
-                        this.layout = [Array.from({ length: columnCount }, () => this.createCell())];
-                    }
 
                     const active = this.getActiveCellCoordinates();
                     const selectedRow = active ? active[0] : this.layout.length - 1;
@@ -646,8 +649,8 @@
                 },
 
                 addColumnAtSelection(position = 'after') {
-                    const rowCount = this.layout.length || 1;
-                    if (!this.layout.length) this.layout = [Array.from({ length: 1 }, () => this.createCell())];
+                    this.ensureLayoutExists();
+                    const rowCount = this.layout.length;
                     const active = this.getActiveCellCoordinates();
                     const selectedCol = active ? active[1] : (this.layout[0]?.length ?? 1) - 1;
                     const insertIndex = position === 'before' ? selectedCol : selectedCol + 1;
