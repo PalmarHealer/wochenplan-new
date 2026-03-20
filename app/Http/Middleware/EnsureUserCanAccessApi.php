@@ -12,7 +12,7 @@ class EnsureUserCanAccessApi
     {
         $user = $request->user();
 
-        if (! $user || ! $user->can('api.access')) {
+        if (! $user || ! $user->hasPermissionTo('api.access')) {
             return response()->json([
                 'message' => 'You are not authorized to access the API.',
             ], Response::HTTP_FORBIDDEN);

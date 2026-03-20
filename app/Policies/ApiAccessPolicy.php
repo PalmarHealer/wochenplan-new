@@ -8,6 +8,6 @@ class ApiAccessPolicy
 {
     public function useApi(User $user): bool
     {
-        return $user->can('api.access');
+        return $user->hasPermissionTo('api.access');
     }
 }
