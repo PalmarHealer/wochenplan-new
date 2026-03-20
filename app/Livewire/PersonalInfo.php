@@ -4,9 +4,9 @@ namespace App\Livewire;
 
 use Filament\Facades\Filament;
 use Filament\Forms;
+use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
-use Filament\Forms\Components\Actions\Action;
 use Jeffgreco13\FilamentBreezy\Livewire\MyProfileComponent;
 
 class PersonalInfo extends MyProfileComponent
