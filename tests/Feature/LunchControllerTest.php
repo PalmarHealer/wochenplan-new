@@ -19,7 +19,7 @@ it('requires authentication for clearing lunch', function () {
         'date' => '2026-03-20',
     ]);
 
-    $response->assertRedirect();
+    $response->assertUnauthorized();
 });
 
 it('returns forbidden when user has no update_layout permission', function () {

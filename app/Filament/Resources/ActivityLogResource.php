@@ -85,7 +85,7 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
                             ->label('Änderungen')
                             ->content(function ($record) {
                                 // For update actions, show changes
-                                if (!empty($record?->changes)) {
+                                if (! empty($record?->changes)) {
                                     $html = '<div style="font-family: monospace; font-size: 13px;">';
                                     $hasChanges = false;
 
@@ -111,30 +111,31 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
 
                                         // Truncate if too long
                                         if (strlen($oldDisplay) > 100) {
-                                            $oldDisplay = substr($oldDisplay, 0, 100) . '...';
+                                            $oldDisplay = substr($oldDisplay, 0, 100).'...';
                                         }
                                         if (strlen($newDisplay) > 100) {
-                                            $newDisplay = substr($newDisplay, 0, 100) . '...';
+                                            $newDisplay = substr($newDisplay, 0, 100).'...';
                                         }
 
                                         $html .= '<div style="margin-bottom: 12px;">';
-                                        $html .= '<strong style="color: #6b7280;">' . htmlspecialchars($field) . ':</strong><br>';
-                                        $html .= '<span style="color: #dc2626; text-decoration: line-through;">' . htmlspecialchars($oldDisplay) . '</span>';
+                                        $html .= '<strong style="color: #6b7280;">'.htmlspecialchars($field).':</strong><br>';
+                                        $html .= '<span style="color: #dc2626; text-decoration: line-through;">'.htmlspecialchars($oldDisplay).'</span>';
                                         $html .= ' <span style="color: #6b7280;">→</span> ';
-                                        $html .= '<span style="color: #16a34a;">' . htmlspecialchars($newDisplay) . '</span>';
+                                        $html .= '<span style="color: #16a34a;">'.htmlspecialchars($newDisplay).'</span>';
                                         $html .= '</div>';
                                     }
 
-                                    if (!$hasChanges) {
+                                    if (! $hasChanges) {
                                         return 'Keine relevanten Änderungen';
                                     }
 
                                     $html .= '</div>';
+
                                     return new \Illuminate\Support\HtmlString($html);
                                 }
 
                                 // For create actions, show the created data
-                                if ($record?->action === 'create' && !empty($record?->content['after'])) {
+                                if ($record?->action === 'create' && ! empty($record?->content['after'])) {
                                     $data = $record->content['after'];
                                     $html = '<div style="font-family: monospace; font-size: 13px;">';
                                     $html .= '<strong style="color: #16a34a;">Erstellte Daten:</strong><br><br>';
@@ -147,21 +148,22 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
                                         $display = $value === null ? 'null' : (is_array($value) ? json_encode($value, JSON_UNESCAPED_UNICODE) : (string) $value);
 
                                         if (strlen($display) > 100) {
-                                            $display = substr($display, 0, 100) . '...';
+                                            $display = substr($display, 0, 100).'...';
                                         }
 
                                         $html .= '<div style="margin-bottom: 8px;">';
-                                        $html .= '<strong style="color: #6b7280;">' . htmlspecialchars($field) . ':</strong> ';
-                                        $html .= '<span style="color: #16a34a;">' . htmlspecialchars($display) . '</span>';
+                                        $html .= '<strong style="color: #6b7280;">'.htmlspecialchars($field).':</strong> ';
+                                        $html .= '<span style="color: #16a34a;">'.htmlspecialchars($display).'</span>';
                                         $html .= '</div>';
                                     }
 
                                     $html .= '</div>';
+
                                     return new \Illuminate\Support\HtmlString($html);
                                 }
 
                                 // For delete actions, show the deleted data
-                                if ($record?->action === 'delete' && !empty($record?->content['before'])) {
+                                if ($record?->action === 'delete' && ! empty($record?->content['before'])) {
                                     $data = $record->content['before'];
                                     $html = '<div style="font-family: monospace; font-size: 13px;">';
                                     $html .= '<strong style="color: #dc2626;">Gelöschte Daten:</strong><br><br>';
@@ -174,16 +176,17 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
                                         $display = $value === null ? 'null' : (is_array($value) ? json_encode($value, JSON_UNESCAPED_UNICODE) : (string) $value);
 
                                         if (strlen($display) > 100) {
-                                            $display = substr($display, 0, 100) . '...';
+                                            $display = substr($display, 0, 100).'...';
                                         }
 
                                         $html .= '<div style="margin-bottom: 8px;">';
-                                        $html .= '<strong style="color: #6b7280;">' . htmlspecialchars($field) . ':</strong> ';
-                                        $html .= '<span style="color: #dc2626;">' . htmlspecialchars($display) . '</span>';
+                                        $html .= '<strong style="color: #6b7280;">'.htmlspecialchars($field).':</strong> ';
+                                        $html .= '<span style="color: #dc2626;">'.htmlspecialchars($display).'</span>';
                                         $html .= '</div>';
                                     }
 
                                     $html .= '</div>';
+
                                     return new \Illuminate\Support\HtmlString($html);
                                 }
 
@@ -429,7 +432,7 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
     public static function getPermissionPrefixes(): array
     {
         return [
-            'view'
+            'view',
         ];
     }
 }
