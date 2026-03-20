@@ -14,6 +14,7 @@ use App\Models\Role;
 use App\Models\Room;
 use App\Models\Time;
 use App\Models\User;
+use App\Policies\ApiAccessPolicy;
 use App\Policies\AbsencePolicy;
 use App\Policies\ActivityLogPolicy;
 use App\Policies\ColorPolicy;
@@ -27,6 +28,7 @@ use App\Policies\RoomPolicy;
 use App\Policies\TimePolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -45,6 +47,8 @@ class AuthServiceProvider extends ServiceProvider
     {
 
         $this->registerPolicies();
+
+        Gate::define('api.access', [ApiAccessPolicy::class, 'useApi']);
     }
 
     protected $policies = [

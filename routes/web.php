@@ -12,3 +12,5 @@ Route::get('/', function () {
 Route::post('/lunch/clear', [LunchController::class, 'clear'])
     ->name('lunch.clear')
     ->middleware(['auth']);
+
+Route::view('/api/docs', 'api.docs');

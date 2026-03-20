@@ -79,12 +79,13 @@ class ShieldSeeder extends Seeder
                 "delete_any_time",
                 "view_user",
                 "create_user",
-                "update_user",
-                "delete_user",
-                "delete_any_user",
-                "page_FAQ"
-            ]
-        }]';
+                 "update_user",
+                 "delete_user",
+                 "delete_any_user",
+                 "api.access",
+                 "page_FAQ"
+             ]
+         }]';
 
         $directPermissions = '[]';
 

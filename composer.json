@@ -12,6 +12,7 @@
         "filament/filament": "3.3",
         "jeffgreco13/filament-breezy": "^2.6",
         "laravel/framework": "^12.1.1",
+        "laravel/sanctum": "^4.3",
         "laravel/tinker": "^2.10.1",
         "livewire/livewire": "^3.6.4",
         "malzariey/filament-daterangepicker-filter": "^3.3",

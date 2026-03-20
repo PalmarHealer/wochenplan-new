@@ -14,6 +14,10 @@ class LogSuccessfulLogin
 
     public function handle(Login $event): void
     {
+        $event->user->forceFill([
+            'last_login_at' => now(),
+        ])->save();
+
         // Check if a login event was already logged for this user in the last 5 seconds
         $recentLogin = ActivityLog::where('user_id', $event->user->id)
             ->where('action', ActivityLog::ACTION_LOGIN)
