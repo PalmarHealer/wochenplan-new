@@ -114,7 +114,18 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                     ->iconButton()
                     ->action(function (DayPdf $record) {
                         $pdfService = app(PdfExportService::class);
-                        $base64Content = $pdfService->getOrGeneratePdf($record->date);
+                        $base64Content = $pdfService->getExistingPdf($record->date);
+
+                        if (! $base64Content) {
+                            Notification::make()
+                                ->title('PDF nicht verfügbar')
+                                ->body('Für dieses Datum existiert keine PDF.')
+                                ->danger()
+                                ->send();
+
+                            return null;
+                        }
+
                         $binaryContent = base64_decode($base64Content);
 
                         $filename = $record->date->locale(config('app.locale'))->translatedFormat('l, d.m.Y').'.pdf';
@@ -136,7 +147,18 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                         // If only one record, download as PDF directly
                         if ($records->count() === 1) {
                             $record = $records->first();
-                            $base64Content = $pdfService->getOrGeneratePdf($record->date);
+                            $base64Content = $pdfService->getExistingPdf($record->date);
+
+                            if (! $base64Content) {
+                                Notification::make()
+                                    ->title('PDF nicht verfügbar')
+                                    ->body('Für dieses Datum existiert keine PDF.')
+                                    ->danger()
+                                    ->send();
+
+                                return null;
+                            }
+
                             $binaryContent = base64_decode($base64Content);
 
                             $filename = $record->date->locale(config('app.locale'))->translatedFormat('l, d.m.Y').'.pdf';
@@ -162,7 +184,12 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                         $zip = new ZipArchive;
                         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
                             foreach ($sortedRecords as $record) {
-                                $base64Content = $pdfService->getOrGeneratePdf($record->date);
+                                $base64Content = $pdfService->getExistingPdf($record->date);
+
+                                if (! $base64Content) {
+                                    continue;
+                                }
+
                                 $binaryContent = base64_decode($base64Content);
 
                                 $filename = $record->date->locale(config('app.locale'))->translatedFormat('l, d.m.Y').'.pdf';

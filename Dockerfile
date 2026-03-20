@@ -84,7 +84,10 @@ RUN apk add --no-cache \
         nss \
         freetype \
         harfbuzz \
-        ttf-freefont
+        ttf-freefont \
+        font-noto \
+        font-noto-cjk \
+        font-noto-emoji
 
 # Build and install PHP extensions
 RUN apk add --no-cache --virtual .build-deps \

@@ -14,10 +14,17 @@ Artisan::command('inspire', function () {
 |--------------------------------------------------------------------------
 */
 
-// Archive the current day's PDF at 23:59 on weekdays
+// Generate PDFs for previous and current day at 01:00 on weekdays
+Schedule::command('pdf:generate yesterday')
+    ->weekdays()
+    ->at('01:00')
+    ->withoutOverlapping()
+    ->onOneServer()
+    ->runInBackground();
+
 Schedule::command('pdf:generate today')
     ->weekdays()
-    ->at('23:59')
+    ->at('01:00')
     ->withoutOverlapping()
     ->onOneServer()
     ->runInBackground();
