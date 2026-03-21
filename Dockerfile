@@ -99,13 +99,16 @@ RUN apk add --no-cache --virtual .build-deps \
     && apk del --no-cache .build-deps
 
 # Install Puppeteer (will use system Chromium)
-RUN npm install -g puppeteer@21 --unsafe-perm=true \
-        --omit=dev \
-        --omit=optional \
-    && echo 'export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true' >> /etc/profile.d/puppeteer.sh \
-    && echo 'export PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser' >> /etc/profile.d/puppeteer.sh \
-    && npm cache clean --force \
-    && rm -rf /tmp/* /root/.npm
+ARG SKIP_PUPPETEER_INSTALL=false
+RUN if [ "${SKIP_PUPPETEER_INSTALL}" = "false" ]; then \
+        PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm install -g puppeteer@21 --unsafe-perm=true \
+            --omit=dev \
+            --omit=optional \
+        && echo 'export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true' >> /etc/profile.d/puppeteer.sh \
+        && echo 'export PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser' >> /etc/profile.d/puppeteer.sh \
+        && npm cache clean --force \
+        && rm -rf /tmp/* /root/.npm; \
+    fi
 
 # Create directories
 RUN mkdir -p \
