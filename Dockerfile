@@ -5,26 +5,14 @@
 # ============================================================================
 FROM php:8.3-fpm-alpine AS builder
 
-# Install build dependencies and PHP extensions
+# Install build dependencies and compile all PHP extensions (including redis)
 RUN apk add --no-cache \
-    git \
-    unzip \
-    libzip-dev \
-    libzip \
-    icu-dev \
-    icu-libs \
-    oniguruma-dev \
-    oniguruma \
-    libxml2-dev \
-    libxml2 \
+    git unzip ${PHPIZE_DEPS} \
+    libzip-dev icu-dev oniguruma-dev libxml2-dev \
     && docker-php-ext-install -j$(nproc) \
-        pdo_mysql \
-        mysqli \
-        zip \
-        bcmath \
-        intl \
-        mbstring \
-        xml
+        pdo_mysql mysqli zip bcmath intl mbstring xml \
+    && pecl install redis \
+    && docker-php-ext-enable redis
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -49,19 +37,12 @@ RUN composer dump-autoload --optimize
 FROM php:8.3-fpm-alpine
 
 ENV APP_DIR=/var/www/html \
-    PUPPETEER_CACHE_DIR=/usr/local/share/puppeteer
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
-# Build and install PHP extensions (rarely changes — keep early for caching)
-RUN apk add --no-cache --virtual .build-deps \
-        ${PHPIZE_DEPS} \
-        libzip-dev \
-        icu-dev \
-        oniguruma-dev \
-        libxml2-dev \
-    && docker-php-ext-install -j$(nproc) pdo_mysql mysqli zip bcmath intl mbstring xml \
-    && pecl install redis \
-    && docker-php-ext-enable redis \
-    && apk del --no-cache .build-deps
+# Copy pre-compiled PHP extensions from builder (avoids recompiling — saves minutes)
+COPY --from=builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 
 # Install all runtime system packages in a single layer
 RUN apk add --no-cache \
