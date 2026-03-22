@@ -1,0 +1,269 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\ChatConversation;
+use App\Services\AiChat\ChatService;
+use App\Services\AiChat\OllamaClient;
+use App\Services\AiChat\ToolRegistry;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
+class AiChatStreamController
+{
+    public function stream(Request $request, ChatService $chatService, OllamaClient $client, ToolRegistry $registry): StreamedResponse
+    {
+        $request->validate(['conversation_id' => 'required|integer']);
+
+        $user = $request->user();
+        $conversationId = (int) $request->input('conversation_id');
+
+        $conversation = ChatConversation::where('id', $conversationId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (! $conversation) {
+            return new StreamedResponse(function () {
+                $this->sse('error', ['message' => 'Not found']);
+                $this->sse('done', []);
+            }, 200, $this->sseHeaders());
+        }
+
+        return new StreamedResponse(function () use ($conversation, $user, $chatService, $client, $registry) {
+            while (ob_get_level() > 0) {
+                ob_end_flush();
+            }
+            ob_implicit_flush(true);
+
+            $tools = $registry->getOllamaToolSchemas($user);
+            $hadToolCalls = false;
+
+            // Phase 1: Tool call loop (non-streaming)
+            for ($round = 0; $round < 5; $round++) {
+                $messages = $chatService->buildMessages($conversation, $user);
+                $response = $client->chat($messages, $tools);
+                $toolCalls = $response['tool_calls'] ?? [];
+
+                if (empty($toolCalls)) {
+                    break;
+                }
+
+                $hadToolCalls = true;
+
+                // Save assistant message with tool calls
+                $conversation->messages()->create([
+                    'role' => 'assistant',
+                    'content' => OllamaClient::stripThinkingTags($response['content'] ?? ''),
+                    'tool_calls' => $toolCalls,
+                ]);
+
+                $allExecuted = true;
+                foreach ($toolCalls as $index => $toolCall) {
+                    $function = $toolCall['function'] ?? $toolCall;
+                    $toolName = $function['name'] ?? 'unknown';
+                    $arguments = $function['arguments'] ?? [];
+                    $toolCallId = "call_{$index}";
+
+                    $tool = $registry->findTool($toolName);
+                    if (! $tool) {
+                        $conversation->messages()->create([
+                            'role' => 'tool', 'content' => json_encode(['error' => "Unknown tool: {$toolName}"]),
+                            'tool_call_id' => $toolCallId, 'tool_name' => $toolName,
+                        ]);
+
+                        continue;
+                    }
+
+                    $perm = $tool->requiredPermission();
+                    if ($perm !== null && ! $user->can($perm)) {
+                        $conversation->messages()->create([
+                            'role' => 'tool', 'content' => json_encode(['error' => 'Keine Berechtigung.']),
+                            'tool_call_id' => $toolCallId, 'tool_name' => $toolName,
+                        ]);
+
+                        continue;
+                    }
+
+                    if ($tool->isReadOnly() || $user->can('auto_approve_ai_actions')) {
+                        try {
+                            $result = $tool->execute($arguments, $user);
+                        } catch (\Exception $e) {
+                            $result = ['error' => $e->getMessage()];
+                        }
+                        $conversation->messages()->create([
+                            'role' => 'tool', 'content' => json_encode($result),
+                            'tool_call_id' => $toolCallId, 'tool_name' => $toolName,
+                            'action_status' => $tool->isReadOnly() ? null : 'auto_approved',
+                        ]);
+                        $this->sse('tool', ['name' => $toolName, 'status' => 'executed']);
+                    } else {
+                        $conversation->messages()->create([
+                            'role' => 'tool', 'content' => null,
+                            'tool_call_id' => $toolCallId, 'tool_name' => $toolName,
+                            'pending_action' => [
+                                'tool_name' => $toolName, 'arguments' => $arguments,
+                                'description' => $this->describeAction($toolName, $arguments),
+                            ],
+                            'action_status' => 'pending',
+                        ]);
+                        $allExecuted = false;
+                    }
+                }
+
+                if (! $allExecuted) {
+                    $this->sse('done', []);
+
+                    return;
+                }
+            }
+
+            if ($hadToolCalls) {
+                // After tool calls: non-streaming final response (reliable)
+                $messages = $chatService->buildMessages($conversation, $user);
+                $response = $client->chat($messages, $tools);
+                $content = OllamaClient::stripThinkingTags($response['content'] ?? '');
+
+                if ($content !== '') {
+                    $this->sse('content', ['text' => $content]);
+                }
+
+                $conversation->messages()->create([
+                    'role' => 'assistant',
+                    'content' => $response['content'] ?? $content,
+                ]);
+            } else {
+                // No tool calls: stream directly from Ollama
+                $messages = $chatService->buildMessages($conversation, $user);
+                $this->streamFromOllama($messages, $conversation);
+            }
+
+            // Generate title
+            if ($conversation->title === null) {
+                $userMsg = $conversation->messages()->where('role', 'user')->orderBy('created_at')->first();
+                if ($userMsg) {
+                    $conversation->update(['title' => $client->generateTitle($userMsg->content)]);
+                }
+            }
+
+            $this->sse('done', []);
+        }, 200, $this->sseHeaders());
+    }
+
+    private function streamFromOllama(array $messages, ChatConversation $conversation): void
+    {
+        $ollamaUrl = rtrim(config('ai-chat.ollama_base_url'), '/').'/api/chat';
+        $payload = json_encode([
+            'model' => config('ai-chat.model'),
+            'messages' => $messages,
+            'stream' => true,
+            'keep_alive' => '30m',
+            'options' => [
+                'temperature' => config('ai-chat.temperature', 0.2),
+                'num_predict' => config('ai-chat.max_tokens', 2048),
+            ],
+        ]);
+
+        $rawFull = '';
+        $state = 'init';
+        $initBuffer = '';
+        $ctrl = $this;
+
+        $ch = curl_init($ollamaUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_RETURNTRANSFER => false,
+            CURLOPT_TIMEOUT => 120,
+            CURLOPT_WRITEFUNCTION => function ($ch, $data) use (&$rawFull, &$state, &$initBuffer, $ctrl) {
+                foreach (explode("\n", $data) as $line) {
+                    $line = trim($line);
+                    if ($line === '') {
+                        continue;
+                    }
+                    $json = json_decode($line, true);
+                    if (! $json) {
+                        continue;
+                    }
+
+                    $chunk = $json['message']['content'] ?? '';
+                    if ($chunk === '') {
+                        continue;
+                    }
+
+                    $rawFull .= $chunk;
+
+                    if ($state === 'init') {
+                        $initBuffer .= $chunk;
+                        // Skip any <think> blocks at the start
+                        if (str_contains($initBuffer, '</think>')) {
+                            $parts = explode('</think>', $initBuffer, 2);
+                            $state = 'content';
+                            $rest = ltrim($parts[1] ?? '');
+                            if ($rest !== '') {
+                                $ctrl->sse('content', ['text' => $rest]);
+                            }
+                        } elseif (strlen($initBuffer) > 8 && ! str_contains($initBuffer, '<')) {
+                            $state = 'content';
+                            $ctrl->sse('content', ['text' => $initBuffer]);
+                        }
+                    } elseif ($state === 'content') {
+                        $ctrl->sse('content', ['text' => $chunk]);
+                    }
+                }
+
+                return strlen($data);
+            },
+        ]);
+
+        curl_exec($ch);
+        curl_close($ch);
+
+        // Flush remaining init buffer
+        if ($state === 'init' && $initBuffer !== '') {
+            $cleaned = OllamaClient::stripThinkingTags($initBuffer);
+            if ($cleaned !== '') {
+                $this->sse('content', ['text' => $cleaned]);
+            }
+        }
+
+        $conversation->messages()->create([
+            'role' => 'assistant',
+            'content' => $rawFull,
+        ]);
+    }
+
+    public function sse(string $event, array $data): void
+    {
+        echo "event: {$event}\ndata: ".json_encode($data)."\n\n";
+        flush();
+    }
+
+    private function describeAction(string $toolName, array $arguments): string
+    {
+        $registry = app(ToolRegistry::class);
+        $displayName = $registry->getDisplayName($toolName);
+
+        return match ($toolName) {
+            'create_lesson' => "{$displayName}: ".($arguments['name'] ?? 'Unbenannt'),
+            'update_lesson' => "{$displayName} #".($arguments['lesson_id'] ?? '?'),
+            'delete_lesson' => "{$displayName} #".($arguments['lesson_id'] ?? '?'),
+            'create_absence' => "{$displayName}: ".($arguments['start'] ?? '?').' bis '.($arguments['end'] ?? '?'),
+            'delete_absence' => "{$displayName} #".($arguments['absence_id'] ?? '?'),
+            'create_room' => "{$displayName}: ".($arguments['name'] ?? ''),
+            'create_time' => "{$displayName}: ".($arguments['name'] ?? ''),
+            'create_color' => "{$displayName}: ".($arguments['name'] ?? ''),
+            default => $displayName,
+        };
+    }
+
+    private function sseHeaders(): array
+    {
+        return [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache',
+            'Connection' => 'keep-alive',
+            'X-Accel-Buffering' => 'no',
+        ];
+    }
+}

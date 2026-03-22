@@ -82,7 +82,9 @@ class ShieldSeeder extends Seeder
                 "update_user",
                 "delete_user",
                 "delete_any_user",
-                "page_FAQ"
+                "page_FAQ",
+                "page_AiChat",
+                "auto_approve_ai_actions"
             ]
         }]';
 

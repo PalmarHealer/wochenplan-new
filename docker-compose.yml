@@ -53,6 +53,10 @@ services:
             AZURE_TENANT_ID:
             AZURE_PROXY:
 
+            # AI Chat (Ollama on Leipzig server)
+            OLLAMA_BASE_URL:
+            AI_CHAT_MODEL: qwen3:8b
+
         # Security: Add capabilities for Chromium sandbox to work properly
         cap_add:
             - SYS_ADMIN

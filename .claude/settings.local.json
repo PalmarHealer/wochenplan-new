@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan:*)",
+      "WebFetch(domain:spatie.be)",
+      "WebSearch",
+      "Bash(npm install:*)",
+      "Bash(docker:*)",
+      "Bash(docker-compose:*)",
+      "Bash(curl:*)",
+      "Bash(./vendor/bin/pint:*)",
+      "Bash(find:*)",
+      "Bash(composer audit:*)",
+      "Bash(xargs:*)",
+      "Bash(timeout 600 bash -c:*)",
+      "Bash(docker-compose restart:*)",
+      "Bash(winpty docker exec:*)",
+      "mcp__chrome-devtools__list_pages",
+      "WebFetch(domain:localhost)",
+      "Bash(git pull:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:api.github.com)",
+      "mcp__chrome-devtools__new_page",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__chrome-devtools__fill",
+      "mcp__chrome-devtools__click",
+      "mcp__chrome-devtools__navigate_page"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
