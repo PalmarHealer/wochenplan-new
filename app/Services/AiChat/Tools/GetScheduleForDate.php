@@ -24,7 +24,7 @@ class GetScheduleForDate implements AiChatTool
 
     public function description(): string
     {
-        return 'Get the complete schedule for a specific date: all lessons, applicable templates, absences, and lunch. Provides a full day overview.';
+        return 'Get complete day schedule: lessons, templates, absences, lunch.';
     }
 
     public function parameters(): array
@@ -34,7 +34,7 @@ class GetScheduleForDate implements AiChatTool
             'properties' => [
                 'date' => [
                     'type' => 'string',
-                    'description' => 'The date to get the schedule for (YYYY-MM-DD format)',
+                    'description' => 'Date (YYYY-MM-DD)',
                 ],
             ],
             'required' => ['date'],

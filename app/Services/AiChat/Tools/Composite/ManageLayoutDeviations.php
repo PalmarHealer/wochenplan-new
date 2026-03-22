@@ -13,7 +13,7 @@ class ManageLayoutDeviations implements AiChatTool
 
     public function description(): string
     {
-        return 'Manage layout deviations (Layout-Abweichungen). Actions: list (filter by date range), create (new deviation), update (edit), delete.';
+        return 'Manage layout deviations (temporary overrides). Actions: list, create, update, delete.';
     }
 
     public function parameters(): array
@@ -21,13 +21,13 @@ class ManageLayoutDeviations implements AiChatTool
         return [
             'type' => 'object',
             'properties' => [
-                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action to perform'],
-                'deviation_id' => ['type' => 'integer', 'description' => 'Deviation ID (for update/delete)'],
-                'start' => ['type' => 'string', 'description' => 'Start date (YYYY-MM-DD)'],
-                'end' => ['type' => 'string', 'description' => 'End date (YYYY-MM-DD)'],
-                'layout_id' => ['type' => 'integer', 'description' => 'Layout ID to use for this deviation'],
-                'from' => ['type' => 'string', 'description' => 'Filter: from date (YYYY-MM-DD, for list)'],
-                'to' => ['type' => 'string', 'description' => 'Filter: to date (YYYY-MM-DD, for list)'],
+                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action'],
+                'deviation_id' => ['type' => 'integer', 'description' => 'ID'],
+                'start' => ['type' => 'string', 'description' => 'Start (YYYY-MM-DD)'],
+                'end' => ['type' => 'string', 'description' => 'End (YYYY-MM-DD)'],
+                'layout_id' => ['type' => 'integer', 'description' => 'Layout ID'],
+                'from' => ['type' => 'string', 'description' => 'Filter from (YYYY-MM-DD)'],
+                'to' => ['type' => 'string', 'description' => 'Filter to (YYYY-MM-DD)'],
             ],
             'required' => ['action'],
         ];

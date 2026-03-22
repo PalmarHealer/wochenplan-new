@@ -19,7 +19,7 @@ class GetFaq implements AiChatTool
 
     public function description(): string
     {
-        return 'Get FAQ and help information about how the Wochenplan system works. Use this when users ask for help or have questions about using the system.';
+        return 'Get FAQ and help about the Wochenplan system.';
     }
 
     public function parameters(): array

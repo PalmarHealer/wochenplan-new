@@ -20,7 +20,7 @@ class ExportDayPdf implements AiChatTool
 
     public function description(): string
     {
-        return 'Export a day\'s schedule as a PDF file. Returns a download link for the generated PDF.';
+        return 'Export day schedule as PDF. Returns download link.';
     }
 
     public function parameters(): array
@@ -30,7 +30,7 @@ class ExportDayPdf implements AiChatTool
             'properties' => [
                 'date' => [
                     'type' => 'string',
-                    'description' => 'The date to export (YYYY-MM-DD, required)',
+                    'description' => 'Date (YYYY-MM-DD)',
                 ],
             ],
             'required' => ['date'],

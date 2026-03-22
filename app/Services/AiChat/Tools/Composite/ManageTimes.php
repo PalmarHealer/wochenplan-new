@@ -13,7 +13,7 @@ class ManageTimes implements AiChatTool
 
     public function description(): string
     {
-        return 'Manage times (Zeiten). Actions: list (show all times), create (new time), update (rename), delete.';
+        return 'Manage time slots. Actions: list, create, update, delete.';
     }
 
     public function parameters(): array
@@ -21,9 +21,9 @@ class ManageTimes implements AiChatTool
         return [
             'type' => 'object',
             'properties' => [
-                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action to perform'],
-                'time_id' => ['type' => 'integer', 'description' => 'Time ID (for update/delete)'],
-                'name' => ['type' => 'string', 'description' => 'Time name (for create/update)'],
+                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action'],
+                'time_id' => ['type' => 'integer', 'description' => 'ID'],
+                'name' => ['type' => 'string', 'description' => 'Name'],
             ],
             'required' => ['action'],
         ];

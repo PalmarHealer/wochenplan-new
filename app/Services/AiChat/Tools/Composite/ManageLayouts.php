@@ -13,7 +13,7 @@ class ManageLayouts implements AiChatTool
 
     public function description(): string
     {
-        return 'Manage layouts. Actions: list (show all layouts), create (new layout), update (edit layout metadata), delete.';
+        return 'Manage layouts. Actions: list, create, update, delete. Weekday: 1=Mon-5=Fri.';
     }
 
     public function parameters(): array
@@ -21,13 +21,13 @@ class ManageLayouts implements AiChatTool
         return [
             'type' => 'object',
             'properties' => [
-                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action to perform'],
-                'layout_id' => ['type' => 'integer', 'description' => 'Layout ID (for update/delete)'],
-                'name' => ['type' => 'string', 'description' => 'Layout name'],
-                'description' => ['type' => 'string', 'description' => 'Layout description'],
-                'weekdays' => ['type' => 'array', 'items' => ['type' => 'integer'], 'description' => 'Weekdays array (1=Monday to 5=Friday)'],
-                'text_size' => ['type' => 'integer', 'description' => 'Text size percentage (default 100)'],
-                'notes' => ['type' => 'string', 'description' => 'Internal notes'],
+                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action'],
+                'layout_id' => ['type' => 'integer', 'description' => 'ID'],
+                'name' => ['type' => 'string', 'description' => 'Name'],
+                'description' => ['type' => 'string', 'description' => 'Description'],
+                'weekdays' => ['type' => 'array', 'items' => ['type' => 'integer'], 'description' => 'Weekdays (1-5)'],
+                'text_size' => ['type' => 'integer', 'description' => 'Text size % (default 100)'],
+                'notes' => ['type' => 'string', 'description' => 'Notes'],
             ],
             'required' => ['action'],
         ];

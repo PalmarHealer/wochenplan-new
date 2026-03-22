@@ -13,7 +13,7 @@ class ManageUsers implements AiChatTool
 
     public function description(): string
     {
-        return 'Manage users (Benutzer). Actions: list (show all users with roles), create (new user), update (edit user), delete.';
+        return 'Manage users. Actions: list, create, update, delete.';
     }
 
     public function parameters(): array
@@ -21,12 +21,12 @@ class ManageUsers implements AiChatTool
         return [
             'type' => 'object',
             'properties' => [
-                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action to perform'],
-                'user_id' => ['type' => 'integer', 'description' => 'User ID (for update/delete)'],
-                'name' => ['type' => 'string', 'description' => 'Username (for create/update)'],
-                'email' => ['type' => 'string', 'description' => 'Email address (for create/update)'],
-                'display_name' => ['type' => 'string', 'description' => 'Display name (for create/update)'],
-                'password' => ['type' => 'string', 'description' => 'Password (for create/update)'],
+                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action'],
+                'user_id' => ['type' => 'integer', 'description' => 'ID'],
+                'name' => ['type' => 'string', 'description' => 'Username'],
+                'email' => ['type' => 'string', 'description' => 'Email'],
+                'display_name' => ['type' => 'string', 'description' => 'Display name'],
+                'password' => ['type' => 'string', 'description' => 'Password'],
             ],
             'required' => ['action'],
         ];

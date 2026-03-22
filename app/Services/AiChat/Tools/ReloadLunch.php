@@ -20,7 +20,7 @@ class ReloadLunch implements AiChatTool
 
     public function description(): string
     {
-        return 'Clear the cached lunch for a specific date so it will be reloaded from the API on next access. Use this when the lunch menu for a day is wrong or outdated.';
+        return 'Reload lunch menu for a date from API.';
     }
 
     public function parameters(): array
@@ -30,7 +30,7 @@ class ReloadLunch implements AiChatTool
             'properties' => [
                 'date' => [
                     'type' => 'string',
-                    'description' => 'The date to reload lunch for (YYYY-MM-DD format, required)',
+                    'description' => 'Date (YYYY-MM-DD)',
                 ],
             ],
             'required' => ['date'],

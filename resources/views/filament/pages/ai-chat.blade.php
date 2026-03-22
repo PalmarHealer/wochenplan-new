@@ -28,7 +28,22 @@
             </div>
 
             <x-filament::section>
-                <div class="space-y-4 overflow-y-auto" style="max-height: calc(100vh - 22rem);" x-ref="chatMessages">
+                <div id="chat-scroll" class="space-y-4 overflow-y-auto pr-3" style="max-height: calc(100vh - 26rem);">
+                    @php
+                        $toolGroups = [];
+                        $currentTools = [];
+                        foreach ($messages as $i => $msg) {
+                            if ($msg['role'] === 'tool' && $msg['action_status'] !== 'pending') {
+                                $currentTools[] = $msg;
+                            } else {
+                                if (!empty($currentTools)) {
+                                    $toolGroups[$i] = $currentTools;
+                                    $currentTools = [];
+                                }
+                            }
+                        }
+                    @endphp
+
                     @forelse($messages as $index => $msg)
                         @if($msg['role'] === 'user')
                             <div class="flex justify-end">
@@ -37,80 +52,71 @@
                                     <p class="text-[10px] text-primary-200 mt-0.5">{{ $msg['created_at'] }}</p>
                                 </div>
                             </div>
-                        @elseif($msg['role'] === 'assistant' && ($msg['content'] || $msg['thinking']))
+                        @elseif($msg['role'] === 'assistant' && $msg['content'])
                             <div class="flex justify-start">
-                                <div class="max-w-[75%] rounded-xl px-4 py-2 bg-gray-100 dark:bg-gray-800">
-                                    {{-- Show tool results that belong to this assistant message (appear right before it) --}}
-                                    @php
-                                        $toolResults = [];
-                                        for ($i = $index - 1; $i >= 0; $i--) {
-                                            if ($messages[$i]['role'] === 'tool' && $messages[$i]['content']) {
-                                                $toolResults[] = $messages[$i];
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                        $toolResults = array_reverse($toolResults);
-                                    @endphp
-                                    @foreach($toolResults as $tr)
-                                        <details class="mb-2">
-                                            <summary class="text-[11px] text-gray-400 dark:text-gray-500 cursor-pointer select-none inline-flex items-center gap-1 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                                <div class="max-w-[75%] rounded-xl px-4 py-2 bg-gray-100 dark:bg-gray-800 flex flex-col gap-0.5">
+                                    @if(isset($toolGroups[$index]) && count($toolGroups[$index]) > 0)
+                                        <details>
+                                            <summary class="text-[11px] text-gray-400 dark:text-gray-500 cursor-pointer select-none inline-flex items-center gap-1 leading-none hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                                                 <x-filament::icon icon="tabler-tool" class="w-3 h-3" />
-                                                {{ $tr['tool_display_name'] ?? $tr['tool_name'] ?? 'Tool' }}
-                                                @if($tr['action_status'] === 'approved') <x-filament::badge color="success" size="xs">Genehmigt</x-filament::badge>
-                                                @elseif($tr['action_status'] === 'auto_approved') <x-filament::badge color="success" size="xs">Auto</x-filament::badge>
-                                                @endif
+                                                {{ count($toolGroups[$index]) }} Tool-Aufrufe
                                             </summary>
-                                            <pre class="mt-1 p-2 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-[11px] font-mono text-gray-500 dark:text-gray-400 whitespace-pre-wrap max-h-32 overflow-auto">{{ json_encode(json_decode($tr['content'], true), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                                            <div class="mt-1.5 space-y-1">
+                                                @foreach($toolGroups[$index] as $tr)
+                                                    <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+                                                        <p class="text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">{{ $tr['tool_display_name'] ?? $tr['tool_name'] ?? 'Tool' }}</p>
+                                                        <pre class="text-[10px] font-mono text-gray-400 whitespace-pre-wrap max-h-20 overflow-auto">{{ json_encode(json_decode($tr['content'], true), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                                                    </div>
+                                                @endforeach
+                                            </div>
                                         </details>
-                                    @endforeach
-                                    @if($msg['content'])
-                                        <div class="prose dark:prose-invert prose-sm max-w-none text-sm">
-                                            {!! \Illuminate\Support\Str::markdown($msg['content']) !!}
-                                        </div>
                                     @endif
-                                    {{-- PDF download buttons from tool results --}}
-                                    @foreach($toolResults as $tr)
-                                        @php $trData = json_decode($tr['content'], true); @endphp
-                                        @if(isset($trData['download_url']))
-                                            <a href="{{ $trData['download_url'] }}" target="_blank" class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg bg-primary-500 text-white text-xs hover:bg-primary-600 transition-colors no-underline">
-                                                <x-filament::icon icon="tabler-download" class="w-3.5 h-3.5" />
-                                                PDF herunterladen
-                                            </a>
-                                        @endif
-                                    @endforeach
+                                    <div class="prose dark:prose-invert prose-sm max-w-none text-sm [&>*]:my-0 [&>*+*]:mt-1.5">
+                                        {!! \Illuminate\Support\Str::markdown($msg['content']) !!}
+                                    </div>
+                                    @if(isset($toolGroups[$index]))
+                                        @foreach($toolGroups[$index] as $tr)
+                                            @php $trData = json_decode($tr['content'], true); @endphp
+                                            @if(isset($trData['download_url']))
+                                                <a href="{{ $trData['download_url'] }}" target="_blank" class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg bg-primary-500 text-white text-xs hover:bg-primary-600 transition-colors no-underline">
+                                                    <x-filament::icon icon="tabler-download" class="w-3.5 h-3.5" />
+                                                    PDF herunterladen
+                                                </a>
+                                            @endif
+                                        @endforeach
+                                    @endif
                                     <p class="text-[10px] text-gray-400 mt-1">{{ $msg['created_at'] }}</p>
                                 </div>
                             </div>
                         @elseif($msg['role'] === 'tool' && $msg['action_status'] === 'pending')
+                            {{-- Pending approval card --}}
                             <div class="flex justify-start">
                                 <div class="max-w-[75%] rounded-xl px-4 py-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800">
-                                    <p class="text-sm font-medium text-warning-700 dark:text-warning-300 mb-2">{{ $msg['pending_action']['description'] ?? 'Bestätigung erforderlich' }}</p>
+                                    <div class="flex items-center gap-1.5 mb-2">
+                                        <x-filament::icon icon="tabler-alert-triangle" class="w-4 h-4 text-warning-500" />
+                                        <p class="text-sm font-medium text-warning-700 dark:text-warning-300">Bestätigung erforderlich</p>
+                                    </div>
+                                    <p class="text-sm text-gray-700 dark:text-gray-300 mb-2">{{ $msg['pending_action']['description'] ?? '' }}</p>
+                                    {{-- Preview of what will change --}}
+                                    @if(!empty($msg['pending_action']['arguments']))
+                                        <details class="mb-2">
+                                            <summary class="text-[11px] text-gray-400 cursor-pointer select-none">Vorschau der Änderungen</summary>
+                                            <div class="mt-1 p-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-xs space-y-0.5">
+                                                @foreach($msg['pending_action']['arguments'] as $key => $val)
+                                                    <div class="flex gap-2">
+                                                        <span class="text-gray-400 font-medium">{{ $key }}:</span>
+                                                        <span class="text-gray-600 dark:text-gray-300">{{ is_array($val) ? json_encode($val) : $val }}</span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </details>
+                                    @endif
                                     <div class="flex gap-2">
                                         <x-filament::button wire:click="approveAction({{ $msg['id'] }})" size="xs" color="success" icon="tabler-check">Genehmigen</x-filament::button>
                                         <x-filament::button wire:click="rejectAction({{ $msg['id'] }})" size="xs" color="danger" icon="tabler-x">Ablehnen</x-filament::button>
                                     </div>
                                 </div>
                             </div>
-                        @elseif($msg['role'] === 'tool')
-                            {{-- Tool results without a following assistant message are shown standalone --}}
-                            @php
-                                $nextMsg = $messages[$index + 1] ?? null;
-                                $isOrphan = !$nextMsg || $nextMsg['role'] !== 'assistant';
-                            @endphp
-                            @if($isOrphan && $msg['content'])
-                                <div class="flex justify-start">
-                                    <div class="max-w-[75%] rounded-xl px-4 py-2 bg-gray-100 dark:bg-gray-800">
-                                        <details>
-                                            <summary class="text-[11px] text-gray-400 cursor-pointer select-none inline-flex items-center gap-1">
-                                                <x-filament::icon icon="tabler-tool" class="w-3 h-3" />
-                                                {{ $msg['tool_display_name'] ?? $msg['tool_name'] ?? 'Tool' }}
-                                            </summary>
-                                            <pre class="mt-1 p-2 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-[11px] font-mono text-gray-500 dark:text-gray-400 whitespace-pre-wrap max-h-32 overflow-auto">{{ json_encode(json_decode($msg['content'], true), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
-                                        </details>
-                                    </div>
-                                </div>
-                            @endif
                         @endif
                     @empty
                         <div class="text-center text-sm text-gray-400 py-8">
@@ -118,22 +124,28 @@
                         </div>
                     @endforelse
 
-                    {{-- Streaming --}}
-                    <template x-if="streaming">
-                        <div class="flex justify-start">
-                            <div class="max-w-[75%] rounded-xl px-4 py-2 bg-gray-100 dark:bg-gray-800">
-                                <template x-if="streamedContent">
-                                    <div class="prose dark:prose-invert prose-sm max-w-none text-sm" x-html="renderMarkdown(streamedContent)"></div>
-                                </template>
-                                <template x-if="!streamedContent">
-                                    <div class="flex items-center gap-2">
-                                        <x-filament::loading-indicator class="w-5 h-5" />
-                                        <span class="text-sm text-gray-500">Denke nach...</span>
-                                    </div>
-                                </template>
+                    {{-- Streaming bubble: stays visible until Livewire replaces it --}}
+                    <div class="flex justify-start" x-show="streaming || streamedContent" x-cloak>
+                        <div class="max-w-[75%] rounded-xl px-4 py-2 bg-gray-100 dark:bg-gray-800 flex flex-col gap-0.5">
+                            {{-- Tool call progress (before content arrives) --}}
+                            <div x-show="toolCallCount > 0 && !streamedContent" class="flex items-center gap-2">
+                                <x-filament::loading-indicator class="w-4 h-4" />
+                                <span class="text-xs text-gray-400" x-text="toolCallCount + ' Tool-Aufruf' + (toolCallCount > 1 ? 'e' : '') + '...'"></span>
+                            </div>
+                            {{-- Tool calls label above content --}}
+                            <span x-show="toolCallCount > 0 && streamedContent" class="text-[11px] text-gray-400 inline-flex items-center gap-1 leading-none">
+                                <x-filament::icon icon="tabler-tool" class="w-3 h-3" />
+                                <span x-text="toolCallCount + ' Tool-Aufruf' + (toolCallCount > 1 ? 'e' : '')"></span>
+                            </span>
+                            {{-- Streamed content --}}
+                            <div x-show="streamedContent" class="prose dark:prose-invert prose-sm max-w-none text-sm [&>*]:my-0 [&>*+*]:mt-1.5" x-html="renderMarkdown(streamedContent)"></div>
+                            {{-- Waiting indicator (only when nothing is happening yet) --}}
+                            <div x-show="!streamedContent && toolCallCount === 0 && streaming" class="flex items-center gap-2">
+                                <x-filament::loading-indicator class="w-5 h-5" />
+                                <span class="text-sm text-gray-500">Denke nach...</span>
                             </div>
                         </div>
-                    </template>
+                    </div>
                 </div>
             </x-filament::section>
 
@@ -163,15 +175,14 @@
             Alpine.data('aiChat', () => ({
                 streaming: false,
                 streamedContent: '',
+                toolCallCount: 0,
                 inputMessage: '',
 
                 scrollToBottom() {
-                    this.$nextTick(() => {
-                        setTimeout(() => {
-                            const el = this.$refs.chatMessages;
-                            if (el) el.scrollTop = el.scrollHeight;
-                        }, 50);
-                    });
+                    setTimeout(() => {
+                        const el = document.getElementById('chat-scroll');
+                        if (el) el.scrollTop = el.scrollHeight;
+                    }, 30);
                 },
 
                 onGlobalKey(e) {
@@ -183,18 +194,45 @@
 
                 renderMarkdown(t) {
                     if (!t) return '';
-                    return t
-                        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                        .replace(/```([\s\S]*?)```/g, '<pre class="bg-gray-100 dark:bg-gray-800 rounded p-2 my-1 text-xs overflow-x-auto"><code>$1</code></pre>')
-                        .replace(/`(.+?)`/g, '<code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs">$1</code>')
-                        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\*(.+?)\*/g, '<em>$1</em>')
-                        .replace(/\n/g, '<br>');
+                    // Escape HTML
+                    let h = t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    // Code blocks
+                    h = h.replace(/```([\s\S]*?)```/g, '<pre class="bg-gray-100 dark:bg-gray-800 rounded p-2 my-1 text-xs overflow-x-auto"><code>$1</code></pre>');
+                    h = h.replace(/`(.+?)`/g, '<code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs">$1</code>');
+                    // Bold/italic
+                    h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                    h = h.replace(/\*(.+?)\*/g, '<em>$1</em>');
+                    // Process line by line for lists
+                    const lines = h.split('\n');
+                    let out = '', inOl = false, inUl = false;
+                    for (const line of lines) {
+                        const olMatch = line.match(/^\s*(\d+)\.\s+(.*)/);
+                        const ulMatch = line.match(/^\s*[-*]\s+(.*)/);
+                        if (olMatch) {
+                            if (!inOl) { out += '<ol class="list-decimal pl-5 my-1">'; inOl = true; }
+                            if (inUl) { out += '</ul>'; inUl = false; }
+                            out += '<li>' + olMatch[2] + '</li>';
+                        } else if (ulMatch) {
+                            if (!inUl) { out += '<ul class="list-disc pl-5 my-1">'; inUl = true; }
+                            if (inOl) { out += '</ol>'; inOl = false; }
+                            out += '<li>' + ulMatch[1] + '</li>';
+                        } else {
+                            if (inOl) { out += '</ol>'; inOl = false; }
+                            if (inUl) { out += '</ul>'; inUl = false; }
+                            out += (line === '' ? '<br>' : line + '<br>');
+                        }
+                    }
+                    if (inOl) out += '</ol>';
+                    if (inUl) out += '</ul>';
+                    // Remove leading/trailing <br>
+                    out = out.replace(/^(<br>)+/, '').replace(/(<br>)+$/, '');
+                    return out;
                 },
 
                 async startStream(convId) {
                     this.streaming = true;
                     this.streamedContent = '';
+                    this.toolCallCount = 0;
                     this.scrollToBottom();
 
                     try {
@@ -217,8 +255,20 @@
                                     try {
                                         const data = JSON.parse(line.slice(6));
                                         if (evt === 'content') {
-                                            this.streamedContent += data.text || '';
+                                            const txt = data.text || '';
+                                            // Trim leading newlines on first chunk
+                                            this.streamedContent += this.streamedContent === '' ? txt.replace(/^\n+/, '') : txt;
                                             this.scrollToBottom();
+                                        } else if (evt === 'tool') {
+                                            this.toolCallCount++;
+                                            this.scrollToBottom();
+                                        } else if (evt === 'pending_action') {
+                                            this.streaming = false;
+                                            await $wire.refreshMessages();
+                                            this.streamedContent = '';
+                                            this.toolCallCount = 0;
+                                            this.scrollToBottom();
+                                            return;
                                         }
                                     } catch {}
                                 }
@@ -226,9 +276,12 @@
                         }
                     } catch (e) { console.error('Stream error:', e); }
 
+                    // Keep streamed content visible while Livewire refreshes
                     this.streaming = false;
-                    this.streamedContent = '';
                     await $wire.refreshMessages();
+                    // Now clear — Livewire has replaced the DOM with the final message
+                    this.streamedContent = '';
+                    this.toolCallCount = 0;
                     this.scrollToBottom();
                 },
 
@@ -243,17 +296,11 @@
                 },
 
                 init() {
-                    this.$watch('$wire.messages', () => this.scrollToBottom());
+                    // Scroll on any Livewire update
+                    Livewire.hook('morph.updated', () => this.scrollToBottom());
                     this.$nextTick(() => {
                         this.$refs.chatInput?.focus();
                         this.scrollToBottom();
-
-                        // Auto-scroll on any DOM changes in the messages container
-                        const el = this.$refs.chatMessages;
-                        if (el) {
-                            new MutationObserver(() => this.scrollToBottom()).observe(el, { childList: true, subtree: true });
-                        }
-
                         if ($wire.pendingStream && $wire.conversationId) {
                             $wire.pendingStream = false;
                             this.startStream($wire.conversationId);

@@ -25,13 +25,15 @@ class AiChat extends Page implements HasForms, HasTable
 
     protected static ?string $navigationIcon = 'tabler-sparkles';
 
-    protected static ?string $navigationLabel = 'Assistent';
+    protected static ?string $navigationLabel = 'Assistant';
 
     protected static ?string $slug = 'assistant';
 
     protected static ?int $navigationSort = 5;
 
     protected static string $view = 'filament.pages.ai-chat';
+
+    protected ?string $subheading = 'Dies ist ein KI-Assistent. Antworten können fehlerhaft sein — bitte mit Vorsicht verwenden. Die KI läuft auf privaten Servern.';
 
     #[Url(as: 'chat')]
     public ?int $conversationId = null;
@@ -49,7 +51,7 @@ class AiChat extends Page implements HasForms, HasTable
 
     public function getTitle(): string
     {
-        return 'Assistent';
+        return 'Assistant';
     }
 
     public function table(Table $table): Table

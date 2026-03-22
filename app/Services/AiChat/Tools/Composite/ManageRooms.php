@@ -13,7 +13,7 @@ class ManageRooms implements AiChatTool
 
     public function description(): string
     {
-        return 'Manage rooms (Räume). Actions: list (show all rooms), create (new room), update (rename), delete.';
+        return 'Manage rooms. Actions: list, create, update, delete.';
     }
 
     public function parameters(): array
@@ -21,9 +21,9 @@ class ManageRooms implements AiChatTool
         return [
             'type' => 'object',
             'properties' => [
-                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action to perform'],
-                'room_id' => ['type' => 'integer', 'description' => 'Room ID (for update/delete)'],
-                'name' => ['type' => 'string', 'description' => 'Room name (for create/update)'],
+                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action'],
+                'room_id' => ['type' => 'integer', 'description' => 'ID'],
+                'name' => ['type' => 'string', 'description' => 'Name'],
             ],
             'required' => ['action'],
         ];

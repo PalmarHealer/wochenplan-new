@@ -13,7 +13,7 @@ class ManageLessons implements AiChatTool
 
     public function description(): string
     {
-        return 'Manage lessons (Angebote). Actions: list (filter by date/room/user), create (new lesson), update (edit lesson), delete.';
+        return 'Manage lessons (Angebote). Actions: list, create, update, delete. Use room_id/time_id/color_id from list tools.';
     }
 
     public function parameters(): array
@@ -21,18 +21,18 @@ class ManageLessons implements AiChatTool
         return [
             'type' => 'object',
             'properties' => [
-                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action to perform'],
-                'lesson_id' => ['type' => 'integer', 'description' => 'Lesson ID (for update/delete)'],
-                'name' => ['type' => 'string', 'description' => 'Lesson name (for create/update)'],
-                'description' => ['type' => 'string', 'description' => 'Lesson description'],
-                'date' => ['type' => 'string', 'description' => 'Date in YYYY-MM-DD format'],
+                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action'],
+                'lesson_id' => ['type' => 'integer', 'description' => 'ID'],
+                'name' => ['type' => 'string', 'description' => 'Name'],
+                'description' => ['type' => 'string', 'description' => 'Description'],
+                'date' => ['type' => 'string', 'description' => 'Date (YYYY-MM-DD)'],
                 'room_id' => ['type' => 'integer', 'description' => 'Room ID'],
                 'time_id' => ['type' => 'integer', 'description' => 'Time ID'],
                 'color_id' => ['type' => 'integer', 'description' => 'Color ID'],
-                'assigned_user_ids' => ['type' => 'array', 'items' => ['type' => 'integer'], 'description' => 'Array of user IDs to assign'],
-                'notes' => ['type' => 'string', 'description' => 'Internal notes'],
-                'disabled' => ['type' => 'boolean', 'description' => 'Whether the lesson is disabled'],
-                'user_id' => ['type' => 'integer', 'description' => 'Filter by assigned user (for list)'],
+                'assigned_user_ids' => ['type' => 'array', 'items' => ['type' => 'integer'], 'description' => 'User IDs'],
+                'notes' => ['type' => 'string', 'description' => 'Notes'],
+                'disabled' => ['type' => 'boolean', 'description' => 'Disabled'],
+                'user_id' => ['type' => 'integer', 'description' => 'Filter by user (list)'],
             ],
             'required' => ['action'],
         ];

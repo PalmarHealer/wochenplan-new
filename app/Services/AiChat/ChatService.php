@@ -265,9 +265,9 @@ class ChatService
         }
     }
 
-    public function buildMessages(ChatConversation $conversation, User $user, bool $enableReasoning = false): array
+    public function buildMessages(ChatConversation $conversation, User $user): array
     {
-        $systemPrompt = $this->getSystemPrompt($user, $enableReasoning);
+        $systemPrompt = $this->getSystemPrompt($user);
 
         $messages = [
             ['role' => 'system', 'content' => $systemPrompt],
@@ -314,14 +314,12 @@ class ChatService
         return $messages;
     }
 
-    private function getSystemPrompt(User $user, bool $enableReasoning = false): string
+    private function getSystemPrompt(User $user): string
     {
         $now = Carbon::now();
         $today = $now->translatedFormat('l, d.m.Y');
         $time = $now->format('H:i');
         $userName = $user->display_name ?? $user->name;
-
-        $noThink = $enableReasoning ? '' : "\n/no_think";
 
         return <<<PROMPT
 Du bist der Assistent für das Wochenplan-System, eine Schulplanungs-Software.
@@ -341,14 +339,17 @@ Regeln:
 - Schreibe NIEMALS <tool_call> Tags oder JSON in deine Antwort. Nutze ausschließlich die Tool-Schnittstelle.
 - Du darfst mehrere Tools gleichzeitig aufrufen wenn nötig.
 - Wenn ein Tool Daten zurückgibt, fasse sie benutzerfreundlich zusammen (keine IDs, nur Namen und relevante Infos).
-- Wenn du ein PDF exportierst, zeige dem Benutzer den Download-Link.
+- Wenn du ein PDF exportierst, schreibe KEINEN Download-Link in deine Antwort. Der Download-Button wird automatisch angezeigt. Sage nur dass das PDF erstellt wurde.
 
 Wichtig - Sei proaktiv und handlungsorientiert:
-- Stelle NICHT viele Rückfragen. Nutze stattdessen die Tools, um fehlende Informationen selbst zu beschaffen (z.B. verfügbare Räume, Layouts, Zeiten auflisten).
+- Stelle NICHT viele Rückfragen. Nutze die Tools um fehlende Infos selbst zu holen (z.B. Räume, Layouts, Zeiten auflisten).
 - Wenn der Benutzer etwas erstellen will, schaue dir die verfügbaren Optionen selbst an, wähle sinnvolle Standardwerte und schlage sie vor: "Ich erstelle die Abweichung mit Layout X vom 1.4. bis 10.4. - ist das okay?"
-- Maximal EINE Rückfrage, bevor du handelst. Nicht mehrere hintereinander.
-- Verwende sinnvolle Standardwerte wenn Informationen fehlen statt nachzufragen.
-{$noThink}
+- Maximal EINE Rückfrage, bevor du handelst.
+- Verwende sinnvolle Standardwerte wenn Informationen fehlen.
+- Wenn der Benutzer etwas ÄNDERN oder KORRIGIEREN will, nutze die UPDATE-Aktion (action: "update") mit der ID des bestehenden Eintrags. Erstelle KEINE Duplikate. Frage im Zweifelsfall welcher Eintrag gemeint ist.
+- Wenn etwas schon existiert und der Benutzer eine Anpassung will, nutze IMMER update statt create.
+
+/no_think
 PROMPT;
     }
 

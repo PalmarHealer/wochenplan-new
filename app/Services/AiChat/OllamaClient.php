@@ -26,7 +26,7 @@ class OllamaClient
             'model' => $this->model,
             'messages' => $messages,
             'stream' => false,
-            'keep_alive' => '30m',
+            'keep_alive' => -1,
             'options' => [
                 'temperature' => config('ai-chat.temperature', 0.2),
                 'num_predict' => config('ai-chat.max_tokens', 2048),

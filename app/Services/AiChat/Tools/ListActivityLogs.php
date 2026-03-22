@@ -20,7 +20,7 @@ class ListActivityLogs implements AiChatTool
 
     public function description(): string
     {
-        return 'List activity logs with optional filters for user, action, and date range.';
+        return 'View activity logs. Filter by user, action, date range.';
     }
 
     public function parameters(): array
@@ -30,23 +30,23 @@ class ListActivityLogs implements AiChatTool
             'properties' => [
                 'user_id' => [
                     'type' => 'integer',
-                    'description' => 'Filter by user ID',
+                    'description' => 'User ID',
                 ],
                 'action' => [
                     'type' => 'string',
-                    'description' => 'Filter by action (e.g. login, create, update, delete)',
+                    'description' => 'Action filter',
                 ],
                 'from' => [
                     'type' => 'string',
-                    'description' => 'Start date filter (YYYY-MM-DD)',
+                    'description' => 'From (YYYY-MM-DD)',
                 ],
                 'to' => [
                     'type' => 'string',
-                    'description' => 'End date filter (YYYY-MM-DD)',
+                    'description' => 'To (YYYY-MM-DD)',
                 ],
                 'limit' => [
                     'type' => 'integer',
-                    'description' => 'Number of entries to return (default: 20)',
+                    'description' => 'Max entries (default 20)',
                 ],
             ],
         ];

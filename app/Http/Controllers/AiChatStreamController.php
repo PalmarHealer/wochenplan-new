@@ -30,6 +30,9 @@ class AiChatStreamController
         }
 
         return new StreamedResponse(function () use ($conversation, $user, $chatService, $client, $registry) {
+            // Ignore client disconnect — finish the AI response regardless
+            ignore_user_abort(true);
+
             while (ob_get_level() > 0) {
                 ob_end_flush();
             }
@@ -84,7 +87,8 @@ class AiChatStreamController
                         continue;
                     }
 
-                    if ($tool->isReadOnly() || $user->can('auto_approve_ai_actions')) {
+                    if ($tool->isReadOnly()) {
+                        // Read-only tools execute immediately
                         try {
                             $result = $tool->execute($arguments, $user);
                         } catch (\Exception $e) {
@@ -93,20 +97,35 @@ class AiChatStreamController
                         $conversation->messages()->create([
                             'role' => 'tool', 'content' => json_encode($result),
                             'tool_call_id' => $toolCallId, 'tool_name' => $toolName,
-                            'action_status' => $tool->isReadOnly() ? null : 'auto_approved',
+                        ]);
+                        $this->sse('tool', ['name' => $toolName, 'status' => 'executed']);
+                    } elseif ($user->can('auto_approve_ai_actions')) {
+                        // Auto-approve permission skips confirmation
+                        try {
+                            $result = $tool->execute($arguments, $user);
+                        } catch (\Exception $e) {
+                            $result = ['error' => $e->getMessage()];
+                        }
+                        $conversation->messages()->create([
+                            'role' => 'tool', 'content' => json_encode($result),
+                            'tool_call_id' => $toolCallId, 'tool_name' => $toolName,
+                            'action_status' => 'auto_approved',
                         ]);
                         $this->sse('tool', ['name' => $toolName, 'status' => 'executed']);
                     } else {
+                        // Mutating tool — requires user approval
                         $conversation->messages()->create([
                             'role' => 'tool', 'content' => null,
                             'tool_call_id' => $toolCallId, 'tool_name' => $toolName,
                             'pending_action' => [
-                                'tool_name' => $toolName, 'arguments' => $arguments,
+                                'tool_name' => $toolName,
+                                'arguments' => $arguments,
                                 'description' => $this->describeAction($toolName, $arguments),
                             ],
                             'action_status' => 'pending',
                         ]);
                         $allExecuted = false;
+                        $this->sse('pending_action', ['description' => $this->describeAction($toolName, $arguments)]);
                     }
                 }
 
@@ -117,25 +136,9 @@ class AiChatStreamController
                 }
             }
 
-            if ($hadToolCalls) {
-                // After tool calls: non-streaming final response (reliable)
-                $messages = $chatService->buildMessages($conversation, $user);
-                $response = $client->chat($messages, $tools);
-                $content = OllamaClient::stripThinkingTags($response['content'] ?? '');
-
-                if ($content !== '') {
-                    $this->sse('content', ['text' => $content]);
-                }
-
-                $conversation->messages()->create([
-                    'role' => 'assistant',
-                    'content' => $response['content'] ?? $content,
-                ]);
-            } else {
-                // No tool calls: stream directly from Ollama
-                $messages = $chatService->buildMessages($conversation, $user);
-                $this->streamFromOllama($messages, $conversation);
-            }
+            // Stream the final response (works for both post-tool and direct)
+            $messages = $chatService->buildMessages($conversation, $user);
+            $this->streamFromOllama($messages, $conversation);
 
             // Generate title
             if ($conversation->title === null) {
@@ -156,7 +159,7 @@ class AiChatStreamController
             'model' => config('ai-chat.model'),
             'messages' => $messages,
             'stream' => true,
-            'keep_alive' => '30m',
+            'keep_alive' => -1,
             'options' => [
                 'temperature' => config('ai-chat.temperature', 0.2),
                 'num_predict' => config('ai-chat.max_tokens', 2048),
@@ -164,8 +167,7 @@ class AiChatStreamController
         ]);
 
         $rawFull = '';
-        $state = 'init';
-        $initBuffer = '';
+        $insideThink = false;
         $ctrl = $this;
 
         $ch = curl_init($ollamaUrl);
@@ -175,7 +177,7 @@ class AiChatStreamController
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
             CURLOPT_RETURNTRANSFER => false,
             CURLOPT_TIMEOUT => 120,
-            CURLOPT_WRITEFUNCTION => function ($ch, $data) use (&$rawFull, &$state, &$initBuffer, $ctrl) {
+            CURLOPT_WRITEFUNCTION => function ($ch, $data) use (&$rawFull, &$insideThink, $ctrl) {
                 foreach (explode("\n", $data) as $line) {
                     $line = trim($line);
                     if ($line === '') {
@@ -193,21 +195,21 @@ class AiChatStreamController
 
                     $rawFull .= $chunk;
 
-                    if ($state === 'init') {
-                        $initBuffer .= $chunk;
-                        // Skip any <think> blocks at the start
-                        if (str_contains($initBuffer, '</think>')) {
-                            $parts = explode('</think>', $initBuffer, 2);
-                            $state = 'content';
-                            $rest = ltrim($parts[1] ?? '');
-                            if ($rest !== '') {
-                                $ctrl->sse('content', ['text' => $rest]);
+                    // Filter out <think>...</think> blocks during streaming
+                    if (str_contains($chunk, '<think>')) {
+                        $insideThink = true;
+                    }
+                    if ($insideThink) {
+                        if (str_contains($chunk, '</think>')) {
+                            $insideThink = false;
+                            // Send anything after </think>
+                            $after = substr($chunk, strpos($chunk, '</think>') + 8);
+                            if (trim($after) !== '') {
+                                $ctrl->sse('content', ['text' => $after]);
                             }
-                        } elseif (strlen($initBuffer) > 8 && ! str_contains($initBuffer, '<')) {
-                            $state = 'content';
-                            $ctrl->sse('content', ['text' => $initBuffer]);
                         }
-                    } elseif ($state === 'content') {
+                        // Skip think content — don't send to client
+                    } else {
                         $ctrl->sse('content', ['text' => $chunk]);
                     }
                 }
@@ -218,14 +220,6 @@ class AiChatStreamController
 
         curl_exec($ch);
         curl_close($ch);
-
-        // Flush remaining init buffer
-        if ($state === 'init' && $initBuffer !== '') {
-            $cleaned = OllamaClient::stripThinkingTags($initBuffer);
-            if ($cleaned !== '') {
-                $this->sse('content', ['text' => $cleaned]);
-            }
-        }
 
         $conversation->messages()->create([
             'role' => 'assistant',

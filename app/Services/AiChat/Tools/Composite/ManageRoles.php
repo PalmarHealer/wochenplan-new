@@ -13,7 +13,7 @@ class ManageRoles implements AiChatTool
 
     public function description(): string
     {
-        return 'Manage roles (Rollen). Actions: list (show all roles with permission count), create (new role), update (rename), delete.';
+        return 'Manage roles. Actions: list, create, update, delete.';
     }
 
     public function parameters(): array
@@ -21,9 +21,9 @@ class ManageRoles implements AiChatTool
         return [
             'type' => 'object',
             'properties' => [
-                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action to perform'],
-                'role_id' => ['type' => 'integer', 'description' => 'Role ID (for update/delete)'],
-                'name' => ['type' => 'string', 'description' => 'Role name (for create/update)'],
+                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action'],
+                'role_id' => ['type' => 'integer', 'description' => 'ID'],
+                'name' => ['type' => 'string', 'description' => 'Name'],
             ],
             'required' => ['action'],
         ];

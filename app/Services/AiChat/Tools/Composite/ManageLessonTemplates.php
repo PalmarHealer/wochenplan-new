@@ -13,7 +13,7 @@ class ManageLessonTemplates implements AiChatTool
 
     public function description(): string
     {
-        return 'Manage lesson templates (Angebotsvorlagen). Actions: list (filter by weekday), create (new template), update (edit template), delete (soft delete).';
+        return 'Manage recurring lesson templates. Actions: list, create, update, delete. Weekday: 1=Mon-5=Fri.';
     }
 
     public function parameters(): array
@@ -21,17 +21,17 @@ class ManageLessonTemplates implements AiChatTool
         return [
             'type' => 'object',
             'properties' => [
-                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action to perform'],
-                'template_id' => ['type' => 'integer', 'description' => 'Template ID (for update/delete)'],
-                'name' => ['type' => 'string', 'description' => 'Template name'],
-                'description' => ['type' => 'string', 'description' => 'Template description'],
-                'weekday' => ['type' => 'integer', 'description' => 'Weekday (1=Monday to 5=Friday)'],
+                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action'],
+                'template_id' => ['type' => 'integer', 'description' => 'ID'],
+                'name' => ['type' => 'string', 'description' => 'Name'],
+                'description' => ['type' => 'string', 'description' => 'Description'],
+                'weekday' => ['type' => 'integer', 'description' => 'Weekday (1-5)'],
                 'room_id' => ['type' => 'integer', 'description' => 'Room ID'],
                 'time_id' => ['type' => 'integer', 'description' => 'Time ID'],
                 'color_id' => ['type' => 'integer', 'description' => 'Color ID'],
-                'assigned_user_ids' => ['type' => 'array', 'items' => ['type' => 'integer'], 'description' => 'Array of user IDs to assign'],
-                'notes' => ['type' => 'string', 'description' => 'Internal notes'],
-                'disabled' => ['type' => 'boolean', 'description' => 'Whether the template is disabled'],
+                'assigned_user_ids' => ['type' => 'array', 'items' => ['type' => 'integer'], 'description' => 'User IDs'],
+                'notes' => ['type' => 'string', 'description' => 'Notes'],
+                'disabled' => ['type' => 'boolean', 'description' => 'Disabled'],
             ],
             'required' => ['action'],
         ];

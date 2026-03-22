@@ -13,7 +13,7 @@ class ManageColors implements AiChatTool
 
     public function description(): string
     {
-        return 'Manage colors (Farben). Actions: list (show all colors with hex codes), create (new color), update (change name/hex), delete.';
+        return 'Manage colors. Actions: list, create, update, delete.';
     }
 
     public function parameters(): array
@@ -21,10 +21,10 @@ class ManageColors implements AiChatTool
         return [
             'type' => 'object',
             'properties' => [
-                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action to perform'],
-                'color_id' => ['type' => 'integer', 'description' => 'Color ID (for update/delete)'],
-                'name' => ['type' => 'string', 'description' => 'Color name (for create/update)'],
-                'color' => ['type' => 'string', 'description' => 'Hex color code, e.g. #FF0000 (for create/update)'],
+                'action' => ['type' => 'string', 'enum' => ['list', 'create', 'update', 'delete'], 'description' => 'Action'],
+                'color_id' => ['type' => 'integer', 'description' => 'ID'],
+                'name' => ['type' => 'string', 'description' => 'Name'],
+                'color' => ['type' => 'string', 'description' => 'Hex code, e.g. #FF0000'],
             ],
             'required' => ['action'],
         ];
