@@ -51,42 +51,7 @@ FROM php:8.3-fpm-alpine
 ENV APP_DIR=/var/www/html \
     PUPPETEER_CACHE_DIR=/usr/local/share/puppeteer
 
-# Install PHP runtime dependencies
-RUN apk add --no-cache \
-        libzip \
-        icu-libs \
-        oniguruma \
-        libxml2
-
-# Install web server and process manager
-RUN apk add --no-cache \
-        nginx \
-        supervisor
-
-# Install SSH server (optional component)
-RUN apk add --no-cache \
-        openssh-server
-
-# Install basic system utilities
-RUN apk add --no-cache \
-        bash \
-        curl \
-        ca-certificates
-
-# Install Node.js runtime for Puppeteer
-RUN apk add --no-cache \
-        nodejs \
-        npm
-
-# Install Chromium and dependencies for PDF generation
-RUN apk add --no-cache \
-        chromium \
-        nss \
-        freetype \
-        harfbuzz \
-        ttf-freefont
-
-# Build and install PHP extensions
+# Build and install PHP extensions (rarely changes — keep early for caching)
 RUN apk add --no-cache --virtual .build-deps \
         ${PHPIZE_DEPS} \
         libzip-dev \
@@ -98,14 +63,32 @@ RUN apk add --no-cache --virtual .build-deps \
     && docker-php-ext-enable redis \
     && apk del --no-cache .build-deps
 
+# Install all runtime system packages in a single layer
+RUN apk add --no-cache \
+        # PHP runtime deps
+        libzip icu-libs oniguruma libxml2 \
+        # Web server & process manager
+        nginx supervisor \
+        # SSH server (optional)
+        openssh-server \
+        # System utilities
+        bash curl ca-certificates \
+        # Node.js for Puppeteer
+        nodejs npm \
+        # Chromium for PDF generation
+        chromium nss freetype harfbuzz ttf-freefont
+
 # Install Puppeteer (will use system Chromium)
-RUN npm install -g puppeteer@21 --unsafe-perm=true \
-        --omit=dev \
-        --omit=optional \
-    && echo 'export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true' >> /etc/profile.d/puppeteer.sh \
-    && echo 'export PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser' >> /etc/profile.d/puppeteer.sh \
-    && npm cache clean --force \
-    && rm -rf /tmp/* /root/.npm
+ARG SKIP_PUPPETEER_INSTALL=false
+RUN if [ "${SKIP_PUPPETEER_INSTALL}" = "false" ]; then \
+        PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm install -g puppeteer@21 --unsafe-perm=true \
+            --omit=dev \
+            --omit=optional \
+        && echo 'export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true' >> /etc/profile.d/puppeteer.sh \
+        && echo 'export PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser' >> /etc/profile.d/puppeteer.sh \
+        && npm cache clean --force \
+        && rm -rf /tmp/* /root/.npm; \
+    fi
 
 # Create directories
 RUN mkdir -p \
@@ -120,57 +103,32 @@ WORKDIR ${APP_DIR}
 # Copy application from builder (read-only, owned by root)
 COPY --from=builder --chown=root:root /build ${APP_DIR}
 
-# Copy .env.example to .env as default config (can be overridden by env vars)
-RUN cp ${APP_DIR}/.env.example ${APP_DIR}/.env
-
-# Create application directories that will be used in read-only mode
-# These will be mounted as tmpfs in docker-compose for runtime writes
-RUN mkdir -p \
-    ${APP_DIR}/storage/app/public \
-    ${APP_DIR}/storage/framework/cache \
-    ${APP_DIR}/storage/framework/sessions \
-    ${APP_DIR}/storage/framework/testing \
-    ${APP_DIR}/storage/framework/views \
-    ${APP_DIR}/storage/logs \
-    ${APP_DIR}/bootstrap/cache
-
-# Create nginx and system directories
-RUN mkdir -p \
-    /var/log/nginx \
-    /var/log/supervisor \
-    /var/lib/nginx/body \
-    /var/lib/nginx/fastcgi \
-    /var/lib/nginx/proxy \
-    /var/lib/nginx/scgi \
-    /var/lib/nginx/uwsgi \
-    /tmp \
-    /run \
-    /run/php \
-    /var/run
-
-# Set ownership and permissions for application directories
-RUN chown -R www-data:www-data \
-        ${APP_DIR}/storage \
+# Create all directories, set permissions, configure PHP-FPM and SSH in one layer
+RUN cp ${APP_DIR}/.env.example ${APP_DIR}/.env \
+    # App directories
+    && mkdir -p \
+        ${APP_DIR}/storage/app/public \
+        ${APP_DIR}/storage/framework/cache \
+        ${APP_DIR}/storage/framework/sessions \
+        ${APP_DIR}/storage/framework/testing \
+        ${APP_DIR}/storage/framework/views \
+        ${APP_DIR}/storage/logs \
         ${APP_DIR}/bootstrap/cache \
-    && chmod -R 755 ${APP_DIR}/storage ${APP_DIR}/bootstrap/cache
-
-# Set ownership for nginx directories
-RUN chown -R www-data:www-data \
-        /var/log/nginx \
-        /var/lib/nginx
-
-# Create storage symlink at build time (required for read-only filesystem)
-RUN ln -s ${APP_DIR}/storage/app/public ${APP_DIR}/public/storage
-
-# Nginx configuration
-COPY docker/nginx/wochenplan.conf /etc/nginx/http.d/wochenplan.conf
-RUN rm -f /etc/nginx/http.d/default.conf
-
-# Custom PHP configuration
-COPY docker/php/custom.ini /usr/local/etc/php/conf.d/custom.ini
-
-# PHP-FPM configuration tweaks
-RUN sed -i 's#^;*listen = .*#listen = /run/php/php8.3-fpm.sock#' /usr/local/etc/php-fpm.d/www.conf \
+    # Nginx and system directories
+    && mkdir -p \
+        /var/log/nginx /var/log/supervisor \
+        /var/lib/nginx/body /var/lib/nginx/fastcgi /var/lib/nginx/proxy \
+        /var/lib/nginx/scgi /var/lib/nginx/uwsgi \
+        /run/php /var/run \
+    # Permissions
+    && chown -R www-data:www-data \
+        ${APP_DIR}/storage ${APP_DIR}/bootstrap/cache \
+        /var/log/nginx /var/lib/nginx \
+    && chmod -R 755 ${APP_DIR}/storage ${APP_DIR}/bootstrap/cache \
+    # Storage symlink
+    && ln -s ${APP_DIR}/storage/app/public ${APP_DIR}/public/storage \
+    # PHP-FPM configuration
+    && sed -i 's#^;*listen = .*#listen = /run/php/php8.3-fpm.sock#' /usr/local/etc/php-fpm.d/www.conf \
     && sed -i 's#^;*clear_env = .*#clear_env = no#' /usr/local/etc/php-fpm.d/www.conf \
     && sed -i 's/^user = .*/user = www-data/' /usr/local/etc/php-fpm.d/www.conf \
     && sed -i 's/^group = .*/group = www-data/' /usr/local/etc/php-fpm.d/www.conf \
@@ -179,23 +137,23 @@ RUN sed -i 's#^;*listen = .*#listen = /run/php/php8.3-fpm.sock#' /usr/local/etc/
     && sed -i 's/^;listen.mode = .*/listen.mode = 0660/' /usr/local/etc/php-fpm.d/www.conf \
     && sed -i 's#^listen = .*#listen = /run/php/php8.3-fpm.sock#' /usr/local/etc/php-fpm.d/zz-docker.conf \
     && echo "env[LARAVEL_PDF_CHROME_PATH] = /usr/bin/chromium-browser" >> /usr/local/etc/php-fpm.d/www.conf \
-    && echo "env[PUPPETEER_EXECUTABLE_PATH] = /usr/bin/chromium-browser" >> /usr/local/etc/php-fpm.d/www.conf
-
-# SSH configuration
-RUN sed -i 's/^#*PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config \
+    && echo "env[PUPPETEER_EXECUTABLE_PATH] = /usr/bin/chromium-browser" >> /usr/local/etc/php-fpm.d/www.conf \
+    # SSH configuration
+    && sed -i 's/^#*PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config \
     && sed -i 's/^#*PermitRootLogin .*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config \
     && sed -i 's/^#*PubkeyAuthentication .*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
 
-# Supervisor configuration
+# Config files (separate COPY layers for cache efficiency)
+COPY docker/nginx/wochenplan.conf /etc/nginx/http.d/wochenplan.conf
+COPY docker/php/custom.ini /usr/local/etc/php/conf.d/custom.ini
 COPY docker/supervisor/supervisord.conf /etc/supervisor/supervisord.conf
 COPY docker/supervisor/programs/*.conf /etc/supervisor/conf.d/
-# Backup supervisor configs (since /etc/supervisor/conf.d will be tmpfs at runtime)
-RUN mkdir -p /etc/supervisor/conf.d.orig && cp -a /etc/supervisor/conf.d/* /etc/supervisor/conf.d.orig/
-
-# Entrypoint and db_setup scripts
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY docker/db_setup.sh /usr/local/bin/db_setup.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/db_setup.sh
+
+RUN rm -f /etc/nginx/http.d/default.conf \
+    && mkdir -p /etc/supervisor/conf.d.orig && cp -a /etc/supervisor/conf.d/* /etc/supervisor/conf.d.orig/ \
+    && chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/db_setup.sh
 
 EXPOSE 80 22
 

@@ -160,6 +160,9 @@ class UserResource extends Resource
                     })
                     ->native(false),
             ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+            ])
             ->bulkActions([
                 Tables\Actions\BulkAction::make('assignRoles')
                     ->label('Berechtigung vergeben')
