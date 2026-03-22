@@ -223,7 +223,7 @@
                             'bg-blue-100 dark:bg-blue-900/30': dragTarget?.type === 'row' && dragTarget?.index === rowIndex && dragging?.fromIndex !== rowIndex,
                             'opacity-50': dragging?.type === 'row' && dragging?.fromIndex === rowIndex,
                         }"
-                        :style="{ cursor: resizing ? (resizing.type === 'row' ? 'row-resize' : '') : '' }"
+                        :style="{}"
                         @mouseover="if (dragging?.type === 'row') dragTarget = { type: 'row', index: rowIndex }"
                         @mousemove="updateHeaderCursor($event, 'row')"
                         @mousedown.prevent="handleHeaderMouseDown($event, 'row', rowIndex)"
@@ -338,7 +338,7 @@
                 },
 
                 createDefaultLayout(rows, cols) {
-                    const defaultRowHeight = 90;
+                    const defaultRowHeight = 60;
                     this.layout = [];
                     for (let r = 0; r < rows; r++) {
                         const row = [];
@@ -625,17 +625,15 @@
                     const nearStart = distFromStart < EDGE_SIZE && index > 0;
                     const nearEnd = distFromEnd < EDGE_SIZE;
 
-                    if (nearStart || nearEnd) {
+                    if (type !== 'row' && (nearStart || nearEnd)) {
                         const resizeIndex = nearStart ? index - 1 : index;
                         this.resizing = {
                             type,
                             index: resizeIndex,
-                            startPos: type === 'col' ? event.clientX : event.clientY,
-                            startSize: type === 'col'
-                                ? (this.getColumnWidth(resizeIndex) || rect.width)
-                                : (this.getRowHeight(resizeIndex) || rect.height),
+                            startPos: event.clientX,
+                            startSize: this.getColumnWidth(resizeIndex) || rect.width,
                         };
-                        document.body.style.cursor = type === 'col' ? 'col-resize' : 'row-resize';
+                        document.body.style.cursor = 'col-resize';
                         document.body.style.userSelect = 'none';
                     } else {
                         // Don't start drag yet — wait for mouse movement
@@ -667,7 +665,7 @@
                         : (rect.bottom - event.clientY);
 
                     const nearAnyEdge = distFromStart < EDGE_SIZE || distFromEnd < EDGE_SIZE;
-                    el.style.cursor = nearAnyEdge ? (type === 'col' ? 'col-resize' : 'row-resize') : 'grab';
+                    el.style.cursor = (type === 'col' && nearAnyEdge) ? 'col-resize' : 'grab';
                 },
 
                 getActiveAlignment() {
@@ -868,16 +866,9 @@
                     }
 
                     if (this.resizing) {
-                        const delta = this.resizing.type === 'col'
-                            ? event.clientX - this.resizing.startPos
-                            : event.clientY - this.resizing.startPos;
+                        const delta = event.clientX - this.resizing.startPos;
                         const newSize = Math.max(20, Math.round(this.resizing.startSize + delta));
-
-                        if (this.resizing.type === 'col') {
-                            this.setColumnWidth(this.resizing.index, newSize);
-                        } else {
-                            this.setRowHeight(this.resizing.index, newSize);
-                        }
+                        this.setColumnWidth(this.resizing.index, newSize);
                         return;
                     }
 
@@ -1251,6 +1242,7 @@
                     const newRow = [];
                     for (let col = 0; col < columnCount; col++) {
                         const cell = this.createCell();
+                        cell.rowHeight = 60;
                         const inheritedWidth = this.getColumnWidth(col);
                         if (inheritedWidth) cell.colWidth = inheritedWidth;
                         newRow.push(cell);
