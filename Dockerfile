@@ -119,6 +119,8 @@ RUN cp ${APP_DIR}/.env.example ${APP_DIR}/.env \
     && sed -i 's#^listen = .*#listen = /run/php/php8.3-fpm.sock#' /usr/local/etc/php-fpm.d/zz-docker.conf \
     && echo "env[LARAVEL_PDF_CHROME_PATH] = /usr/bin/chromium-browser" >> /usr/local/etc/php-fpm.d/www.conf \
     && echo "env[PUPPETEER_EXECUTABLE_PATH] = /usr/bin/chromium-browser" >> /usr/local/etc/php-fpm.d/www.conf \
+    # Nginx: run worker processes as www-data (matches /var/lib/nginx ownership)
+    && sed -i 's/^user nginx;/user www-data;/' /etc/nginx/nginx.conf \
     # SSH configuration
     && sed -i 's/^#*PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config \
     && sed -i 's/^#*PermitRootLogin .*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config \
