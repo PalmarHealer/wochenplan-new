@@ -70,7 +70,7 @@ class ReloadLunch implements AiChatTool
 
         return [
             'success' => true,
-            'message' => "Kein Cache vorhanden. Mittagessen wurde frisch geladen.",
+            'message' => 'Kein Cache vorhanden. Mittagessen wurde frisch geladen.',
             'lunch' => $lunch,
         ];
     }

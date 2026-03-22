@@ -8,8 +8,15 @@ use App\Services\AiChat\AiChatTool;
 
 class ManageLessons implements AiChatTool
 {
-    public function name(): string { return 'manage_lessons'; }
-    public function displayName(): string { return 'Angebote verwalten'; }
+    public function name(): string
+    {
+        return 'manage_lessons';
+    }
+
+    public function displayName(): string
+    {
+        return 'Angebote verwalten';
+    }
 
     public function description(): string
     {
@@ -38,8 +45,15 @@ class ManageLessons implements AiChatTool
         ];
     }
 
-    public function requiredPermission(): ?string { return 'view_lesson'; }
-    public function isReadOnly(): bool { return false; }
+    public function requiredPermission(): ?string
+    {
+        return 'view_lesson';
+    }
+
+    public function isReadOnly(): bool
+    {
+        return false;
+    }
 
     public function execute(array $arguments, User $user): array
     {
@@ -60,8 +74,12 @@ class ManageLessons implements AiChatTool
             $query->whereHas('assignedUsers', fn ($q) => $q->where('users.id', $user->id));
         }
 
-        if (isset($args['date'])) $query->where('date', $args['date']);
-        if (isset($args['room_id'])) $query->where('room', $args['room_id']);
+        if (isset($args['date'])) {
+            $query->where('date', $args['date']);
+        }
+        if (isset($args['room_id'])) {
+            $query->where('room', $args['room_id']);
+        }
         if (isset($args['user_id'])) {
             $uid = $args['user_id'];
             $query->whereHas('assignedUsers', fn ($q) => $q->where('users.id', $uid));
@@ -89,9 +107,15 @@ class ManageLessons implements AiChatTool
 
     private function create(array $args, User $user): array
     {
-        if (! $user->can('create_lesson')) return ['error' => 'Keine Berechtigung.'];
-        if (empty($args['name'])) return ['error' => 'Name ist erforderlich.'];
-        if (empty($args['date'])) return ['error' => 'Datum ist erforderlich.'];
+        if (! $user->can('create_lesson')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
+        if (empty($args['name'])) {
+            return ['error' => 'Name ist erforderlich.'];
+        }
+        if (empty($args['date'])) {
+            return ['error' => 'Datum ist erforderlich.'];
+        }
 
         $lesson = Lesson::create([
             'name' => $args['name'],
@@ -115,23 +139,43 @@ class ManageLessons implements AiChatTool
 
     private function update(array $args, User $user): array
     {
-        if (! $user->can('update_lesson')) return ['error' => 'Keine Berechtigung.'];
+        if (! $user->can('update_lesson')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
         $lesson = Lesson::with('assignedUsers')->find($args['lesson_id'] ?? 0);
-        if (! $lesson) return ['error' => 'Angebot nicht gefunden.'];
+        if (! $lesson) {
+            return ['error' => 'Angebot nicht gefunden.'];
+        }
 
         if (! $user->can('view_any_lesson') && ! $lesson->assignedUsers->contains('id', $user->id)) {
             return ['error' => 'Keine Berechtigung für dieses Angebot.'];
         }
 
         $data = ['updated_by' => $user->id];
-        if (isset($args['name'])) $data['name'] = $args['name'];
-        if (isset($args['description'])) $data['description'] = $args['description'];
-        if (isset($args['date'])) $data['date'] = $args['date'];
-        if (isset($args['room_id'])) $data['room'] = $args['room_id'];
-        if (isset($args['time_id'])) $data['lesson_time'] = $args['time_id'];
-        if (isset($args['color_id'])) $data['color'] = $args['color_id'];
-        if (isset($args['notes'])) $data['notes'] = $args['notes'];
-        if (isset($args['disabled'])) $data['disabled'] = $args['disabled'];
+        if (isset($args['name'])) {
+            $data['name'] = $args['name'];
+        }
+        if (isset($args['description'])) {
+            $data['description'] = $args['description'];
+        }
+        if (isset($args['date'])) {
+            $data['date'] = $args['date'];
+        }
+        if (isset($args['room_id'])) {
+            $data['room'] = $args['room_id'];
+        }
+        if (isset($args['time_id'])) {
+            $data['lesson_time'] = $args['time_id'];
+        }
+        if (isset($args['color_id'])) {
+            $data['color'] = $args['color_id'];
+        }
+        if (isset($args['notes'])) {
+            $data['notes'] = $args['notes'];
+        }
+        if (isset($args['disabled'])) {
+            $data['disabled'] = $args['disabled'];
+        }
 
         $lesson->update($data);
 
@@ -144,9 +188,13 @@ class ManageLessons implements AiChatTool
 
     private function delete(array $args, User $user): array
     {
-        if (! $user->can('delete_lesson')) return ['error' => 'Keine Berechtigung.'];
+        if (! $user->can('delete_lesson')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
         $lesson = Lesson::with('assignedUsers')->find($args['lesson_id'] ?? 0);
-        if (! $lesson) return ['error' => 'Angebot nicht gefunden.'];
+        if (! $lesson) {
+            return ['error' => 'Angebot nicht gefunden.'];
+        }
 
         if (! $user->can('view_any_lesson') && ! $lesson->assignedUsers->contains('id', $user->id)) {
             return ['error' => 'Keine Berechtigung für dieses Angebot.'];
@@ -155,6 +203,7 @@ class ManageLessons implements AiChatTool
         $name = $lesson->name;
         $lesson->assignedUsers()->detach();
         $lesson->delete();
+
         return ['success' => true, 'message' => "Angebot \"{$name}\" gelöscht."];
     }
 }

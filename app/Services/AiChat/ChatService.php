@@ -156,7 +156,7 @@ class ChatService
      * Stream the LLM response for a conversation. Used by the SSE endpoint.
      * Returns a Generator that yields content chunks.
      */
-    public function streamResponse(int $conversationId, User $user): \Generator|null
+    public function streamResponse(int $conversationId, User $user): ?\Generator
     {
         $conversation = ChatConversation::where('id', $conversationId)
             ->where('user_id', $user->id)

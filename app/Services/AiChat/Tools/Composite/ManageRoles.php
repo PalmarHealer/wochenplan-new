@@ -8,8 +8,15 @@ use Spatie\Permission\Models\Role;
 
 class ManageRoles implements AiChatTool
 {
-    public function name(): string { return 'manage_roles'; }
-    public function displayName(): string { return 'Rollen verwalten'; }
+    public function name(): string
+    {
+        return 'manage_roles';
+    }
+
+    public function displayName(): string
+    {
+        return 'Rollen verwalten';
+    }
 
     public function description(): string
     {
@@ -29,8 +36,15 @@ class ManageRoles implements AiChatTool
         ];
     }
 
-    public function requiredPermission(): ?string { return 'view_role'; }
-    public function isReadOnly(): bool { return false; }
+    public function requiredPermission(): ?string
+    {
+        return 'view_role';
+    }
+
+    public function isReadOnly(): bool
+    {
+        return false;
+    }
 
     public function execute(array $arguments, User $user): array
     {
@@ -54,23 +68,33 @@ class ManageRoles implements AiChatTool
         ])->toArray();
 
         $summary = $roles->map(fn (Role $r) => "{$r->name} ({$r->permissions_count} Berechtigungen)")->implode(', ');
+
         return ['roles' => $items, 'summary' => $summary];
     }
 
     private function create(array $args, User $user): array
     {
-        if (! $user->can('create_role')) return ['error' => 'Keine Berechtigung.'];
-        if (empty($args['name'])) return ['error' => 'Name ist erforderlich.'];
+        if (! $user->can('create_role')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
+        if (empty($args['name'])) {
+            return ['error' => 'Name ist erforderlich.'];
+        }
 
         $role = Role::create(['name' => $args['name'], 'guard_name' => 'web']);
+
         return ['success' => true, 'message' => "Rolle \"{$role->name}\" erstellt."];
     }
 
     private function update(array $args, User $user): array
     {
-        if (! $user->can('update_role')) return ['error' => 'Keine Berechtigung.'];
+        if (! $user->can('update_role')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
         $role = Role::find($args['role_id'] ?? 0);
-        if (! $role) return ['error' => 'Rolle nicht gefunden.'];
+        if (! $role) {
+            return ['error' => 'Rolle nicht gefunden.'];
+        }
 
         if (isset($args['name'])) {
             $role->update(['name' => $args['name']]);
@@ -81,9 +105,13 @@ class ManageRoles implements AiChatTool
 
     private function delete(array $args, User $user): array
     {
-        if (! $user->can('delete_role')) return ['error' => 'Keine Berechtigung.'];
+        if (! $user->can('delete_role')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
         $role = Role::find($args['role_id'] ?? 0);
-        if (! $role) return ['error' => 'Rolle nicht gefunden.'];
+        if (! $role) {
+            return ['error' => 'Rolle nicht gefunden.'];
+        }
 
         if ($role->name === 'super_admin') {
             return ['error' => 'Die Rolle "super_admin" kann nicht gelöscht werden.'];
@@ -91,6 +119,7 @@ class ManageRoles implements AiChatTool
 
         $name = $role->name;
         $role->delete();
+
         return ['success' => true, 'message' => "Rolle \"{$name}\" gelöscht."];
     }
 }

@@ -79,7 +79,7 @@ class ListActivityLogs implements AiChatTool
         }
 
         if (! empty($arguments['to'])) {
-            $query->where('timestamp', '<=', $arguments['to'] . ' 23:59:59');
+            $query->where('timestamp', '<=', $arguments['to'].' 23:59:59');
         }
 
         $limit = $arguments['limit'] ?? 20;

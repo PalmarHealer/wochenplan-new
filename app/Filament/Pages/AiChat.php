@@ -3,7 +3,6 @@
 namespace App\Filament\Pages;
 
 use App\Models\ChatConversation;
-use App\Models\ChatMessage;
 use App\Services\AiChat\ChatService;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -121,7 +120,6 @@ class AiChat extends Page implements HasForms, HasTable
     }
 
     public bool $pendingStream = false;
-
 
     /**
      * Send a message within an open conversation.

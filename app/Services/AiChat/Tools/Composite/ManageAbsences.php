@@ -8,8 +8,15 @@ use App\Services\AiChat\AiChatTool;
 
 class ManageAbsences implements AiChatTool
 {
-    public function name(): string { return 'manage_absences'; }
-    public function displayName(): string { return 'Krankmeldungen verwalten'; }
+    public function name(): string
+    {
+        return 'manage_absences';
+    }
+
+    public function displayName(): string
+    {
+        return 'Krankmeldungen verwalten';
+    }
 
     public function description(): string
     {
@@ -33,8 +40,15 @@ class ManageAbsences implements AiChatTool
         ];
     }
 
-    public function requiredPermission(): ?string { return 'view_absence'; }
-    public function isReadOnly(): bool { return false; }
+    public function requiredPermission(): ?string
+    {
+        return 'view_absence';
+    }
+
+    public function isReadOnly(): bool
+    {
+        return false;
+    }
 
     public function execute(array $arguments, User $user): array
     {
@@ -55,9 +69,15 @@ class ManageAbsences implements AiChatTool
             $query->where('user_id', $user->id);
         }
 
-        if (isset($args['from'])) $query->where('end', '>=', $args['from']);
-        if (isset($args['to'])) $query->where('start', '<=', $args['to']);
-        if (isset($args['user_id'])) $query->where('user_id', $args['user_id']);
+        if (isset($args['from'])) {
+            $query->where('end', '>=', $args['from']);
+        }
+        if (isset($args['to'])) {
+            $query->where('start', '<=', $args['to']);
+        }
+        if (isset($args['user_id'])) {
+            $query->where('user_id', $args['user_id']);
+        }
 
         $absences = $query->get();
 
@@ -73,9 +93,15 @@ class ManageAbsences implements AiChatTool
 
     private function create(array $args, User $user): array
     {
-        if (! $user->can('create_absence')) return ['error' => 'Keine Berechtigung.'];
-        if (empty($args['start'])) return ['error' => 'Startdatum ist erforderlich.'];
-        if (empty($args['end'])) return ['error' => 'Enddatum ist erforderlich.'];
+        if (! $user->can('create_absence')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
+        if (empty($args['start'])) {
+            return ['error' => 'Startdatum ist erforderlich.'];
+        }
+        if (empty($args['end'])) {
+            return ['error' => 'Enddatum ist erforderlich.'];
+        }
 
         $targetUserId = $args['user_id'] ?? $user->id;
 
@@ -93,22 +119,31 @@ class ManageAbsences implements AiChatTool
 
         $targetUser = User::find($targetUserId);
         $name = $targetUser?->display_name ?? $targetUser?->name ?? 'Unbekannt';
+
         return ['success' => true, 'message' => "Krankmeldung für {$name} vom {$args['start']} bis {$args['end']} erstellt."];
     }
 
     private function update(array $args, User $user): array
     {
-        if (! $user->can('update_absence')) return ['error' => 'Keine Berechtigung.'];
+        if (! $user->can('update_absence')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
         $absence = Absence::find($args['absence_id'] ?? 0);
-        if (! $absence) return ['error' => 'Krankmeldung nicht gefunden.'];
+        if (! $absence) {
+            return ['error' => 'Krankmeldung nicht gefunden.'];
+        }
 
         if (! $user->can('view_any_absence') && $absence->user_id !== $user->id) {
             return ['error' => 'Keine Berechtigung für diese Krankmeldung.'];
         }
 
         $data = ['updated_by' => $user->id];
-        if (isset($args['start'])) $data['start'] = $args['start'];
-        if (isset($args['end'])) $data['end'] = $args['end'];
+        if (isset($args['start'])) {
+            $data['start'] = $args['start'];
+        }
+        if (isset($args['end'])) {
+            $data['end'] = $args['end'];
+        }
 
         $absence->update($data);
 
@@ -117,15 +152,20 @@ class ManageAbsences implements AiChatTool
 
     private function delete(array $args, User $user): array
     {
-        if (! $user->can('delete_absence')) return ['error' => 'Keine Berechtigung.'];
+        if (! $user->can('delete_absence')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
         $absence = Absence::find($args['absence_id'] ?? 0);
-        if (! $absence) return ['error' => 'Krankmeldung nicht gefunden.'];
+        if (! $absence) {
+            return ['error' => 'Krankmeldung nicht gefunden.'];
+        }
 
         if (! $user->can('view_any_absence') && $absence->user_id !== $user->id) {
             return ['error' => 'Keine Berechtigung für diese Krankmeldung.'];
         }
 
         $absence->delete();
+
         return ['success' => true, 'message' => 'Krankmeldung gelöscht.'];
     }
 }

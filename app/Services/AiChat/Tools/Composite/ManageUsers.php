@@ -8,8 +8,15 @@ use Illuminate\Support\Facades\Hash;
 
 class ManageUsers implements AiChatTool
 {
-    public function name(): string { return 'manage_users'; }
-    public function displayName(): string { return 'Benutzer verwalten'; }
+    public function name(): string
+    {
+        return 'manage_users';
+    }
+
+    public function displayName(): string
+    {
+        return 'Benutzer verwalten';
+    }
 
     public function description(): string
     {
@@ -32,8 +39,15 @@ class ManageUsers implements AiChatTool
         ];
     }
 
-    public function requiredPermission(): ?string { return 'view_user'; }
-    public function isReadOnly(): bool { return false; }
+    public function requiredPermission(): ?string
+    {
+        return 'view_user';
+    }
+
+    public function isReadOnly(): bool
+    {
+        return false;
+    }
 
     public function execute(array $arguments, User $user): array
     {
@@ -62,10 +76,18 @@ class ManageUsers implements AiChatTool
 
     private function create(array $args, User $user): array
     {
-        if (! $user->can('create_user')) return ['error' => 'Keine Berechtigung.'];
-        if (empty($args['name'])) return ['error' => 'Name ist erforderlich.'];
-        if (empty($args['email'])) return ['error' => 'E-Mail ist erforderlich.'];
-        if (empty($args['password'])) return ['error' => 'Passwort ist erforderlich.'];
+        if (! $user->can('create_user')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
+        if (empty($args['name'])) {
+            return ['error' => 'Name ist erforderlich.'];
+        }
+        if (empty($args['email'])) {
+            return ['error' => 'E-Mail ist erforderlich.'];
+        }
+        if (empty($args['password'])) {
+            return ['error' => 'Passwort ist erforderlich.'];
+        }
 
         $newUser = User::create([
             'name' => $args['name'],
@@ -75,32 +97,50 @@ class ManageUsers implements AiChatTool
         ]);
 
         $displayName = $newUser->display_name ?? $newUser->name;
+
         return ['success' => true, 'message' => "Benutzer \"{$displayName}\" ({$newUser->email}) erstellt."];
     }
 
     private function update(array $args, User $user): array
     {
-        if (! $user->can('update_user')) return ['error' => 'Keine Berechtigung.'];
+        if (! $user->can('update_user')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
         $target = User::find($args['user_id'] ?? 0);
-        if (! $target) return ['error' => 'Benutzer nicht gefunden.'];
+        if (! $target) {
+            return ['error' => 'Benutzer nicht gefunden.'];
+        }
 
         $data = [];
-        if (isset($args['name'])) $data['name'] = $args['name'];
-        if (isset($args['email'])) $data['email'] = $args['email'];
-        if (isset($args['display_name'])) $data['display_name'] = $args['display_name'];
-        if (isset($args['password'])) $data['password'] = Hash::make($args['password']);
+        if (isset($args['name'])) {
+            $data['name'] = $args['name'];
+        }
+        if (isset($args['email'])) {
+            $data['email'] = $args['email'];
+        }
+        if (isset($args['display_name'])) {
+            $data['display_name'] = $args['display_name'];
+        }
+        if (isset($args['password'])) {
+            $data['password'] = Hash::make($args['password']);
+        }
 
         $target->update($data);
 
         $displayName = $target->display_name ?? $target->name;
+
         return ['success' => true, 'message' => "Benutzer \"{$displayName}\" aktualisiert."];
     }
 
     private function delete(array $args, User $user): array
     {
-        if (! $user->can('delete_user')) return ['error' => 'Keine Berechtigung.'];
+        if (! $user->can('delete_user')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
         $target = User::find($args['user_id'] ?? 0);
-        if (! $target) return ['error' => 'Benutzer nicht gefunden.'];
+        if (! $target) {
+            return ['error' => 'Benutzer nicht gefunden.'];
+        }
 
         if ($target->id === $user->id) {
             return ['error' => 'Du kannst dich nicht selbst löschen.'];
@@ -108,6 +148,7 @@ class ManageUsers implements AiChatTool
 
         $displayName = $target->display_name ?? $target->name;
         $target->delete();
+
         return ['success' => true, 'message' => "Benutzer \"{$displayName}\" gelöscht."];
     }
 }

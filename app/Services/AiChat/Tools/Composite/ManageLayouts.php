@@ -8,8 +8,15 @@ use App\Services\AiChat\AiChatTool;
 
 class ManageLayouts implements AiChatTool
 {
-    public function name(): string { return 'manage_layouts'; }
-    public function displayName(): string { return 'Layouts verwalten'; }
+    public function name(): string
+    {
+        return 'manage_layouts';
+    }
+
+    public function displayName(): string
+    {
+        return 'Layouts verwalten';
+    }
 
     public function description(): string
     {
@@ -33,8 +40,15 @@ class ManageLayouts implements AiChatTool
         ];
     }
 
-    public function requiredPermission(): ?string { return 'view_layout'; }
-    public function isReadOnly(): bool { return false; }
+    public function requiredPermission(): ?string
+    {
+        return 'view_layout';
+    }
+
+    public function isReadOnly(): bool
+    {
+        return false;
+    }
 
     private const WEEKDAY_NAMES = [1 => 'Montag', 2 => 'Dienstag', 3 => 'Mittwoch', 4 => 'Donnerstag', 5 => 'Freitag'];
 
@@ -51,7 +65,10 @@ class ManageLayouts implements AiChatTool
 
     private function formatWeekdays(?array $days): string
     {
-        if (empty($days)) return '-';
+        if (empty($days)) {
+            return '-';
+        }
+
         return collect($days)->map(fn ($d) => self::WEEKDAY_NAMES[$d] ?? $d)->implode(', ');
     }
 
@@ -71,8 +88,12 @@ class ManageLayouts implements AiChatTool
 
     private function create(array $args, User $user): array
     {
-        if (! $user->can('create_layout')) return ['error' => 'Keine Berechtigung.'];
-        if (empty($args['name'])) return ['error' => 'Name ist erforderlich.'];
+        if (! $user->can('create_layout')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
+        if (empty($args['name'])) {
+            return ['error' => 'Name ist erforderlich.'];
+        }
 
         $layout = Layout::create([
             'name' => $args['name'],
@@ -87,16 +108,30 @@ class ManageLayouts implements AiChatTool
 
     private function update(array $args, User $user): array
     {
-        if (! $user->can('update_layout')) return ['error' => 'Keine Berechtigung.'];
+        if (! $user->can('update_layout')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
         $layout = Layout::find($args['layout_id'] ?? 0);
-        if (! $layout) return ['error' => 'Layout nicht gefunden.'];
+        if (! $layout) {
+            return ['error' => 'Layout nicht gefunden.'];
+        }
 
         $data = [];
-        if (isset($args['name'])) $data['name'] = $args['name'];
-        if (isset($args['description'])) $data['description'] = $args['description'];
-        if (isset($args['weekdays'])) $data['weekdays'] = $args['weekdays'];
-        if (isset($args['text_size'])) $data['text_size'] = $args['text_size'];
-        if (isset($args['notes'])) $data['notes'] = $args['notes'];
+        if (isset($args['name'])) {
+            $data['name'] = $args['name'];
+        }
+        if (isset($args['description'])) {
+            $data['description'] = $args['description'];
+        }
+        if (isset($args['weekdays'])) {
+            $data['weekdays'] = $args['weekdays'];
+        }
+        if (isset($args['text_size'])) {
+            $data['text_size'] = $args['text_size'];
+        }
+        if (isset($args['notes'])) {
+            $data['notes'] = $args['notes'];
+        }
 
         $layout->update($data);
 
@@ -105,11 +140,16 @@ class ManageLayouts implements AiChatTool
 
     private function delete(array $args, User $user): array
     {
-        if (! $user->can('delete_layout')) return ['error' => 'Keine Berechtigung.'];
+        if (! $user->can('delete_layout')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
         $layout = Layout::find($args['layout_id'] ?? 0);
-        if (! $layout) return ['error' => 'Layout nicht gefunden.'];
+        if (! $layout) {
+            return ['error' => 'Layout nicht gefunden.'];
+        }
         $name = $layout->name;
         $layout->delete();
+
         return ['success' => true, 'message' => "Layout \"{$name}\" gelöscht."];
     }
 }

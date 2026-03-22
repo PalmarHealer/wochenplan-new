@@ -8,8 +8,15 @@ use App\Services\AiChat\AiChatTool;
 
 class ManageRooms implements AiChatTool
 {
-    public function name(): string { return 'manage_rooms'; }
-    public function displayName(): string { return 'Räume verwalten'; }
+    public function name(): string
+    {
+        return 'manage_rooms';
+    }
+
+    public function displayName(): string
+    {
+        return 'Räume verwalten';
+    }
 
     public function description(): string
     {
@@ -29,8 +36,15 @@ class ManageRooms implements AiChatTool
         ];
     }
 
-    public function requiredPermission(): ?string { return 'view_room'; }
-    public function isReadOnly(): bool { return false; }
+    public function requiredPermission(): ?string
+    {
+        return 'view_room';
+    }
+
+    public function isReadOnly(): bool
+    {
+        return false;
+    }
 
     public function execute(array $arguments, User $user): array
     {
@@ -46,32 +60,46 @@ class ManageRooms implements AiChatTool
     private function list(): array
     {
         $rooms = Room::all();
+
         return ['rooms' => $rooms->pluck('name', 'id')->toArray(), 'summary' => $rooms->pluck('name')->implode(', ')];
     }
 
     private function create(array $args, User $user): array
     {
-        if (! $user->can('create_room')) return ['error' => 'Keine Berechtigung.'];
+        if (! $user->can('create_room')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
         $room = Room::create(['name' => $args['name'] ?? 'Neuer Raum']);
+
         return ['success' => true, 'message' => "Raum \"{$room->name}\" erstellt."];
     }
 
     private function update(array $args, User $user): array
     {
-        if (! $user->can('update_room')) return ['error' => 'Keine Berechtigung.'];
+        if (! $user->can('update_room')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
         $room = Room::find($args['room_id'] ?? 0);
-        if (! $room) return ['error' => 'Raum nicht gefunden.'];
+        if (! $room) {
+            return ['error' => 'Raum nicht gefunden.'];
+        }
         $room->update(['name' => $args['name'] ?? $room->name]);
+
         return ['success' => true, 'message' => "Raum zu \"{$room->name}\" umbenannt."];
     }
 
     private function delete(array $args, User $user): array
     {
-        if (! $user->can('delete_room')) return ['error' => 'Keine Berechtigung.'];
+        if (! $user->can('delete_room')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
         $room = Room::find($args['room_id'] ?? 0);
-        if (! $room) return ['error' => 'Raum nicht gefunden.'];
+        if (! $room) {
+            return ['error' => 'Raum nicht gefunden.'];
+        }
         $name = $room->name;
         $room->delete();
+
         return ['success' => true, 'message' => "Raum \"{$name}\" gelöscht."];
     }
 }

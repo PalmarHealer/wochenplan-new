@@ -8,8 +8,15 @@ use App\Services\AiChat\AiChatTool;
 
 class ManageLessonTemplates implements AiChatTool
 {
-    public function name(): string { return 'manage_lesson_templates'; }
-    public function displayName(): string { return 'Angebotsvorlagen verwalten'; }
+    public function name(): string
+    {
+        return 'manage_lesson_templates';
+    }
+
+    public function displayName(): string
+    {
+        return 'Angebotsvorlagen verwalten';
+    }
 
     public function description(): string
     {
@@ -37,8 +44,15 @@ class ManageLessonTemplates implements AiChatTool
         ];
     }
 
-    public function requiredPermission(): ?string { return 'view_lesson::template'; }
-    public function isReadOnly(): bool { return false; }
+    public function requiredPermission(): ?string
+    {
+        return 'view_lesson::template';
+    }
+
+    public function isReadOnly(): bool
+    {
+        return false;
+    }
 
     private const WEEKDAY_NAMES = [1 => 'Montag', 2 => 'Dienstag', 3 => 'Mittwoch', 4 => 'Donnerstag', 5 => 'Freitag'];
 
@@ -61,7 +75,9 @@ class ManageLessonTemplates implements AiChatTool
             $query->whereHas('assignedUsers', fn ($q) => $q->where('users.id', $user->id));
         }
 
-        if (isset($args['weekday'])) $query->where('weekday', $args['weekday']);
+        if (isset($args['weekday'])) {
+            $query->where('weekday', $args['weekday']);
+        }
 
         $templates = $query->get();
 
@@ -85,9 +101,15 @@ class ManageLessonTemplates implements AiChatTool
 
     private function create(array $args, User $user): array
     {
-        if (! $user->can('create_lesson::template')) return ['error' => 'Keine Berechtigung.'];
-        if (empty($args['name'])) return ['error' => 'Name ist erforderlich.'];
-        if (! isset($args['weekday'])) return ['error' => 'Wochentag ist erforderlich.'];
+        if (! $user->can('create_lesson::template')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
+        if (empty($args['name'])) {
+            return ['error' => 'Name ist erforderlich.'];
+        }
+        if (! isset($args['weekday'])) {
+            return ['error' => 'Wochentag ist erforderlich.'];
+        }
 
         $template = LessonTemplate::create([
             'name' => $args['name'],
@@ -107,28 +129,49 @@ class ManageLessonTemplates implements AiChatTool
         }
 
         $day = self::WEEKDAY_NAMES[$template->weekday] ?? $template->weekday;
+
         return ['success' => true, 'message' => "Vorlage \"{$template->name}\" für {$day} erstellt."];
     }
 
     private function update(array $args, User $user): array
     {
-        if (! $user->can('update_lesson::template')) return ['error' => 'Keine Berechtigung.'];
+        if (! $user->can('update_lesson::template')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
         $template = LessonTemplate::with('assignedUsers')->find($args['template_id'] ?? 0);
-        if (! $template) return ['error' => 'Vorlage nicht gefunden.'];
+        if (! $template) {
+            return ['error' => 'Vorlage nicht gefunden.'];
+        }
 
         if (! $user->can('view_any_lesson::template') && ! $template->assignedUsers->contains('id', $user->id)) {
             return ['error' => 'Keine Berechtigung für diese Vorlage.'];
         }
 
         $data = ['updated_by' => $user->id];
-        if (isset($args['name'])) $data['name'] = $args['name'];
-        if (isset($args['description'])) $data['description'] = $args['description'];
-        if (isset($args['weekday'])) $data['weekday'] = $args['weekday'];
-        if (isset($args['room_id'])) $data['room'] = $args['room_id'];
-        if (isset($args['time_id'])) $data['lesson_time'] = $args['time_id'];
-        if (isset($args['color_id'])) $data['color'] = $args['color_id'];
-        if (isset($args['notes'])) $data['notes'] = $args['notes'];
-        if (isset($args['disabled'])) $data['disabled'] = $args['disabled'];
+        if (isset($args['name'])) {
+            $data['name'] = $args['name'];
+        }
+        if (isset($args['description'])) {
+            $data['description'] = $args['description'];
+        }
+        if (isset($args['weekday'])) {
+            $data['weekday'] = $args['weekday'];
+        }
+        if (isset($args['room_id'])) {
+            $data['room'] = $args['room_id'];
+        }
+        if (isset($args['time_id'])) {
+            $data['lesson_time'] = $args['time_id'];
+        }
+        if (isset($args['color_id'])) {
+            $data['color'] = $args['color_id'];
+        }
+        if (isset($args['notes'])) {
+            $data['notes'] = $args['notes'];
+        }
+        if (isset($args['disabled'])) {
+            $data['disabled'] = $args['disabled'];
+        }
 
         $template->update($data);
 
@@ -141,9 +184,13 @@ class ManageLessonTemplates implements AiChatTool
 
     private function delete(array $args, User $user): array
     {
-        if (! $user->can('delete_lesson::template')) return ['error' => 'Keine Berechtigung.'];
+        if (! $user->can('delete_lesson::template')) {
+            return ['error' => 'Keine Berechtigung.'];
+        }
         $template = LessonTemplate::with('assignedUsers')->find($args['template_id'] ?? 0);
-        if (! $template) return ['error' => 'Vorlage nicht gefunden.'];
+        if (! $template) {
+            return ['error' => 'Vorlage nicht gefunden.'];
+        }
 
         if (! $user->can('view_any_lesson::template') && ! $template->assignedUsers->contains('id', $user->id)) {
             return ['error' => 'Keine Berechtigung für diese Vorlage.'];
@@ -152,6 +199,7 @@ class ManageLessonTemplates implements AiChatTool
         $name = $template->name;
         $template->assignedUsers()->detach();
         $template->delete();
+
         return ['success' => true, 'message' => "Vorlage \"{$name}\" gelöscht."];
     }
 }
