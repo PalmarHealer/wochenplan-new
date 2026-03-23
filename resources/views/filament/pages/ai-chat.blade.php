@@ -241,13 +241,15 @@
                             headers: {
                                 'Accept': 'text/event-stream',
                                 'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             },
                             body: JSON.stringify({ conversation_id: convId }),
                         });
 
                         if (!resp.ok || !resp.body) {
+                            console.error('Stream request failed:', resp.status, resp.statusText);
                             this.streaming = false;
+                            this.streamedContent = 'Fehler: Verbindung zum Assistenten fehlgeschlagen. Bitte Seite neu laden.';
                             $wire.call('refreshMessages');
                             return;
                         }
