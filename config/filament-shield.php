@@ -49,7 +49,7 @@ return [
         'pages' => true,
         'widgets' => false,
         'resources' => true,
-        'custom_permissions' => false,
+        'custom_permissions' => true,
     ],
 
     'generator' => [

@@ -9,6 +9,7 @@
 .env
 .env.backup
 .env.production
+docker-compose.local.yml
 .phpactor.json
 .phpunit.result.cache
 Homestead.json
@@ -18,6 +19,7 @@ yarn-error.log
 /auth.json
 /.fleet
 /.idea
+.claude/settings.local.json
 /.nova
 /.vscode
 /.zed

@@ -24,7 +24,6 @@ class ShieldSeeder extends Seeder
                 "delete_absence",
                 "delete_any_absence",
                 "view_activity::log",
-                "view_any_activity::log",
                 "view_color",
                 "create_color",
                 "update_color",
@@ -82,7 +81,9 @@ class ShieldSeeder extends Seeder
                 "update_user",
                 "delete_user",
                 "delete_any_user",
-                "page_FAQ"
+                "page_FAQ",
+                "page_AiChat",
+                "auto_approve_ai_actions"
             ]
         }]';
 
