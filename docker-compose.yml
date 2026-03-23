@@ -10,7 +10,7 @@ services:
         environment:
             # Laravel application key for encryption
             # Leave empty to auto-generate on first run (will be printed in logs)
-            APP_KEY: base64:/Si5vcnXtiW0DYRLDPlh4enrdeaZ3r58dXSaxXRuNI0=
+            # APP_KEY:
             APP_NAME: Wochenplan
             APP_URL: http://localhost
             APP_DEBUG: false
