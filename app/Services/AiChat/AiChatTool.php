@@ -16,6 +16,13 @@ interface AiChatTool
 
     public function requiredPermission(): ?string;
 
+    /**
+     * Permission needed for the specific action/arguments.
+     * Composite tools should override to return granular permissions (e.g. create_lesson).
+     * Default: falls back to requiredPermission().
+     */
+    public function requiredPermissionForAction(array $arguments): ?string;
+
     public function isReadOnly(): bool;
 
     public function execute(array $arguments, User $user): array;

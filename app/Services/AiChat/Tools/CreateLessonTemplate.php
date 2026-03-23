@@ -75,6 +75,11 @@ class CreateLessonTemplate implements AiChatTool
         return 'create_lesson::template';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return false;

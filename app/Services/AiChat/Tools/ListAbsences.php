@@ -49,6 +49,11 @@ class ListAbsences implements AiChatTool
         return 'view_absence';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return true;

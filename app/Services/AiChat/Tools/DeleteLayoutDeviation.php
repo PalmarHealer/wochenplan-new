@@ -42,6 +42,11 @@ class DeleteLayoutDeviation implements AiChatTool
         return 'delete_layout::deviation';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return false;

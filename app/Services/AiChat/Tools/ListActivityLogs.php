@@ -57,6 +57,11 @@ class ListActivityLogs implements AiChatTool
         return 'view_activity::log';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return true;

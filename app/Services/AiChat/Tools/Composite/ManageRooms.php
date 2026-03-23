@@ -41,6 +41,16 @@ class ManageRooms implements AiChatTool
         return 'view_room';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return match ($arguments['action'] ?? 'list') {
+            'create' => 'create_room',
+            'update' => 'update_room',
+            'delete' => 'delete_room',
+            default => $this->requiredPermission(),
+        };
+    }
+
     public function isReadOnly(): bool
     {
         return false;

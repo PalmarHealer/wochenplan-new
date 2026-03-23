@@ -91,8 +91,8 @@ class ChatService
                     continue;
                 }
 
-                // Check permission
-                $perm = $tool->requiredPermission();
+                // Check permission (granular per-action)
+                $perm = $tool->requiredPermissionForAction($arguments);
                 if ($perm !== null && ! $user->can($perm)) {
                     $conversation->messages()->create([
                         'role' => 'tool',
@@ -206,7 +206,7 @@ class ChatService
         }
 
         // Re-check permissions before executing — roles may have changed since pending
-        $requiredPermission = $tool->requiredPermission();
+        $requiredPermission = $tool->requiredPermissionForAction($action['arguments']);
         if ($requiredPermission && $user->cannot($requiredPermission)) {
             $message->update([
                 'content' => json_encode(['error' => 'Sie sind nicht mehr berechtigt, dieses Tool auszuführen.']),

@@ -45,6 +45,16 @@ class ManageLayouts implements AiChatTool
         return 'view_layout';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return match ($arguments['action'] ?? 'list') {
+            'create' => 'create_layout',
+            'update' => 'update_layout',
+            'delete' => 'delete_layout',
+            default => $this->requiredPermission(),
+        };
+    }
+
     public function isReadOnly(): bool
     {
         return false;

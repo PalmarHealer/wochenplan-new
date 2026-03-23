@@ -63,6 +63,11 @@ class CreateLayout implements AiChatTool
         return 'create_layout';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return false;

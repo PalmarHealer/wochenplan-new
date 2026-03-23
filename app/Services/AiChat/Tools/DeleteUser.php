@@ -41,6 +41,11 @@ class DeleteUser implements AiChatTool
         return 'delete_user';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return false;

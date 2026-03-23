@@ -41,6 +41,11 @@ class ListLessonTemplates implements AiChatTool
         return 'view_lesson::template';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return true;

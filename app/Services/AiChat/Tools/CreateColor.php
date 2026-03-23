@@ -46,6 +46,11 @@ class CreateColor implements AiChatTool
         return 'create_color';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return false;

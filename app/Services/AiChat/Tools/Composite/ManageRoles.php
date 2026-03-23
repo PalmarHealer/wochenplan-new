@@ -41,6 +41,16 @@ class ManageRoles implements AiChatTool
         return 'view_role';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return match ($arguments['action'] ?? 'list') {
+            'create' => 'create_role',
+            'update' => 'update_role',
+            'delete' => 'delete_role',
+            default => $this->requiredPermission(),
+        };
+    }
+
     public function isReadOnly(): bool
     {
         return false;

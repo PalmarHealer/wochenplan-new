@@ -50,6 +50,11 @@ class UpdateColor implements AiChatTool
         return 'update_color';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return false;

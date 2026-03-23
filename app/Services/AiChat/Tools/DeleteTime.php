@@ -42,6 +42,11 @@ class DeleteTime implements AiChatTool
         return 'delete_time';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return false;

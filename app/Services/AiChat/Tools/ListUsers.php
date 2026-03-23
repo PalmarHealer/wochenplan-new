@@ -35,6 +35,11 @@ class ListUsers implements AiChatTool
         return 'view_user';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return true;

@@ -41,6 +41,16 @@ class ManageTimes implements AiChatTool
         return 'view_time';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return match ($arguments['action'] ?? 'list') {
+            'create' => 'create_time',
+            'update' => 'update_time',
+            'delete' => 'delete_time',
+            default => $this->requiredPermission(),
+        };
+    }
+
     public function isReadOnly(): bool
     {
         return false;

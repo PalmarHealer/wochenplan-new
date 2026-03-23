@@ -46,6 +46,11 @@ class GetScheduleForDate implements AiChatTool
         return 'view_lesson';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return true;

@@ -74,7 +74,7 @@ class AiChatStreamController
                         continue;
                     }
 
-                    $perm = $tool->requiredPermission();
+                    $perm = $tool->requiredPermissionForAction($arguments);
                     if ($perm !== null && ! $user->can($perm)) {
                         $conversation->messages()->create([
                             'role' => 'tool', 'content' => json_encode(['error' => 'Keine Berechtigung.']),

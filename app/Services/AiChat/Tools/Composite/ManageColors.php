@@ -42,6 +42,16 @@ class ManageColors implements AiChatTool
         return 'view_color';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return match ($arguments['action'] ?? 'list') {
+            'create' => 'create_color',
+            'update' => 'update_color',
+            'delete' => 'delete_color',
+            default => $this->requiredPermission(),
+        };
+    }
+
     public function isReadOnly(): bool
     {
         return false;

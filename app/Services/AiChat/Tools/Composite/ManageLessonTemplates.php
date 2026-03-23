@@ -49,6 +49,16 @@ class ManageLessonTemplates implements AiChatTool
         return 'view_lesson::template';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return match ($arguments['action'] ?? 'list') {
+            'create' => 'create_lesson::template',
+            'update' => 'update_lesson::template',
+            'delete' => 'delete_lesson::template',
+            default => $this->requiredPermission(),
+        };
+    }
+
     public function isReadOnly(): bool
     {
         return false;

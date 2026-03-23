@@ -46,6 +46,11 @@ class UpdateRoom implements AiChatTool
         return 'update_room';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return false;

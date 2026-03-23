@@ -45,6 +45,11 @@ class ListLayoutDeviations implements AiChatTool
         return 'view_layout::deviation';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return true;

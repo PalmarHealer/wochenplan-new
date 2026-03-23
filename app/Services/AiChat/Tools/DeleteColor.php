@@ -42,6 +42,11 @@ class DeleteColor implements AiChatTool
         return 'delete_color';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return false;

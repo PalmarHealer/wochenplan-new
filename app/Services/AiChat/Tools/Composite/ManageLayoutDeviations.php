@@ -45,6 +45,16 @@ class ManageLayoutDeviations implements AiChatTool
         return 'view_layout::deviation';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return match ($arguments['action'] ?? 'list') {
+            'create' => 'create_layout::deviation',
+            'update' => 'update_layout::deviation',
+            'delete' => 'delete_layout::deviation',
+            default => $this->requiredPermission(),
+        };
+    }
+
     public function isReadOnly(): bool
     {
         return false;

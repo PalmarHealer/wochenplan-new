@@ -42,6 +42,11 @@ class DeleteAbsence implements AiChatTool
         return 'delete_absence';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return false;

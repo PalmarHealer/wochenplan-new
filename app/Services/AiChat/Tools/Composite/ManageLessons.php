@@ -50,6 +50,16 @@ class ManageLessons implements AiChatTool
         return 'view_lesson';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return match ($arguments['action'] ?? 'list') {
+            'create' => 'create_lesson',
+            'update' => 'update_lesson',
+            'delete' => 'delete_lesson',
+            default => $this->requiredPermission(),
+        };
+    }
+
     public function isReadOnly(): bool
     {
         return false;

@@ -45,6 +45,16 @@ class ManageAbsences implements AiChatTool
         return 'view_absence';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return match ($arguments['action'] ?? 'list') {
+            'create' => 'create_absence',
+            'update' => 'update_absence',
+            'delete' => 'delete_absence',
+            default => $this->requiredPermission(),
+        };
+    }
+
     public function isReadOnly(): bool
     {
         return false;

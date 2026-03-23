@@ -46,6 +46,11 @@ class UpdateTime implements AiChatTool
         return 'update_time';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return false;

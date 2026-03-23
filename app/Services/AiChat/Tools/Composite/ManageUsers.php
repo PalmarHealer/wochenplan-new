@@ -44,6 +44,16 @@ class ManageUsers implements AiChatTool
         return 'view_user';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return match ($arguments['action'] ?? 'list') {
+            'create' => 'create_user',
+            'update' => 'update_user',
+            'delete' => 'delete_user',
+            default => $this->requiredPermission(),
+        };
+    }
+
     public function isReadOnly(): bool
     {
         return false;

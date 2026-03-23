@@ -42,6 +42,11 @@ class CreateRoom implements AiChatTool
         return 'create_room';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return false;

@@ -75,6 +75,11 @@ class CreateLesson implements AiChatTool
         return 'create_lesson';
     }
 
+    public function requiredPermissionForAction(array $arguments): ?string
+    {
+        return $this->requiredPermission();
+    }
+
     public function isReadOnly(): bool
     {
         return false;
