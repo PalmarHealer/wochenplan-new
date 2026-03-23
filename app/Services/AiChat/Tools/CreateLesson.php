@@ -20,7 +20,7 @@ class CreateLesson implements AiChatTool
 
     public function description(): string
     {
-        return 'Create a new lesson (Angebot) for a specific date. Requires at minimum a name and date. You must use valid room_id, time_id, and color_id values (use list_rooms, list_times, list_colors to find them first).';
+        return 'Create a new lesson (Angebot) for a specific date. Requires at minimum a name and date. You must use valid room_id, time_id, and color_id values based on the available rooms, time slots, and colors.';
     }
 
     public function parameters(): array

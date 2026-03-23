@@ -82,11 +82,16 @@ class GetScheduleForDate implements AiChatTool
 
         $templates = $templatesQuery->get()->reject(fn ($t) => $parentIds->contains($t->id));
 
-        // Get absences
-        $absences = Absence::with(['user'])
+        // Get absences (scoped by permission)
+        $absencesQuery = Absence::with(['user'])
             ->whereDate('start', '<=', $date)
-            ->whereDate('end', '>=', $date)
-            ->get();
+            ->whereDate('end', '>=', $date);
+
+        if (! $user->can('view_any_absence')) {
+            $absencesQuery->where('user_id', $user->id);
+        }
+
+        $absences = $absencesQuery->get();
 
         // Get lunch
         $lunch = app(LunchService::class)->getLunch($date->toDateString());

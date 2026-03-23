@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ChatMessage extends Model
 {
+    protected $touches = ['conversation'];
+
     protected $fillable = [
         'conversation_id',
         'role',

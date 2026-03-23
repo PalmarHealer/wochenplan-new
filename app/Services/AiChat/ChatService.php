@@ -75,7 +75,7 @@ class ChatService
                 $function = $toolCall['function'] ?? $toolCall;
                 $toolName = $function['name'] ?? 'unknown';
                 $arguments = $function['arguments'] ?? [];
-                $toolCallId = $toolCall['id'] ?? "call_{$index}";
+                $toolCallId = $toolCall['id'] ?? 'call_'.$i.'_'.$index.'_'.uniqid();
 
                 $tool = $this->registry->findTool($toolName);
 
@@ -106,9 +106,10 @@ class ChatService
                 }
 
                 // Read-only or auto-approve: execute immediately
-                if ($tool->isReadOnly() || $user->can('auto_approve_ai_actions')) {
+                $effectivelyReadOnly = $tool->isReadOnly() || ($arguments['action'] ?? null) === 'list';
+                if ($effectivelyReadOnly || $user->can('auto_approve_ai_actions')) {
                     $result = $this->executeTool($tool, $arguments, $user);
-                    $status = $tool->isReadOnly() ? null : 'auto_approved';
+                    $status = $effectivelyReadOnly ? null : 'auto_approved';
 
                     $conversation->messages()->create([
                         'role' => 'tool',
@@ -198,6 +199,17 @@ class ChatService
         if (! $tool) {
             $message->update([
                 'content' => json_encode(['error' => 'Tool nicht mehr verfügbar.']),
+                'action_status' => 'rejected',
+            ]);
+
+            return $this->getConversationMessages($conversation);
+        }
+
+        // Re-check permissions before executing — roles may have changed since pending
+        $requiredPermission = $tool->requiredPermission();
+        if ($requiredPermission && $user->cannot($requiredPermission)) {
+            $message->update([
+                'content' => json_encode(['error' => 'Sie sind nicht mehr berechtigt, dieses Tool auszuführen.']),
                 'action_status' => 'rejected',
             ]);
 
@@ -342,11 +354,11 @@ Regeln:
 - Wenn du ein PDF exportierst, schreibe KEINEN Download-Link in deine Antwort. Der Download-Button wird automatisch angezeigt. Sage nur dass das PDF erstellt wurde.
 
 Wichtig - Sei proaktiv und handlungsorientiert:
-- Stelle NICHT viele Rückfragen. Nutze die Tools um fehlende Infos selbst zu holen (z.B. Räume, Layouts, Zeiten auflisten).
+- Stelle NICHT viele Rückfragen. Nutze die manage_*-Tools mit action "list" um fehlende Infos selbst zu holen (z.B. manage_rooms, manage_layouts, manage_times).
 - Wenn der Benutzer etwas erstellen will, schaue dir die verfügbaren Optionen selbst an, wähle sinnvolle Standardwerte und schlage sie vor: "Ich erstelle die Abweichung mit Layout X vom 1.4. bis 10.4. - ist das okay?"
 - Maximal EINE Rückfrage, bevor du handelst.
 - Verwende sinnvolle Standardwerte wenn Informationen fehlen.
-- Wenn der Benutzer etwas ÄNDERN oder KORRIGIEREN will, nutze die UPDATE-Aktion (action: "update") mit der ID des bestehenden Eintrags. Erstelle KEINE Duplikate. Frage im Zweifelsfall welcher Eintrag gemeint ist.
+- Wenn der Benutzer etwas ÄNDERN oder KORRIGIEREN will, verwende die manage_*-Tools mit action "update" und der ID des bestehenden Eintrags. Erstelle KEINE Duplikate. Frage im Zweifelsfall welcher Eintrag gemeint ist.
 - Wenn etwas schon existiert und der Benutzer eine Anpassung will, nutze IMMER update statt create.
 
 /no_think
@@ -370,13 +382,17 @@ PROMPT;
 
     private function describeAction(string $toolName, array $arguments): string
     {
-        return match ($toolName) {
-            'create_lesson' => 'Angebot erstellen: '.($arguments['name'] ?? 'Unbenannt'),
-            'update_lesson' => 'Angebot #'.($arguments['lesson_id'] ?? '?').' bearbeiten',
-            'delete_lesson' => 'Angebot #'.($arguments['lesson_id'] ?? '?').' löschen',
-            'create_absence' => 'Krankmeldung erstellen: '.($arguments['start'] ?? '?').' bis '.($arguments['end'] ?? '?'),
-            'delete_absence' => 'Krankmeldung #'.($arguments['absence_id'] ?? '?').' löschen',
-            default => "Aktion: {$toolName}",
+        $displayName = $this->registry->getDisplayName($toolName);
+        $action = $arguments['action'] ?? null;
+
+        return match (true) {
+            $toolName === 'manage_lessons' && $action === 'create' => "{$displayName}: ".($arguments['name'] ?? 'Unbenannt').' erstellen',
+            $toolName === 'manage_lessons' && $action === 'update' => "{$displayName} #".($arguments['lesson_id'] ?? '?').' bearbeiten',
+            $toolName === 'manage_lessons' && $action === 'delete' => "{$displayName} #".($arguments['lesson_id'] ?? '?').' löschen',
+            $toolName === 'manage_absences' && $action === 'create' => "{$displayName}: ".($arguments['start'] ?? '?').' bis '.($arguments['end'] ?? '?'),
+            $toolName === 'manage_absences' && $action === 'delete' => "{$displayName} #".($arguments['absence_id'] ?? '?').' löschen',
+            $action !== null => "{$displayName}: {$action}",
+            default => $displayName,
         };
     }
 

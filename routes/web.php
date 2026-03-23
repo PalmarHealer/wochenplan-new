@@ -15,20 +15,28 @@ Route::post('/lunch/clear', [LunchController::class, 'clear'])
     ->middleware(['auth']);
 
 // AI Chat streaming endpoint
-Route::get('/assistant/stream', [AiChatStreamController::class, 'stream'])
+Route::post('/assistant/stream', [AiChatStreamController::class, 'stream'])
     ->name('assistant.stream')
     ->middleware(['auth']);
 
 // AI Chat PDF download
 Route::get('/assistant/pdf', function (\Illuminate\Http\Request $request) {
     $request->validate(['date' => 'required|date']);
+
+    if (! $request->user()->can('view_day::pdf')) {
+        abort(403, 'Keine Berechtigung.');
+    }
+
     $date = \Carbon\Carbon::parse($request->input('date'));
     $pdfService = app(\App\Services\PdfExportService::class);
     $base64 = $pdfService->getOrGeneratePdf($date->toDateString());
     if (! $base64) {
         abort(404, 'PDF nicht verfügbar.');
     }
-    $binary = base64_decode($base64);
+    $binary = base64_decode($base64, true);
+    if ($binary === false) {
+        abort(500, 'PDF-Daten fehlerhaft.');
+    }
     $filename = $date->locale('de')->translatedFormat('l, d.m.Y').'.pdf';
 
     return response()->streamDownload(fn () => print ($binary), $filename, ['Content-Type' => 'application/pdf']);

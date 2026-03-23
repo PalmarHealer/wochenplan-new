@@ -88,11 +88,6 @@ class OllamaClient
 
         $url = "{$this->baseUrl}/api/chat";
 
-        // Use a temp file as a pipe for curl streaming
-        $tmpFile = tmpfile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-        fclose($tmpFile);
-
         // Use proc_open to run curl and read its stdout line by line
         $cmd = sprintf(
             'curl -s -N --max-time 120 -H "Content-Type: application/json" -d %s %s',

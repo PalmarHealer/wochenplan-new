@@ -236,8 +236,14 @@
                     this.scrollToBottom();
 
                     try {
-                        const resp = await fetch(`/assistant/stream?conversation_id=${convId}`, {
-                            headers: { 'Accept': 'text/event-stream' },
+                        const resp = await fetch('/assistant/stream', {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'text/event-stream',
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                            },
+                            body: JSON.stringify({ conversation_id: convId }),
                         });
                         const reader = resp.body.getReader();
                         const dec = new TextDecoder();

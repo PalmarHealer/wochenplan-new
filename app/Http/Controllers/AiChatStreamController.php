@@ -39,7 +39,6 @@ class AiChatStreamController
             ob_implicit_flush(true);
 
             $tools = $registry->getOllamaToolSchemas($user);
-            $hadToolCalls = false;
 
             // Phase 1: Tool call loop (non-streaming)
             for ($round = 0; $round < 5; $round++) {
@@ -50,8 +49,6 @@ class AiChatStreamController
                 if (empty($toolCalls)) {
                     break;
                 }
-
-                $hadToolCalls = true;
 
                 // Save assistant message with tool calls
                 $conversation->messages()->create([
@@ -65,7 +62,7 @@ class AiChatStreamController
                     $function = $toolCall['function'] ?? $toolCall;
                     $toolName = $function['name'] ?? 'unknown';
                     $arguments = $function['arguments'] ?? [];
-                    $toolCallId = "call_{$index}";
+                    $toolCallId = $toolCall['id'] ?? $function['id'] ?? "round_{$round}_call_{$index}";
 
                     $tool = $registry->findTool($toolName);
                     if (! $tool) {
@@ -87,7 +84,8 @@ class AiChatStreamController
                         continue;
                     }
 
-                    if ($tool->isReadOnly()) {
+                    $effectivelyReadOnly = $tool->isReadOnly() || ($arguments['action'] ?? null) === 'list';
+                    if ($effectivelyReadOnly) {
                         // Read-only tools execute immediately
                         try {
                             $result = $tool->execute($arguments, $user);
@@ -237,16 +235,15 @@ class AiChatStreamController
     {
         $registry = app(ToolRegistry::class);
         $displayName = $registry->getDisplayName($toolName);
+        $action = $arguments['action'] ?? null;
 
-        return match ($toolName) {
-            'create_lesson' => "{$displayName}: ".($arguments['name'] ?? 'Unbenannt'),
-            'update_lesson' => "{$displayName} #".($arguments['lesson_id'] ?? '?'),
-            'delete_lesson' => "{$displayName} #".($arguments['lesson_id'] ?? '?'),
-            'create_absence' => "{$displayName}: ".($arguments['start'] ?? '?').' bis '.($arguments['end'] ?? '?'),
-            'delete_absence' => "{$displayName} #".($arguments['absence_id'] ?? '?'),
-            'create_room' => "{$displayName}: ".($arguments['name'] ?? ''),
-            'create_time' => "{$displayName}: ".($arguments['name'] ?? ''),
-            'create_color' => "{$displayName}: ".($arguments['name'] ?? ''),
+        return match (true) {
+            $toolName === 'manage_lessons' && $action === 'create' => "{$displayName}: ".($arguments['name'] ?? 'Unbenannt').' erstellen',
+            $toolName === 'manage_lessons' && $action === 'update' => "{$displayName} #".($arguments['lesson_id'] ?? '?').' bearbeiten',
+            $toolName === 'manage_lessons' && $action === 'delete' => "{$displayName} #".($arguments['lesson_id'] ?? '?').' löschen',
+            $toolName === 'manage_absences' && $action === 'create' => "{$displayName}: ".($arguments['start'] ?? '?').' bis '.($arguments['end'] ?? '?'),
+            $toolName === 'manage_absences' && $action === 'delete' => "{$displayName} #".($arguments['absence_id'] ?? '?').' löschen',
+            $action !== null => "{$displayName}: {$action}",
             default => $displayName,
         };
     }

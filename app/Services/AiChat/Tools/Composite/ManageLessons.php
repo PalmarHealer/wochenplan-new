@@ -20,7 +20,7 @@ class ManageLessons implements AiChatTool
 
     public function description(): string
     {
-        return 'Manage lessons (Angebote). Actions: list, create, update, delete. Use room_id/time_id/color_id from list tools.';
+        return 'Manage lessons (Angebote). Actions: list, create, update, delete. Use manage_rooms/manage_times/manage_colors with action "list" to find valid IDs.';
     }
 
     public function parameters(): array
