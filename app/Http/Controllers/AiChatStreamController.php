@@ -216,8 +216,15 @@ class AiChatStreamController
             },
         ]);
 
-        curl_exec($ch);
+        $success = curl_exec($ch);
+        $curlError = curl_error($ch);
         curl_close($ch);
+
+        if (! $success || $curlError) {
+            $ctrl->sse('error', ['message' => 'Verbindung zur KI fehlgeschlagen.']);
+
+            return;
+        }
 
         $conversation->messages()->create([
             'role' => 'assistant',

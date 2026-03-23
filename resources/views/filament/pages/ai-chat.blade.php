@@ -72,7 +72,7 @@
                                         </details>
                                     @endif
                                     <div class="prose dark:prose-invert prose-sm max-w-none text-sm [&>*]:my-0 [&>*+*]:mt-1.5">
-                                        {!! \Illuminate\Support\Str::markdown($msg['content']) !!}
+                                        {!! \Illuminate\Support\Str::markdown($msg['content'], ['html_input' => 'strip', 'allow_unsafe_links' => false]) !!}
                                     </div>
                                     @if(isset($toolGroups[$index]))
                                         @foreach($toolGroups[$index] as $tr)
@@ -245,6 +245,13 @@
                             },
                             body: JSON.stringify({ conversation_id: convId }),
                         });
+
+                        if (!resp.ok || !resp.body) {
+                            this.streaming = false;
+                            $wire.call('refreshMessages');
+                            return;
+                        }
+
                         const reader = resp.body.getReader();
                         const dec = new TextDecoder();
                         let buf = '', evt = 'content';

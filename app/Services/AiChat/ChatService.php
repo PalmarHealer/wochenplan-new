@@ -223,10 +223,9 @@ class ChatService
             'action_status' => 'approved',
         ]);
 
-        // Continue the LLM conversation with the tool result
+        // Continue the LLM conversation with the tool result (no tools — force natural language)
         $messages = $this->buildMessages($conversation, $user);
-        $tools = $this->registry->getOllamaToolSchemas($user);
-        $response = $this->client->chat($messages, $tools);
+        $response = $this->client->chat($messages);
 
         $conversation->messages()->create([
             'role' => 'assistant',
@@ -250,10 +249,9 @@ class ChatService
             'action_status' => 'rejected',
         ]);
 
-        // Tell the LLM the action was rejected
+        // Tell the LLM the action was rejected (no tools — force natural language)
         $messages = $this->buildMessages($conversation, $user);
-        $tools = $this->registry->getOllamaToolSchemas($user);
-        $response = $this->client->chat($messages, $tools);
+        $response = $this->client->chat($messages);
 
         $conversation->messages()->create([
             'role' => 'assistant',
@@ -296,10 +294,17 @@ class ChatService
                 if ($msg->action_status === 'pending' && $msg->content === null) {
                     continue;
                 }
-                $messages[] = [
+                $toolMsg = [
                     'role' => 'tool',
                     'content' => $msg->content ?? '{}',
                 ];
+                if ($msg->tool_call_id) {
+                    $toolMsg['tool_call_id'] = $msg->tool_call_id;
+                }
+                if ($msg->tool_name) {
+                    $toolMsg['name'] = $msg->tool_name;
+                }
+                $messages[] = $toolMsg;
             } elseif ($msg->role === 'assistant' && ! empty($msg->tool_calls)) {
                 // Ensure tool_calls arguments are objects, not arrays
                 $toolCalls = array_map(function ($tc) {
