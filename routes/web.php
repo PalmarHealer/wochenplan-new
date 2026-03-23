@@ -29,7 +29,12 @@ Route::get('/assistant/pdf', function (\Illuminate\Http\Request $request) {
 
     $date = \Carbon\Carbon::parse($request->input('date'));
     $pdfService = app(\App\Services\PdfExportService::class);
-    $base64 = $pdfService->getOrGeneratePdf($date->toDateString());
+
+    // Past dates: only serve existing PDFs; today/future: generate if needed
+    $base64 = $date->isPast() && ! $date->isToday()
+        ? $pdfService->getExistingPdf($date->toDateString())
+        : $pdfService->getOrGeneratePdf($date->toDateString());
+
     if (! $base64) {
         abort(404, 'PDF nicht verfügbar.');
     }
@@ -37,7 +42,7 @@ Route::get('/assistant/pdf', function (\Illuminate\Http\Request $request) {
     if ($binary === false) {
         abort(500, 'PDF-Daten fehlerhaft.');
     }
-    $filename = $date->locale('de')->translatedFormat('l, d.m.Y').'.pdf';
+    $filename = $date->locale(config('app.locale'))->translatedFormat('l, d.m.Y').'.pdf';
 
     return response()->streamDownload(fn () => print ($binary), $filename, ['Content-Type' => 'application/pdf']);
 })->name('assistant.pdf')->middleware(['auth']);

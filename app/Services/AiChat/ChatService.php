@@ -266,12 +266,15 @@ class ChatService
         try {
             return $tool->execute($arguments, $user);
         } catch (\Exception $e) {
+            $correlationId = uniqid('tool_', true);
+
             Log::error('AI Chat tool execution error', [
                 'tool' => $tool->name(),
                 'error' => $e->getMessage(),
+                'correlation_id' => $correlationId,
             ]);
 
-            return ['error' => 'Fehler bei der Ausführung: '.$e->getMessage()];
+            return ['error' => 'Es ist ein Fehler bei der Ausführung aufgetreten. (Fehler-ID: '.$correlationId.')'];
         }
     }
 

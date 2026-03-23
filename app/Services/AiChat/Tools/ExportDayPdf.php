@@ -56,7 +56,7 @@ class ExportDayPdf implements AiChatTool
 
         return [
             'success' => true,
-            'download_url' => "/assistant/pdf?date={$date}",
+            'download_url' => route('assistant.pdf', ['date' => $date]),
             'message' => "PDF für {$date} wurde erstellt.",
         ];
     }

@@ -200,15 +200,20 @@ class AiChatStreamController
                     if ($insideThink) {
                         if (str_contains($chunk, '</think>')) {
                             $insideThink = false;
-                            // Send anything after </think>
+                            // Send anything after </think>, stripping tool_call tags
                             $after = substr($chunk, strpos($chunk, '</think>') + 8);
+                            $after = preg_replace('/<tool_call>[\s\S]*?<\/tool_call>/u', '', $after);
                             if (trim($after) !== '') {
                                 $ctrl->sse('content', ['text' => $after]);
                             }
                         }
                         // Skip think content — don't send to client
                     } else {
-                        $ctrl->sse('content', ['text' => $chunk]);
+                        // Strip any <tool_call> tags before sending
+                        $cleaned = preg_replace('/<tool_call>[\s\S]*?<\/tool_call>/u', '', $chunk);
+                        if (trim($cleaned) !== '') {
+                            $ctrl->sse('content', ['text' => $cleaned]);
+                        }
                     }
                 }
 

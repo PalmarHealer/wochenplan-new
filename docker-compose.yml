@@ -54,7 +54,7 @@ services:
             AZURE_PROXY:
 
             # AI Chat (Ollama on Leipzig server)
-            OLLAMA_BASE_URL:
+            OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://localhost:11434}
             AI_CHAT_MODEL: qwen3:8b
 
         # Security: Add capabilities for Chromium sandbox to work properly

@@ -236,7 +236,7 @@
                     this.scrollToBottom();
 
                     try {
-                        const resp = await fetch('/assistant/stream', {
+                        const resp = await fetch('{{ route('assistant.stream') }}', {
                             method: 'POST',
                             headers: {
                                 'Accept': 'text/event-stream',
