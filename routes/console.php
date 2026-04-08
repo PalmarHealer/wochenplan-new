@@ -22,6 +22,14 @@ Schedule::command('pdf:generate yesterday')
     ->onOneServer()
     ->runInBackground();
 
+// On Mondays, also refresh Friday's PDF to cover weekend gap
+Schedule::command('pdf:generate last friday')
+    ->mondays()
+    ->at('01:02')
+    ->withoutOverlapping()
+    ->onOneServer()
+    ->runInBackground();
+
 Schedule::command('pdf:generate today')
     ->weekdays()
     ->at('01:05')
