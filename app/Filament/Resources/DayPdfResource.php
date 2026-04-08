@@ -254,7 +254,7 @@ class DayPdfResource extends Resource implements HasShieldPermissions
         if ($notifyIfMissing) {
             Notification::make()
                 ->title('PDF nicht verfügbar')
-                ->body('Für dieses Datum ist noch keine gespeicherte PDF vorhanden. PDFs werden nachts automatisch erstellt. Sie können die PDF über „Neu generieren“ sofort erstellen.')
+                ->body('Für dieses Datum ist noch keine gespeicherte PDF vorhanden. PDFs werden nachts automatisch erstellt. Sie können die PDF über "Neu generieren" sofort erstellen.')
                 ->warning()
                 ->send();
         }
