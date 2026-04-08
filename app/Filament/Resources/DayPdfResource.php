@@ -114,14 +114,12 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                     ->iconButton()
                     ->action(function (DayPdf $record) {
                         $pdfService = app(PdfExportService::class);
-                        $base64Content = $pdfService->getOrGeneratePdf($record->date);
-                        $binaryContent = base64_decode($base64Content);
+                        $base64Content = self::getExistingPdf($pdfService, $record);
+                        if (! $base64Content) {
+                            return;
+                        }
 
-                        $filename = $record->date->locale(config('app.locale'))->translatedFormat('l, d.m.Y').'.pdf';
-
-                        return Response::streamDownload(function () use ($binaryContent) {
-                            echo $binaryContent;
-                        }, $filename, ['Content-Type' => 'application/pdf']);
+                        return self::streamPdfDownload($record, $base64Content);
                     }),
             ])
             ->recordAction('download')
@@ -136,14 +134,12 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                         // If only one record, download as PDF directly
                         if ($records->count() === 1) {
                             $record = $records->first();
-                            $base64Content = $pdfService->getOrGeneratePdf($record->date);
-                            $binaryContent = base64_decode($base64Content);
+                            $base64Content = self::getExistingPdf($pdfService, $record);
+                            if (! $base64Content) {
+                                return;
+                            }
 
-                            $filename = $record->date->locale(config('app.locale'))->translatedFormat('l, d.m.Y').'.pdf';
-
-                            return Response::streamDownload(function () use ($binaryContent) {
-                                echo $binaryContent;
-                            }, $filename, ['Content-Type' => 'application/pdf']);
+                            return self::streamPdfDownload($record, $base64Content);
                         }
 
                         // Multiple records - create ZIP
@@ -161,8 +157,16 @@ class DayPdfResource extends Resource implements HasShieldPermissions
 
                         $zip = new ZipArchive;
                         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+                            $missingDates = [];
                             foreach ($sortedRecords as $record) {
-                                $base64Content = $pdfService->getOrGeneratePdf($record->date);
+                                $base64Content = self::getExistingPdf($pdfService, $record, false);
+
+                                if (! $base64Content) {
+                                    $missingDates[] = $record->date->format('d.m.Y');
+
+                                    continue;
+                                }
+
                                 $binaryContent = base64_decode($base64Content);
 
                                 $filename = $record->date->locale(config('app.locale'))->translatedFormat('l, d.m.Y').'.pdf';
@@ -170,6 +174,14 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                                 $zip->addFromString($filename, $binaryContent);
                             }
                             $zip->close();
+
+                            if ($missingDates !== []) {
+                                Notification::make()
+                                    ->title('Einige PDFs fehlen')
+                                    ->body('Folgende Daten konnten nicht hinzugefügt werden: '.implode(', ', $missingDates))
+                                    ->warning()
+                                    ->send();
+                            }
 
                             return Response::download($zipPath, $zipFileName)->deleteFileAfterSend(true);
                         }
@@ -230,5 +242,34 @@ class DayPdfResource extends Resource implements HasShieldPermissions
             'delete',
             'delete_any',
         ];
+    }
+
+    protected static function getExistingPdf(PdfExportService $pdfService, DayPdf $record, bool $notifyIfMissing = true): ?string
+    {
+        $base64Content = $pdfService->getExistingPdf($record->date);
+        if ($base64Content) {
+            return $base64Content;
+        }
+
+        if ($notifyIfMissing) {
+            Notification::make()
+                ->title('PDF nicht verfügbar')
+                ->body('Für dieses Datum ist noch keine gespeicherte PDF vorhanden. PDFs werden nachts automatisch erstellt. Sie können die PDF über "Neu generieren" sofort erstellen.')
+                ->warning()
+                ->send();
+        }
+
+        return null;
+    }
+
+    protected static function streamPdfDownload(DayPdf $record, string $base64Content)
+    {
+        $binaryContent = base64_decode($base64Content);
+
+        $filename = $record->date->locale(config('app.locale'))->translatedFormat('l, d.m.Y').'.pdf';
+
+        return Response::streamDownload(function () use ($binaryContent) {
+            echo $binaryContent;
+        }, $filename, ['Content-Type' => 'application/pdf']);
     }
 }

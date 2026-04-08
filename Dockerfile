@@ -57,7 +57,8 @@ RUN apk add --no-cache \
         # Node.js for Puppeteer
         nodejs npm \
         # Chromium for PDF generation
-        chromium nss freetype harfbuzz ttf-freefont
+        chromium nss freetype harfbuzz ttf-freefont \
+        font-noto font-noto-cjk font-noto-emoji
 
 # Install Puppeteer (will use system Chromium)
 ARG SKIP_PUPPETEER_INSTALL=false
