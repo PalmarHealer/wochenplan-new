@@ -10,7 +10,8 @@ use Spatie\LaravelPdf\Facades\Pdf;
 class PdfExportService
 {
     public function __construct(
-        private LayoutService $layoutService
+        private LayoutService $layoutService,
+        private LunchService $lunchService,
     ) {}
 
     /**
@@ -123,6 +124,9 @@ class PdfExportService
 
         $absences = array_values(array_unique($absences, SORT_REGULAR));
 
+        // Get lunch for placeholder replacement (e.g. %mittagessen%)
+        $lunch = $this->lunchService->getLunch($date->toDateString());
+
         // Set up writable directory for Chrome user data
         $userDataDir = storage_path('app/chrome-data');
         if (! file_exists($userDataDir)) {
@@ -136,6 +140,7 @@ class PdfExportService
             'lessons' => $lessons,
             'colors' => $colors,
             'absences' => $absences,
+            'lunch' => $lunch,
         ])
             ->format('a4')
             ->landscape()
