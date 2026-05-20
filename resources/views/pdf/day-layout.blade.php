@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $date->locale('de')->translatedFormat('l, d.m.Y') }}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -24,7 +21,7 @@
             height: 100vh;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', 'Ubuntu', sans-serif;
+            font-family: 'Noto Sans', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Color Emoji', 'Segoe UI Emoji', 'Apple Color Emoji', 'Ubuntu', sans-serif;
             font-size: {{ $textSize }}%;
             color: black;
             background: white;
@@ -176,7 +173,7 @@
                                 @endif
                             @else
                                 @php
-                                    // Simple placeholder replacement for PDF
+                                    // Placeholder replacement for PDF — mirrors Day::replacePlaceholders()
                                     $displayName = $cell['displayName'] ?? '';
                                     $dayName = $date->translatedFormat('D');
                                     $dayFull = $date->translatedFormat('d.m.Y');
@@ -186,8 +183,15 @@
                                         $absencesStr .= $absence['display_name'] . ($key === array_key_last($absences) ? '' : ', ');
                                     }
 
-                                    $displayName = str_replace('%tag%', str_replace('.', '', $dayName) . " " . $dayFull, $displayName);
-                                    $displayName = str_replace('%abwesenheit%', $absencesStr, $displayName);
+                                    $context = [
+                                        'mittagessen' => $lunch ?? '',
+                                        'abwesenheit' => $absencesStr,
+                                        'tag' => str_replace('.', '', $dayName) . ' ' . $dayFull,
+                                    ];
+
+                                    $displayName = preg_replace_callback('/%([a-zA-Z0-9_]+)%/', function ($matches) use ($context) {
+                                        return $context[$matches[1]] ?? $matches[0];
+                                    }, $displayName);
                                 @endphp
                                 {!! $displayName !!}
                             @endif
