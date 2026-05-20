@@ -127,8 +127,11 @@ class PdfExportService
         // Get lunch for placeholder replacement (e.g. %mittagessen%)
         $lunch = $this->lunchService->getLunch($date->toDateString());
 
-        // Set up writable directory for Chrome user data
-        $userDataDir = storage_path('app/chrome-data');
+        // Set up writable directory for Chrome user data.
+        // Per-invocation subdir so concurrent generatePdf() calls (e.g. the
+        // scheduled `yesterday` and `today` jobs running back-to-back) don't
+        // collide on Chromium's user-data-dir lock.
+        $userDataDir = storage_path('app/chrome-data/'.$date->format('Y-m-d').'-'.uniqid('', true));
         if (! file_exists($userDataDir)) {
             mkdir($userDataDir, 0755, true); // Secure permissions (owner rwx, group/others rx)
         }
@@ -177,11 +180,41 @@ class PdfExportService
             mkdir(storage_path('app/temp'), 0755, true);
         }
 
-        $pdf->save($tempPath);
-        $content = file_get_contents($tempPath);
-        unlink($tempPath);
+        try {
+            $pdf->save($tempPath);
+            $content = file_get_contents($tempPath);
+        } finally {
+            if (file_exists($tempPath)) {
+                unlink($tempPath);
+            }
+            // Best-effort cleanup of the per-run Chrome profile dir.
+            $this->removeDirectoryRecursive($userDataDir);
+        }
 
         return $content;
+    }
+
+    /**
+     * Recursively delete a directory and its contents. Errors are swallowed
+     * because this runs in a finally block; leftover dirs are harmless and
+     * will simply be ignored on the next run (each has a unique name).
+     */
+    private function removeDirectoryRecursive(string $path): void
+    {
+        if (! is_dir($path)) {
+            return;
+        }
+
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($path, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ($iterator as $entry) {
+            @($entry->isDir() && ! $entry->isLink() ? rmdir($entry->getPathname()) : unlink($entry->getPathname()));
+        }
+
+        @rmdir($path);
     }
 
     /**
