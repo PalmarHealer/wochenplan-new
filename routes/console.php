@@ -14,10 +14,12 @@ Artisan::command('inspire', function () {
 |--------------------------------------------------------------------------
 */
 
-// Archive the current day's PDF at 23:59 on weekdays
+// Archive the current day's PDF at 23:59 on weekdays.
+// Output is logged (not ->runInBackground()) so failures are visible in
+// storage/logs/schedule-pdf.log instead of being silently discarded.
 Schedule::command('pdf:generate today')
     ->weekdays()
     ->at('23:59')
-    ->withoutOverlapping()
+    ->withoutOverlapping(10)
     ->onOneServer()
-    ->runInBackground();
+    ->appendOutputTo(storage_path('logs/schedule-pdf.log'));
