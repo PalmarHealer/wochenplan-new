@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
 use App\Services\PdfExportService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -42,12 +41,10 @@ class PdfGenerate extends Command
         $this->info("Generating PDF for {$date->format('Y-m-d')}...");
 
         try {
-            // Authenticate as the first user for the created_by field
-            $user = User::first();
-            if ($user) {
-                auth()->login($user);
-            }
-
+            // No authenticated user on scheduled/CLI runs: leave created_by null
+            // so these records show as "Automatisch" rather than being attributed
+            // to whichever user happens to have the lowest id (the super admin).
+            // Regenerates only if the stored PDF is outdated.
             $pdfService->getOrGeneratePdf($date);
 
             $this->info("PDF generated successfully for {$date->format('Y-m-d')}");

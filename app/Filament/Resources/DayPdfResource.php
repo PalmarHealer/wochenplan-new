@@ -78,6 +78,7 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                     ->searchable(),
                 Tables\Columns\TextColumn::make('creator.name')
                     ->label('Erstellt von')
+                    ->placeholder('Automatisch')
                     ->sortable()
                     ->toggleable(),
                 Tables\Columns\IconColumn::make('is_outdated')
@@ -114,7 +115,7 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                     ->iconButton()
                     ->action(function (DayPdf $record) {
                         $pdfService = app(PdfExportService::class);
-                        $base64Content = self::getExistingPdf($pdfService, $record);
+                        $base64Content = self::getPdfContent($pdfService, $record);
                         if (! $base64Content) {
                             return;
                         }
@@ -134,7 +135,7 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                         // If only one record, download as PDF directly
                         if ($records->count() === 1) {
                             $record = $records->first();
-                            $base64Content = self::getExistingPdf($pdfService, $record);
+                            $base64Content = self::getPdfContent($pdfService, $record);
                             if (! $base64Content) {
                                 return;
                             }
@@ -159,7 +160,7 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
                             $missingDates = [];
                             foreach ($sortedRecords as $record) {
-                                $base64Content = self::getExistingPdf($pdfService, $record, false);
+                                $base64Content = self::getPdfContent($pdfService, $record, false);
 
                                 if (! $base64Content) {
                                     $missingDates[] = $record->date->format('d.m.Y');
@@ -244,9 +245,12 @@ class DayPdfResource extends Resource implements HasShieldPermissions
         ];
     }
 
-    protected static function getExistingPdf(PdfExportService $pdfService, DayPdf $record, bool $notifyIfMissing = true): ?string
+    protected static function getPdfContent(PdfExportService $pdfService, DayPdf $record, bool $notifyIfMissing = true): ?string
     {
-        $base64Content = $pdfService->getExistingPdf($record->date);
+        // Regenerates the PDF if the stored copy is outdated, otherwise serves
+        // the cached one — so a download from the list view always reflects the
+        // current state of the day.
+        $base64Content = $pdfService->getOrGeneratePdf($record->date);
         if ($base64Content) {
             return $base64Content;
         }
@@ -254,7 +258,7 @@ class DayPdfResource extends Resource implements HasShieldPermissions
         if ($notifyIfMissing) {
             Notification::make()
                 ->title('PDF nicht verfügbar')
-                ->body('Für dieses Datum ist noch keine gespeicherte PDF vorhanden. PDFs werden nachts automatisch erstellt. Sie können die PDF über "Neu generieren" sofort erstellen.')
+                ->body('Für dieses Datum konnte keine PDF erstellt werden.')
                 ->warning()
                 ->send();
         }
