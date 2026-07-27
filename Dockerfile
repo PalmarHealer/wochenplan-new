@@ -53,7 +53,7 @@ RUN apk add --no-cache \
         # SSH server (optional)
         openssh-server \
         # System utilities
-        bash curl ca-certificates \
+        bash curl ca-certificates logrotate \
         # Node.js for Puppeteer
         nodejs npm \
         # Chromium for PDF generation
@@ -132,12 +132,16 @@ COPY docker/nginx/wochenplan.conf /etc/nginx/http.d/wochenplan.conf
 COPY docker/php/custom.ini /usr/local/etc/php/conf.d/custom.ini
 COPY docker/supervisor/supervisord.conf /etc/supervisor/supervisord.conf
 COPY docker/supervisor/programs/*.conf /etc/supervisor/conf.d/
+COPY docker/logrotate/wochenplan.conf /etc/logrotate.d/wochenplan
+COPY docker/logrotate/run.sh /usr/local/bin/logrotate_run.sh
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY docker/db_setup.sh /usr/local/bin/db_setup.sh
 
 RUN rm -f /etc/nginx/http.d/default.conf \
     && mkdir -p /etc/supervisor/conf.d.orig && cp -a /etc/supervisor/conf.d/* /etc/supervisor/conf.d.orig/ \
-    && chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/db_setup.sh
+    && chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/db_setup.sh /usr/local/bin/logrotate_run.sh \
+    # logrotate refuses to read a config writable by group or others
+    && chmod 0644 /etc/logrotate.d/wochenplan
 
 EXPOSE 80 22
 
