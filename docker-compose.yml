@@ -67,7 +67,7 @@ services:
             redis:
                 condition: service_started
         healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost/"]
+            test: ["CMD", "curl", "-f", "http://localhost/up"]
             interval: 15s
             timeout: 5s
             retries: 10
