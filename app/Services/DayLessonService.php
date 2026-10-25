@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Lesson;
 use App\Models\LessonTemplate;
+use App\Models\Time;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -86,14 +87,47 @@ class DayLessonService
      */
     public function visibleLessonsForDate(Carbon $date): Collection
     {
-        $layout = $this->layoutService->getLayoutWithModelForDate($date)['data'];
-
-        $visibleKeys = collect($layout)
-            ->flatten(1)
-            ->reject(fn ($cell) => isset($cell['hidden']) || empty($cell['room']) || empty($cell['time']))
+        $visibleKeys = $this->visibleCells($date)
             ->map(fn ($cell) => $cell['room'].'-'.$cell['time'])
             ->flip();
 
         return $this->lessonsForDate($date)->filter(fn ($lesson, $key) => $visibleKeys->has($key));
+    }
+
+    /**
+     * Start and end (minutes after midnight) of every time used in the layout of the date.
+     * The end is the explicit end of the time, otherwise the next later start in that layout,
+     * so the same time can be longer on a day with a different layout. Unknown values are null.
+     *
+     * @return array<int, array{start: ?int, end: ?int}>
+     */
+    public function timeRangesForDate(Carbon $date): array
+    {
+        $timeIds = $this->visibleCells($date)->pluck('time')->map(fn ($id) => (int) $id)->unique();
+        $times = Time::whereIn('id', $timeIds)->get();
+
+        $starts = $times->map(fn (Time $time) => $time->startMinutes())->filter(fn ($start) => $start !== null)->unique()->sort()->values();
+
+        return $times
+            ->mapWithKeys(function (Time $time) use ($starts) {
+                $start = $time->startMinutes();
+                $end = $time->endMinutes()
+                    ?? ($start === null ? null : $starts->first(fn ($next) => $next > $start));
+
+                return [$time->id => ['start' => $start, 'end' => $end]];
+            })
+            ->all();
+    }
+
+    /**
+     * Visible lesson cells (with room and time) of the layout of the date.
+     */
+    private function visibleCells(Carbon $date): Collection
+    {
+        $layout = $this->layoutService->getLayoutWithModelForDate($date)['data'];
+
+        return collect($layout)
+            ->flatten(1)
+            ->reject(fn ($cell) => ! is_array($cell) || isset($cell['hidden']) || empty($cell['room']) || empty($cell['time']));
     }
 }

@@ -93,6 +93,7 @@ class ShiftPlan extends Page
             $date = $monday->copy()->addDays($i);
             $key = $date->toDateString();
             $lessons = $dayLessons->visibleLessonsForDate($date);
+            $ranges = $dayLessons->timeRangesForDate($date);
 
             $this->days[] = [
                 'date' => $key,
@@ -105,8 +106,11 @@ class ShiftPlan extends Page
             foreach ($lessons as $lesson) {
                 foreach ($lesson->assignedUsers as $user) {
                     $users[$user->id]['name'] = $user->display_name ?: $user->name;
+                    $range = $ranges[(int) $lesson->lesson_time] ?? ['start' => null, 'end' => null];
                     $users[$user->id]['days'][$key][] = [
                         'time' => $lesson->times?->name,
+                        'start' => $range['start'],
+                        'end' => $range['end'],
                         'room' => $lesson->rooms?->name,
                         'name' => strip_tags((string) $lesson->name),
                         'color' => $colors[$lesson->color] ?? null,
@@ -128,22 +132,59 @@ class ShiftPlan extends Page
 
                 foreach ($this->days as $day) {
                     $entries = collect($user['days'][$day['date']] ?? [])
-                        ->sortBy('time', SORT_NATURAL)
+                        ->sortBy([['start', 'asc'], ['time', 'asc']])
                         ->values()
                         ->all();
 
+                    $absent = $absences->contains(fn ($absence) => $absence->user_id === $id
+                        && $absence->start->toDateString() <= $day['date']
+                        && $absence->end->toDateString() >= $day['date']);
+
                     $days[$day['date']] = [
-                        'absent' => $absences->contains(fn ($absence) => $absence->user_id === $id
-                            && $absence->start->toDateString() <= $day['date']
-                            && $absence->end->toDateString() >= $day['date']),
+                        'absent' => $absent,
                         'entries' => $entries,
+                        ...self::presence($absent ? [] : $entries),
                     ];
                 }
 
-                return ['id' => $id, 'name' => $user['name'], 'days' => $days];
+                return [
+                    'id' => $id,
+                    'name' => $user['name'],
+                    'days' => $days,
+                    'minutes' => array_sum(array_column($days, 'minutes')),
+                ];
             })
             ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
             ->values()
             ->all();
+    }
+
+    /**
+     * When someone is there on a day (first start to last end) and how long they work:
+     * the covered time of all lessons that take place, overlaps counted once.
+     *
+     * @return array{from: ?int, until: ?int, minutes: int}
+     */
+    public static function presence(array $entries): array
+    {
+        $intervals = collect($entries)
+            ->reject(fn ($entry) => $entry['disabled'] || $entry['start'] === null)
+            ->map(fn ($entry) => [$entry['start'], max($entry['end'] ?? $entry['start'], $entry['start'])])
+            ->sortBy(fn ($interval) => $interval[0])
+            ->values();
+
+        if ($intervals->isEmpty()) {
+            return ['from' => null, 'until' => null, 'minutes' => 0];
+        }
+
+        $minutes = 0;
+        $coveredUntil = null;
+
+        foreach ($intervals as [$start, $end]) {
+            $minutes += max(0, $end - max($start, $coveredUntil ?? $start));
+            $coveredUntil = max($coveredUntil ?? $end, $end);
+        }
+
+        return ['from' => $intervals->min(0), 'until' => $intervals->max(1), 'minutes' => $minutes];
     }
 }

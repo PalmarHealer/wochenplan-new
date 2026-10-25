@@ -1,3 +1,7 @@
+@php
+    use App\Models\Time;
+    $fmt = fn (?int $minutes) => $minutes === null ? '?' : Time::formatMinutes($minutes);
+@endphp
 <x-filament::page>
     <style>
         .sp-wrap { overflow-x: auto; }
@@ -17,6 +21,10 @@
         .sp-off { text-decoration: line-through; opacity: .55; }
         .sp-absent { background: rgb(254 242 242); }
         .sp-badge { display: inline-block; font-size: .7rem; font-weight: 600; padding: .05rem .4rem; border-radius: .375rem; background: rgb(254 226 226); color: rgb(153 27 27); margin-bottom: .25rem; }
+        .sp-sum { display: block; font-weight: 400; font-size: .75rem; opacity: .7; font-variant-numeric: tabular-nums; }
+        .sp-day { display: flex; justify-content: space-between; gap: .5rem; font-size: .75rem; font-variant-numeric: tabular-nums; padding-bottom: .25rem; margin-bottom: .25rem; border-bottom: 1px dashed rgb(229 231 235); }
+        .sp-day strong { font-weight: 600; }
+        .dark .sp-day { border-color: rgb(255 255 255 / .1); }
         .sp-empty { padding: 2rem; text-align: center; opacity: .7; }
         .dark .sp-table th, .dark .sp-table td { border-color: rgb(255 255 255 / .1); }
         .dark .sp-table thead th, .dark .sp-table thead th.sp-name { background: rgb(24 24 27); }
@@ -59,19 +67,34 @@
                     <tbody>
                         @foreach ($rows as $row)
                             <tr wire:key="sp-row-{{ $row['id'] }}">
-                                <th class="sp-name">{{ $row['name'] }}</th>
+                                <th class="sp-name">
+                                    {{ $row['name'] }}
+                                    <span class="sp-sum" title="Arbeitszeit in dieser Woche">{{ $fmt($row['minutes']) }} h / Woche</span>
+                                </th>
                                 @foreach ($days as $day)
                                     @php($cell = $row['days'][$day['date']])
                                     <td @class(['sp-absent' => $cell['absent']])>
                                         @if ($cell['absent'])
                                             <span class="sp-badge">abwesend</span>
                                         @endif
+                                        @if ($cell['from'] !== null)
+                                            <div class="sp-day" title="Anwesend von – bis · Arbeitszeit">
+                                                <strong>{{ $fmt($cell['from']) }}–{{ $fmt($cell['until']) }}</strong>
+                                                <span>{{ $fmt($cell['minutes']) }} h</span>
+                                            </div>
+                                        @endif
                                         @foreach ($cell['entries'] as $entry)
                                             <div @class(['sp-entry', 'sp-off' => $entry['disabled'] || $cell['absent']])
                                                  title="{{ $entry['disabled'] ? 'Fällt aus' : '' }}">
                                                 <span class="sp-dot" @if ($entry['color']) style="background: {{ $entry['color'] }}" @endif></span>
                                                 <span>
-                                                    <span class="sp-time">{{ $entry['time'] }}</span>
+                                                    <span class="sp-time" title="{{ $entry['time'] }}">
+                                                        @if ($entry['start'] !== null)
+                                                            {{ $fmt($entry['start']) }}@if ($entry['end'] !== null)–{{ $fmt($entry['end']) }}@endif
+                                                        @else
+                                                            {{ $entry['time'] }}
+                                                        @endif
+                                                    </span>
                                                     {{ $entry['name'] }}
                                                     @if ($entry['room'])
                                                         <span class="sp-room">· {{ $entry['room'] }}</span>
