@@ -42,10 +42,11 @@ class PdfGenerate extends Command
         $this->info("Generating PDF for {$date->format('Y-m-d')}...");
 
         try {
-            // Authenticate as the first user for the created_by field
+            // Act as the first user for the created_by field. setUser() instead of
+            // login(): no Login event, so no fake 127.0.0.1 login in the activity log.
             $user = User::first();
             if ($user) {
-                auth()->login($user);
+                auth()->setUser($user);
             }
 
             $pdfService->getOrGeneratePdf($date);
