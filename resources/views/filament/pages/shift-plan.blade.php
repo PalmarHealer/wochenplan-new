@@ -43,11 +43,26 @@
         <x-filament::button icon="tabler-arrow-narrow-right" icon-position="after" wire:click="changeWeek(1)">
             Nächste Woche
         </x-filament::button>
+
+        @if ($this->canSeeAll())
+            <x-filament::tabs style="margin-left: auto;">
+                <x-filament::tabs.item :active="! $this->showsAll()" icon="tabler-user" wire:click="setScope('meins')">
+                    Meins
+                </x-filament::tabs.item>
+                <x-filament::tabs.item :active="$this->showsAll()" icon="tabler-users" wire:click="setScope('alle')">
+                    Alle
+                </x-filament::tabs.item>
+            </x-filament::tabs>
+        @endif
     </div>
 
     <x-filament::section>
         @if (empty($rows))
-            <div class="sp-empty">In dieser Woche sind keine Angebote mit zugewiesenen Personen geplant.</div>
+            <div class="sp-empty">
+                {{ $this->showsAll()
+                    ? 'In dieser Woche sind keine Angebote mit zugewiesenen Personen geplant.'
+                    : 'Du hast in dieser Woche keine Angebote.' }}
+            </div>
         @else
             <div class="sp-wrap">
                 <table class="sp-table">

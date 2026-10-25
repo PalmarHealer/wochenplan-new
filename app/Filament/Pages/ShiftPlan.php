@@ -28,6 +28,10 @@ class ShiftPlan extends Page
     #[Url(as: 'woche')]
     public ?string $week = null;
 
+    /** 'meins' or 'alle'; users without view_all_shifts always get 'meins'. */
+    #[Url(as: 'ansicht')]
+    public ?string $scope = null;
+
     /** @var array<int, array{date: string, label: string, note: ?string}> */
     public array $days = [];
 
@@ -36,7 +40,23 @@ class ShiftPlan extends Page
 
     public function getTitle(): string
     {
-        return 'Schichtplan';
+        return $this->showsAll() ? 'Schichtplan' : 'Mein Schichtplan';
+    }
+
+    public function canSeeAll(): bool
+    {
+        return (bool) auth()->user()?->can('view_all_shifts');
+    }
+
+    public function showsAll(): bool
+    {
+        return $this->canSeeAll() && $this->scope !== 'meins';
+    }
+
+    public function setScope(string $scope): void
+    {
+        $this->scope = $scope === 'meins' ? 'meins' : null;
+        $this->load();
     }
 
     public function getHeading(): string
@@ -118,6 +138,10 @@ class ShiftPlan extends Page
                     ];
                 }
             }
+        }
+
+        if (! $this->showsAll()) {
+            $users = array_intersect_key($users, [auth()->id() => true]);
         }
 
         $absences = Absence::query()

@@ -3,11 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use BezhanSalleh\FilamentShield\Support\Utils;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Contracts\Permission;
-use Spatie\Permission\Contracts\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 class AdminUserSeeder extends Seeder
@@ -74,32 +71,11 @@ class AdminUserSeeder extends Seeder
             $user->save();
         }
 
-        // Prepare Role and Permission models via Filament Shield Utils for compatibility
-        /** @var class-string<Role> $roleModel */
-        $roleModel = Utils::getRoleModel();
-        /** @var class-string<Permission> $permissionModel */
-        $permissionModel = Utils::getPermissionModel();
+        // Ensure the role exists with all permissions (also seeded on its own on every start).
+        (new SuperAdminRoleSeeder)->run();
 
-        $guard = config('auth.defaults.guard', 'web');
-
-        // Create or get the admin role
-        $adminRole = $roleModel::firstOrCreate([
-            'name' => 'super_admin',
-            'guard_name' => $guard,
-        ]);
-
-        // Give admin all existing permissions for the guard
-        $allPermissions = $permissionModel::query()
-            ->where('guard_name', $guard)
-            ->get();
-
-        if ($allPermissions->isNotEmpty()) {
-            $adminRole->syncPermissions($allPermissions);
-        }
-
-        // Assign role to the user
-        if (! $user->hasRole($adminRole)) {
-            $user->assignRole($adminRole);
+        if (! $user->hasRole(SuperAdminRoleSeeder::ROLE)) {
+            $user->assignRole(SuperAdminRoleSeeder::ROLE);
         }
     }
 }
