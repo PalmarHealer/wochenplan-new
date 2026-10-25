@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Help\HelpTopic;
+use App\Help\HelpTopics;
 use App\Services\LunchService;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
@@ -11,6 +13,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Collection;
 
 class FAQ extends Page implements HasForms
 {
@@ -37,6 +40,31 @@ class FAQ extends Page implements HasForms
     sende bitte eine Nachricht an support@nauren.de, damit der Inhalt entsprechend ergänzt werden kann.';
 
     protected static string $view = 'filament.pages.faq';
+
+    /**
+     * Help topics the current user may see, grouped, with the rendered body and a
+     * lower-cased search text (heading, description, keywords and body).
+     *
+     * @return Collection<string, Collection<int, array{topic: HelpTopic, body: string, search: string}>>
+     */
+    public function groups(): Collection
+    {
+        $user = auth()->user();
+
+        return collect(HelpTopics::all())
+            ->filter(fn (HelpTopic $topic) => $topic->isVisibleTo($user))
+            ->map(function (HelpTopic $topic) {
+                $body = view($topic->view(), ['page' => $this])->render();
+                $text = implode(' ', [$topic->heading, $topic->description, implode(' ', $topic->keywords), strip_tags($body)]);
+
+                return [
+                    'topic' => $topic,
+                    'body' => $body,
+                    'search' => mb_strtolower(preg_replace('/\s+/', ' ', html_entity_decode($text))),
+                ];
+            })
+            ->groupBy(fn (array $entry) => $entry['topic']->group);
+    }
 
     public function clearLunchAction(): Action
     {

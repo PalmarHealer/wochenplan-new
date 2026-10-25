@@ -8,6 +8,7 @@ use App\Services\DayLessonService;
 use App\Services\LayoutService;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
+use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Livewire\Attributes\Url;
 
@@ -41,6 +42,18 @@ class ShiftPlan extends Page
     public function getTitle(): string
     {
         return $this->showsAll() ? 'Schichtplan' : 'Mein Schichtplan';
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('help')
+                ->label('Hilfe')
+                ->icon('tabler-help')
+                ->color('gray')
+                ->url(FAQ::getUrl().'#shift-plan')
+                ->visible(fn () => FAQ::canAccess()),
+        ];
     }
 
     public function canSeeAll(): bool
