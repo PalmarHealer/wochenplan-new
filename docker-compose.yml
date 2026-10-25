@@ -38,9 +38,10 @@ services:
             # URL to public SSH keys (e.g., https://github.com/<your-user>.keys). If empty or unset, SSH will be disabled.
             SSH_AUTHORIZED_KEYS_URL:
 
-            # First user and Admin login
+            # First user and Admin login. The password is synced on every start and must be
+            # at least 12 characters and not a default like "admin", otherwise no admin is seeded.
             ADMIN_EMAIL: admin@admin.com
-            ADMIN_PASSWORD: admin
+            ADMIN_PASSWORD:
 
             # Lunch APi
             LUNCH_API_URL:

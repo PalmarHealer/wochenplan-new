@@ -14,6 +14,9 @@ class LayoutSelector extends Field
 
     protected array $colors = [];
 
+    /** @var array|Closure */
+    protected $occupied = [];
+
     public function colors(array $colors): static
     {
         $this->colors = $colors;
@@ -39,6 +42,24 @@ class LayoutSelector extends Field
     public function getLayout(): array
     {
         $evaluated = $this->evaluate($this->layout);
+
+        return is_array($evaluated) ? $evaluated : [];
+    }
+
+    /**
+     * Lessons already in a slot, keyed by "room-time", shown inside the cells:
+     * ['3-7' => ['name' => 'Mathe', 'users' => 'Anna, Ben', 'disabled' => false]].
+     */
+    public function occupied(array|Closure $occupied): static
+    {
+        $this->occupied = $occupied;
+
+        return $this;
+    }
+
+    public function getOccupied(): array
+    {
+        $evaluated = $this->evaluate($this->occupied);
 
         return is_array($evaluated) ? $evaluated : [];
     }

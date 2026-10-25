@@ -197,7 +197,9 @@ class DayPdfResource extends Resource implements HasShieldPermissions
                     ->color('warning')
                     ->requiresConfirmation()
                     ->modalHeading('PDFs neu generieren')
-                    ->modalDescription('Möchten Sie die ausgewählten PDFs wirklich neu generieren?')
+                    ->modalDescription('Möchten Sie die ausgewählten PDFs wirklich neu generieren? PDFs vergangener Tage zeigen danach den heutigen Stand statt des archivierten.')
+                    // Regenerating overwrites the archive, so it needs the same right as creating a PDF.
+                    ->authorize(fn () => auth()->user()->can('create', DayPdf::class))
                     ->action(function (Collection $records) {
                         $pdfService = app(PdfExportService::class);
 

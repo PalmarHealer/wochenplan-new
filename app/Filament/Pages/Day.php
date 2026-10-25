@@ -4,18 +4,27 @@ namespace App\Filament\Pages;
 
 use App\Filament\Resources\LessonResource;
 use App\Filament\Resources\LessonTemplateResource;
+use App\Forms\Components\CustomRichEditor;
 use App\Models\Absence;
 use App\Models\Color;
 use App\Models\Lesson;
 use App\Models\LessonTemplate;
+use App\Models\User;
+use App\Services\DayLessonService;
 use App\Services\LastSeenService;
 use App\Services\LayoutService;
 use App\Services\LunchService;
 use App\Services\PdfExportService;
 use Carbon\Carbon;
 use Exception;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Support\Enums\MaxWidth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Response;
 use Livewire\Attributes\Url;
 
@@ -52,7 +61,9 @@ class Day extends Page
 
     public ?string $day = null;
 
-    public bool $canCreate = false;
+    public bool $canCreateLesson = false;
+
+    public bool $canCreateRecurring = false;
 
     public bool $canCreateTemplates = false;
 
@@ -68,8 +79,6 @@ class Day extends Page
 
         $this->lunch = app(LunchService::class)->getLunch($this->day);
 
-        $this->canCreate = auth()->user()->can('create_lesson') || auth()->user()->can('update_lesson');
-
         $this->canCreateTemplates = auth()->user()->can('update_lesson::template');
 
         $layoutService = app(LayoutService::class);
@@ -80,49 +89,33 @@ class Day extends Page
 
         $this->colors = Color::all()->pluck('color', 'id')->toArray();
 
-        $rawLessons = Lesson::with(['assignedUsers'])
-            ->whereDate('date', $this->day)
-            ->get();
+        $user = auth()->user();
 
-        $parentIds = $rawLessons->pluck('parent_id')->filter()->unique();
+        $this->canCreateLesson = $user->can('create', Lesson::class);
+        $this->canCreateRecurring = $user->can('create', LessonTemplate::class);
 
-        $rawLessonTemplates = LessonTemplate::with(['assignedUsers'])
-            ->where('weekday', $rawDay->format('N'))
-            ->where('created_at', '<=', $rawDay)
-            ->where(function ($query) use ($rawDay) {
-                $query->whereNull('deleted_at')
-                    ->orWhere('deleted_at', '>=', $rawDay);
-            })
-            ->get();
+        $resolvedLessons = app(DayLessonService::class)->lessonsForDate($rawDay)
+            ->map(function (Lesson|LessonTemplate $lesson) use ($user) {
+                $array = $lesson->toArray();
+                $array['assigned_users'] = $lesson->assignedUsers->pluck('display_name', 'id')->toArray();
+                $isAssigned = $lesson->assignedUsers->contains('id', $user->id);
 
-        $filteredTemplates = $rawLessonTemplates->reject(function ($template) use ($parentIds) {
-            return $parentIds->contains($template->id);
-        });
+                if ($lesson instanceof LessonTemplate) {
+                    if (($user->can('create_lesson') && $isAssigned) || $user->can('view_any_lesson')) {
+                        // Deleted templates still show on earlier days but cannot be edited for all weeks.
+                        $array['url_template'] = $lesson->trashed() ? null : LessonTemplateResource::getUrl('edit', ['record' => $lesson->id, 'date' => $this->day]);
+                        $array['url'] = LessonResource::getUrl('create', ['copy' => $lesson->id, 'date' => $this->day]);
+                    }
+                    $array['inline_template'] = $this->canCreateLesson ? $lesson->id : null;
+                } else {
+                    if (($user->can('view_lesson') && $isAssigned) || $user->can('view_any_lesson')) {
+                        $array['url'] = LessonResource::getUrl('edit', ['record' => $lesson->id, 'date' => $this->day]);
+                    }
+                    $array['inline_lesson'] = $user->can('update', $lesson) ? $lesson->id : null;
+                }
 
-        $templateLessons = $filteredTemplates->mapWithKeys(function ($template) {
-            $key = $template->room.'-'.$template->lesson_time;
-            $array = $template->toArray();
-            $array['assigned_users'] = $template->assignedUsers->pluck('display_name', 'id')->toArray();
-            $user = auth()->user();
-            if (($user->can('create_lesson') && $template->assignedUsers()->where('user_id', $user->id)->exists()) || $user->can('view_any_lesson')) {
-                $array['url_template'] = LessonTemplateResource::getUrl('edit', ['record' => $template->id, 'date' => $this->day]);
-                $array['url'] = LessonResource::getUrl('create', ['copy' => $template->id, 'date' => $this->day]);
-            }
-
-            return [$key => $array];
-        });
-
-        $lessonLessons = $rawLessons->mapWithKeys(function ($lesson) {
-            $key = $lesson->room.'-'.$lesson->lesson_time;
-            $array = $lesson->toArray();
-            $array['assigned_users'] = $lesson->assignedUsers->pluck('display_name', 'id')->toArray();
-            $user = auth()->user();
-            if (($user->can('view_lesson') && $lesson->assignedUsers()->where('user_id', $user->id)->exists()) || $user->can('view_any_lesson')) {
-                $array['url'] = LessonResource::getUrl('edit', ['record' => $lesson->id, 'date' => $this->day]);
-            }
-
-            return [$key => $array];
-        });
+                return $array;
+            });
 
         $rawAbsences = Absence::with(['user'])
             ->whereDate('start', '<=', $rawDay)
@@ -141,11 +134,7 @@ class Day extends Page
         // Extract absent user IDs for checking in blade template
         $absentUserIds = array_column($this->absences, 'id');
 
-        if (empty($templateLessons->values()->toArray())) {
-            $merged = $lessonLessons;
-        } else {
-            $merged = $templateLessons->merge($lessonLessons);
-        }
+        $merged = $resolvedLessons;
 
         // Add absent user IDs to each lesson
         $this->lessons = $merged->map(function ($lesson) use ($absentUserIds) {
@@ -204,6 +193,184 @@ class Day extends Page
         $this->urlDay = $newDate->format('d.m.Y');
 
         $this->mount();
+    }
+
+    /**
+     * Inline editing from the day view. Arguments: ['lesson' => id] edits that lesson,
+     * ['template' => id] creates a lesson for this day only (the recurring template stays
+     * untouched, like "Nur heute" on the full edit page).
+     */
+    public function editLessonAction(): Action
+    {
+        return Action::make('editLesson')
+            ->modalHeading(fn (array $arguments) => isset($arguments['template'])
+                ? 'Angebot nur für diesen Tag bearbeiten'
+                : 'Angebot bearbeiten')
+            ->modalDescription(fn (array $arguments) => isset($arguments['template'])
+                ? 'Die Änderung gilt nur für diesen Tag. Das wiederholende Angebot bleibt unverändert.'
+                : null)
+            ->modalWidth(MaxWidth::ThreeExtraLarge)
+            ->modalSubmitActionLabel('Speichern')
+            ->fillForm(function (array $arguments) {
+                $source = $this->inlineSource($arguments);
+
+                return [
+                    'name' => $source->name,
+                    'description' => $source->description,
+                    'notes' => $source->notes,
+                    'color' => $source->color,
+                    'disabled' => (bool) $source->disabled,
+                    'assignedUsers' => $source->assignedUsers->pluck('id')->all(),
+                ];
+            })
+            ->form(fn () => $this->lessonFormSchema(auth()->user()->can('view_any_lesson')))
+            ->action(function (array $data, array $arguments) {
+                $source = $this->inlineSource($arguments);
+                $fields = [
+                    'name' => $data['name'],
+                    'description' => $data['description'],
+                    'notes' => $data['notes'],
+                    'color' => $data['color'],
+                    'disabled' => $data['disabled'],
+                    'updated_by' => auth()->id(),
+                ];
+
+                if ($source instanceof LessonTemplate) {
+                    Gate::authorize('create', Lesson::class);
+
+                    $lesson = Lesson::create($fields + [
+                        'parent_id' => $source->id,
+                        'date' => $this->day,
+                        'room' => $source->room,
+                        'lesson_time' => $source->lesson_time,
+                        'created_by' => auth()->id(),
+                    ]);
+                    $lesson->assignedUsers()->sync($source->assignedUsers->pluck('id'));
+                } else {
+                    Gate::authorize('update', $source);
+
+                    $lesson = $source;
+                    $lesson->update($fields);
+                }
+
+                if (auth()->user()->can('view_any_lesson')) {
+                    $lesson->assignedUsers()->sync($data['assignedUsers'] ?? []);
+                }
+
+                Notification::make()->title('Angebot gespeichert')->success()->send();
+
+                $this->mount();
+            })
+            ->extraModalFooterActions(fn (array $arguments) => [
+                Action::make('openFullEditor')
+                    ->label('Alle Optionen')
+                    ->color('gray')
+                    ->url(isset($arguments['template'])
+                        ? LessonResource::getUrl('create', ['copy' => $arguments['template'], 'date' => $this->day])
+                        : LessonResource::getUrl('edit', ['record' => $arguments['lesson'] ?? 0, 'date' => $this->day])),
+            ]);
+    }
+
+    /**
+     * Creating from an empty slot. Arguments: room, time and recurring (true creates a
+     * recurring lesson for this weekday from now on, false a lesson for this day only).
+     */
+    public function createLessonAction(): Action
+    {
+        return Action::make('createLesson')
+            ->modalHeading(fn (array $arguments) => ! empty($arguments['recurring'])
+                ? 'Neues Angebot für jede Woche'
+                : 'Neues Angebot nur für diesen Tag')
+            ->modalDescription(fn (array $arguments) => ! empty($arguments['recurring'])
+                ? 'Das Angebot findet ab heute jeden '.$this->figureOutDay()->translatedFormat('l').' in diesem Slot statt.'
+                : 'Das Angebot findet nur am '.$this->figureOutDay()->translatedFormat('d.m.Y').' statt.')
+            ->modalWidth(MaxWidth::ThreeExtraLarge)
+            ->modalSubmitActionLabel('Anlegen')
+            ->authorize(fn (array $arguments) => auth()->user()->can('create', ! empty($arguments['recurring']) ? LessonTemplate::class : Lesson::class))
+            ->form(fn (array $arguments) => $this->lessonFormSchema(! empty($arguments['recurring'])
+                ? auth()->user()->can('view_any_lesson::template')
+                : auth()->user()->can('view_any_lesson')))
+            ->action(function (array $data, array $arguments) {
+                $recurring = ! empty($arguments['recurring']);
+                $model = $recurring ? LessonTemplate::class : Lesson::class;
+
+                Gate::authorize('create', $model);
+
+                $fields = [
+                    'name' => $data['name'],
+                    'description' => $data['description'],
+                    'notes' => $data['notes'],
+                    'color' => $data['color'],
+                    'disabled' => $data['disabled'],
+                    'room' => (int) $arguments['room'],
+                    'lesson_time' => (int) $arguments['time'],
+                    'created_by' => auth()->id(),
+                    'updated_by' => auth()->id(),
+                ];
+
+                $lesson = $model::create($fields + ($recurring
+                    ? ['weekday' => $this->figureOutDay()->isoWeekday()]
+                    : ['date' => $this->day]));
+
+                if (array_key_exists('assignedUsers', $data)) {
+                    $lesson->assignedUsers()->sync($data['assignedUsers'] ?? []);
+                }
+
+                Notification::make()->title('Angebot angelegt')->success()->send();
+
+                $this->mount();
+            })
+            ->extraModalFooterActions(fn (array $arguments) => [
+                Action::make('openFullCreator')
+                    ->label('Alle Optionen')
+                    ->color('gray')
+                    ->url(! empty($arguments['recurring'])
+                        ? LessonTemplateResource::getUrl('create', ['date' => $this->day])
+                        : LessonResource::getUrl('create', ['date' => $this->day, 'room' => $arguments['room'] ?? null, 'time' => $arguments['time'] ?? null])),
+            ]);
+    }
+
+    /**
+     * Fields shared by the inline edit and create modals.
+     */
+    private function lessonFormSchema(bool $canAssignUsers): array
+    {
+        return [
+            CustomRichEditor::make('name')
+                ->label('Name')
+                ->required()
+                ->toolbarButtons(['bold', 'italic', 'strike', 'underline', 'undo', 'redo']),
+            CustomRichEditor::make('description')
+                ->label('Beschreibung')
+                ->toolbarButtons(['bold', 'italic', 'strike', 'underline', 'bulletList', 'orderedList', 'undo', 'redo']),
+            Select::make('assignedUsers')
+                ->label('Personen')
+                ->multiple()
+                ->searchable()
+                ->preload()
+                ->options(fn () => User::query()
+                    ->whereHas('roles')
+                    ->whereDoesntHave('roles', fn ($query) => $query->where('name', 'super_admin'))
+                    ->orderBy('name')
+                    ->pluck('name', 'id'))
+                ->visible($canAssignUsers),
+            Select::make('color')
+                ->label('Farbe')
+                ->options(fn () => Color::query()->pluck('name', 'id')),
+            TextInput::make('notes')
+                ->label('Notizen'),
+            Toggle::make('disabled')
+                ->label('Fällt aus'),
+        ];
+    }
+
+    private function inlineSource(array $arguments): Lesson|LessonTemplate
+    {
+        if (isset($arguments['template'])) {
+            return LessonTemplate::withTrashed()->with('assignedUsers')->findOrFail($arguments['template']);
+        }
+
+        return Lesson::with('assignedUsers')->findOrFail($arguments['lesson'] ?? 0);
     }
 
     public function checkForUpdate(): void

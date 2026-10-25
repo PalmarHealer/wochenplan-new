@@ -37,8 +37,21 @@ class TimeResource extends Resource
                 Section::make([
                     Forms\Components\TextInput::make('name')
                         ->label('Name')
-                        ->required(),
-                ]),
+                        ->required()
+                        ->columnSpanFull(),
+                    Forms\Components\TextInput::make('starts_at')
+                        ->label('Beginn')
+                        ->placeholder('aus dem Namen')
+                        ->helperText('Leer lassen, wenn der Name mit der Uhrzeit beginnt, z. B. „10:15 Angebot 1“.')
+                        ->regex('/^([01]?\d|2[0-3]):[0-5]\d$/')
+                        ->validationMessages(['regex' => 'Bitte als HH:MM angeben, z. B. 10:15.']),
+                    Forms\Components\TextInput::make('ends_at')
+                        ->label('Ende')
+                        ->placeholder('Beginn der nächsten Zeit')
+                        ->helperText('Leer lassen, dann endet die Zeit, wenn im Layout des Tages die nächste beginnt.')
+                        ->regex('/^([01]?\d|2[0-3]):[0-5]\d$/')
+                        ->validationMessages(['regex' => 'Bitte als HH:MM angeben, z. B. 11:00.']),
+                ])->columns(2),
             ]);
     }
 
@@ -54,6 +67,13 @@ class TimeResource extends Resource
                     ->label('Name')
                     ->sortable()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('starts_at')
+                    ->label('Beginn')
+                    ->state(fn (Time $record) => ($start = $record->startMinutes()) === null ? null : Time::formatMinutes($start))
+                    ->placeholder('–'),
+                Tables\Columns\TextColumn::make('ends_at')
+                    ->label('Ende')
+                    ->placeholder('nächste Zeit im Layout'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
                     ->dateTime('d.m.Y H:i')

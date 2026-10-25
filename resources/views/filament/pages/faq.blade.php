@@ -1,156 +1,75 @@
 <x-filament-panels::page>
+    <style>
+        .help-group { font-size: .8rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; opacity: .6; margin: .75rem 0 -.25rem; }
+        .help-body p { margin-bottom: .75rem; }
+        .help-body p:last-child { margin-bottom: 0; }
+        .help-body ul, .help-body ol { margin: 0 0 .75rem 1.25rem; }
+        .help-body ul { list-style: disc; }
+        .help-body ol { list-style: decimal; }
+        .help-body li { margin-bottom: .25rem; }
+        .help-body h4 { font-weight: 600; margin: 1rem 0 .375rem; }
+        .help-body code { font-size: .85em; padding: .05rem .3rem; border-radius: .25rem; background: rgb(0 0 0 / .06); }
+        .dark .help-body code { background: rgb(255 255 255 / .1); }
+        .help-body .help-note { padding: .5rem .75rem; border-left: 3px solid rgb(245 158 11); background: rgb(245 158 11 / .08); border-radius: .25rem; margin-bottom: .75rem; }
+        .help-empty { padding: 1.5rem; text-align: center; opacity: .7; }
+    </style>
 
-    @if(auth()->user()->can('view_lesson::template'))
-        <x-filament::section
-            icon="tabler-calendar-time"
-            collapsible
-            collapsed
-            persist-collapsed
-            id="lesson-template">
-            <x-slot name="heading">
-                Das Angebot wiederholen
-            </x-slot>
+    <div
+        x-data="{
+            query: '',
+            matches(text) {
+                const words = this.query.toLowerCase().split(/\s+/).filter(Boolean);
+                return words.every((word) => text.includes(word));
+            },
+            get hasResults() {
+                return [...this.$root.querySelectorAll('[data-help-search]')]
+                    .some((el) => this.matches(el.dataset.helpSearch));
+            },
+        }"
+        x-init="
+            const id = window.location.hash.slice(1);
+            if (id) {
+                $nextTick(() => {
+                    $dispatch('open-section', { id });
+                    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            }
+        "
+        style="display: flex; flex-direction: column; gap: 1rem;"
+    >
+        <x-filament::input.wrapper prefix-icon="tabler-search">
+            <x-filament::input type="search" x-model.debounce.150ms="query" placeholder="Hilfe durchsuchen, z. B. „Schichtplan“ oder „Ferien“" />
+        </x-filament::input.wrapper>
 
-            <x-slot name="description">
-                Das Angebot aktualisiert sich nicht für alle Wochen.
-            </x-slot>
+        @forelse ($this->groups() as $group => $topics)
+            <div x-show="[...$el.querySelectorAll('[data-help-search]')].some((topic) => matches(topic.dataset.helpSearch))"
+                 style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="help-group">{{ $group }}</div>
 
-            <span>
-                Falls das Angebot sich nicht für alle Wochen aktualisiert, obwohl du auf das Angebot geklickt hast,
-                liegt das daran, dass das neue System standardmäßig Angebote nur für einen Tag erstellen will.
-                Wenn du willst, dass es sich für alle Wochen ändert, musst du das in den
-            <x-filament::link :href="route('filament.admin.resources.lesson-templates.index')">
-                Angebot vorlagen
-            </x-filament::link>
-                erstellen.
-        </span>
-        </x-filament::section>
-    @endif
+                @foreach ($topics as $entry)
+                    @php($topic = $entry['topic'])
+                    <div x-show="matches($el.dataset.helpSearch)" data-help-search="{{ $entry['search'] }}" wire:key="help-{{ $topic->id }}">
+                        <x-filament::section
+                            :icon="$topic->icon"
+                            collapsible
+                            collapsed
+                            persist-collapsed
+                            :id="$topic->id">
+                            <x-slot name="heading">{{ $topic->heading }}</x-slot>
+                            <x-slot name="description">{{ $topic->description }}</x-slot>
 
-
-    @if(auth()->user()->can('view_lesson'))
-        <x-filament::section
-            icon="tabler-table"
-            collapsible
-            collapsed
-            persist-collapsed
-            id="lesson-columns">
-            <x-slot name="heading">
-                Spalten in Tabellen anpassen
-            </x-slot>
-
-            <x-slot name="description">
-                Nicht alle Details in der Angebotsliste sichtbar.
-            </x-slot>
-
-            <span>
-                Falls nicht alle Spalten in der Angebotsliste angezeigt werden, kannst du diese ganz einfach einblenden.
-                Klicke dazu oben rechts in der Tabelle auf das Spalten-Symbol
-                <x-filament::icon
-                    icon="heroicon-m-view-columns"
-                    class="inline h-5 w-5"
-                />
-                und wähle aus, welche Spalten du sehen möchtest.
-                <br><br>
-                Dies funktioniert in allen Tabellen der Anwendung.
-            </span>
-        </x-filament::section>
-    @endif
-
-    @if(auth()->user()->can('view_any_lesson'))
-        <x-filament::section
-            icon="tabler-user-x"
-            collapsible
-            collapsed
-            persist-collapsed
-            id="lesson-users-disappear">
-            <x-slot name="heading">
-                Zugewiesene Benutzer verschwinden aus Angeboten
-            </x-slot>
-
-            <x-slot name="description">
-                Benutzer werden automatisch aus der Zuweisung entfernt.
-            </x-slot>
-
-            <span>
-                Wenn zugewiesene Benutzer aus Angeboten verschwinden, liegt das meist am Filter "Alle Benutzer erlauben".
-                <br><br>
-                Standardmäßig können nur Benutzer mit entsprechenden Berechtigungen zugewiesen werden.
-                Wenn die Option "Alle Benutzer erlauben" deaktiviert ist, werden beim Öffnen/Bearbeiten
-                des Angebots automatisch alle Benutzer entfernt, die nicht dem Filtermuster entsprechen.
-                <br><br>
-                Wenn ein Benutzer beim Laden eines Angebots fehlt, musst du ihn manuell wieder hinzufügen indem du
-                die Option "Alle Benutzer erlauben" im Angebot aktivierst und die fehlenden Benutzer wieder auswählst.
-                <br><br>
-                <em>Wichtig: Die Option "Alle Benutzer erlauben" merkt sich ihren Status nicht und muss bei jedem Bearbeiten
-                des Angebots erneut aktiviert werden, bevor Benutzer hinzugefügt werden, die nicht dem Filtermuster entsprechen.</em>
-            </span>
-        </x-filament::section>
-    @endif
-
-    @if(auth()->user()->can('view_user'))
-        <x-filament::section
-            icon="tabler-users-group"
-            collapsible
-            collapsed
-            persist-collapsed
-            id="import-users">
-            <x-slot name="heading">
-                Benutzer importieren
-            </x-slot>
-
-            <x-slot name="description">
-                Mehrere Benutzer schnell und einfach per CSV-Datei importieren.
-            </x-slot>
-
-            <span>
-                    Es ist möglich mehrere Benutzer gleichzeitig importieren, indem eine <code>.csv</code>-Datei mit den
-                    entsprechenden Benutzerdaten hochgeladen wird.
-        <br><br>
-        Eine Beispiel-Datei findest du hier:
-        <x-filament::link href="{{ asset('files/personen-beispiel.csv') }}" target="_blank">
-            Beispiel-CSV herunterladen
-        </x-filament::link>.
-        <br><br>
-        Die Benutzer werden hier verwaltet und importiert:
-        <x-filament::link :href="route('filament.admin.resources.users.index')">
-            Zur Benutzerliste
-        </x-filament::link>.
-    </span>
-        </x-filament::section>
-    @endif
-
-    @if(auth()->user()->can('update_layout'))
-        <x-filament::section
-            icon="tabler-alert-triangle"
-            collapsible
-            collapsed
-            persist-collapsed
-            id="lunch-not-current">
-            <x-slot name="heading">
-                Mittagessen nicht aktuell
-            </x-slot>
-
-            <x-slot name="description">
-                Das Mittagessen für einen bestimmten Tag ist nicht korrekt.
-            </x-slot>
-
-            <div>
-                <p class="mb-4">
-                    Leider kann das System nicht automatisch erkennen, ob das Mittagessen für einen bestimmten Tag aktuell ist.
-                    Das Mittagessen wird beim ersten Abruf gecacht und danach nicht mehr automatisch aktualisiert.
-                </p>
-
-                <p class="mb-4">
-                    Wenn das Mittagessen für einen Tag nicht korrekt ist, kannst du es hier manuell leeren.
-                    Beim nächsten Abruf wird es dann automatisch von der API neu geladen.
-                </p>
-
-                <div class="flex justify-start">
-                    {{ ($this->clearLunchAction) }}
-                </div>
+                            <div class="help-body">{!! $entry['body'] !!}</div>
+                        </x-filament::section>
+                    </div>
+                @endforeach
             </div>
-        </x-filament::section>
-    @endif
+        @empty
+            <div class="help-empty">Für deine Rolle gibt es noch keine Hilfethemen.</div>
+        @endforelse
 
+        <div class="help-empty" x-show="query && ! hasResults" x-cloak>
+            Nichts gefunden. Wenn dir etwas fehlt, schreib an
+            <x-filament::link href="mailto:support@nauren.de">support@nauren.de</x-filament::link>.
+        </div>
+    </div>
 </x-filament-panels::page>
