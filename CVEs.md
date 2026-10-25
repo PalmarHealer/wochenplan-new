@@ -8,9 +8,36 @@ This document tracks CVEs that affected this repository and their remediation st
 
 | CVE | Severity | Package | Status | Fixed Date |
 |-----|----------|---------|--------|------------|
+| CVE-2026-109618 / CVE-2026-109619 (PHP2Shell) | CRITICAL (9.2) | PHP runtime (Docker base image) | **FIXED** | 2026-10-25 |
+| CVE-2026-114509 | CRITICAL | laravel/framework | **FIXED** | 2026-10-25 |
+| Various (~60 advisories) | LOW-HIGH | filament, guzzle, commonmark, symfony/*, phpseclib, ... | **FIXED** | 2026-10-25 |
+| Various (10 advisories) | HIGH-CRITICAL | puppeteer@21 dependency chain (ws, basic-ftp, zod, ...) | **FIXED** | 2026-10-25 |
 | CVE-2025-54068 | CRITICAL (9.8) | livewire/livewire | **FIXED** | 2026-01-18 |
 | CVE-2025-64500 | HIGH | symfony/http-foundation | **FIXED** | 2026-01-18 |
 | CVE-2025-27515 | MEDIUM | laravel/framework | **FIXED** | 2026-01-18 |
+
+---
+
+## PHP2Shell - CVE-2026-109618 / CVE-2026-109619 (2026-10-25)
+
+### Overview
+- **Component:** PHP interpreter (`php:8.3-fpm-alpine` base image)
+- **Severity:** CRITICAL (CVSS v4 9.2), unauthenticated RCE, exploited in the wild
+- **Fixed Version:** PHP 8.3.36 (also 8.2.35, 8.4.27, 8.5.12)
+
+CVE-2026-109618 is memory corruption when a request hits the memory limit, CVE-2026-109619 a use-after-free in the session upload progress feature. PHP-FPM is affected.
+
+### Remediation
+- Base image pinned to `php:8.3.36-fpm-alpine` (builder and runtime) instead of the floating `8.3-fpm-alpine` tag.
+- Defense in depth: `session.upload_progress.enabled = Off` (unused by the app), `expose_php = Off`, nginx `server_tokens off`.
+
+### Dependency audit (same date)
+- `composer update`: Laravel 12.47 -> 12.70 (CVE-2026-114509 TokenGuard auth bypass), Filament 3.3.0 -> 3.3.57 (constraint was pinned to exactly `3.3`, now `^3.3`), Livewire 3.8, Guzzle 7.16, league/commonmark 2.10, Symfony components. `composer audit` is clean.
+- Puppeteer in the image 21 -> 25 (`npm audit` clean). `PUPPETEER_SKIP_DOWNLOAD` added because the old `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD` is ignored since Puppeteer 22.
+
+### References
+- [Sophos advisory](https://www.sophos.com/en-us/security-advisories/sophos-sa-20261021-php2shell)
+- [Akamai analysis](https://www.akamai.com/blog/security-research/understanding-php2shell-everything-you-need-to-know)
 
 ---
 
