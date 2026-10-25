@@ -7,6 +7,7 @@ use App\Forms\Components\CustomRichEditor;
 use App\Forms\Components\LayoutSelector;
 use App\Models\Color;
 use App\Models\LessonTemplate;
+use App\Services\DayLessonService;
 use App\Services\LayoutService;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
@@ -107,6 +108,13 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                         ->columnSpanFull()
                         ->required()
                         ->layout(fn (Get $get) => app(LayoutService::class)->getLayoutByWeekday((int) ($get('weekday') ?? 6)))
+                        ->occupied(function (Get $get, ?LessonTemplate $record) {
+                            $service = app(DayLessonService::class);
+                            $templates = $service->templatesForWeekday((int) ($get('weekday') ?? 6))
+                                ->reject(fn ($template) => $template->id === $record?->id);
+
+                            return $service->slotSummaries($templates);
+                        })
                         ->reactive()
                         ->colors($colors),
                 ]),

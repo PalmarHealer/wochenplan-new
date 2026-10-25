@@ -2,17 +2,19 @@
     use Illuminate\Support\Js;
     $layout = $getLayout();
     $colors = $getColors();
+    $occupied = $getOccupied();
 @endphp
 <x-dynamic-component
     :component="$getFieldWrapperView()"
     :field="$field"
 >
     <div
-        wire:key="layout-selector-{{ md5(json_encode($layout)) }}"
+        wire:key="layout-selector-{{ md5(json_encode([$layout, $occupied])) }}"
         style="overflow-y: scroll;"
         x-data="layoutEditor({
             layout: {{ Js::from($layout) }},
             colors: {{ Js::from($colors) }},
+            occupied: {{ Js::from((object) $occupied) }},
             state: $wire.entangle('{{ $getStatePath() }}'),
         })"
         x-init="init()"
@@ -56,6 +58,17 @@
                             @mouseleave="isHovered = false"
                         >
                             <div x-html="cell.displayName ?? ``" class="select-none"></div>
+                            <template x-if="slotOf(cell)">
+                                <div
+                                    class="select-none"
+                                    style="font-size: 0.7rem; line-height: 1.15;"
+                                    :style="slotOf(cell).disabled ? { textDecoration: 'line-through', opacity: .6 } : {}"
+                                    :title="slotOf(cell).users"
+                                >
+                                    <div style="opacity: .75;" x-text="slotOf(cell).users"></div>
+                                    <div style="font-weight: 600;" x-text="slotOf(cell).name"></div>
+                                </div>
+                            </template>
                         </td>
                     </template>
                 </tr>
@@ -66,10 +79,11 @@
 
     <script>
 
-        function layoutEditor({layout, colors, state}) {
+        function layoutEditor({layout, colors, occupied, state}) {
             return {
                 layout: layout,
                 colors: colors,
+                occupied: occupied ?? {},
                 selectedRow: null,
                 selectedCol: null,
                 state: state,
@@ -81,6 +95,12 @@
 
                     this.selectedRow = row;
                     this.selectedCol = col;
+                },
+
+                slotOf(cell) {
+                    if (!cell || !cell.room || !cell.time) return null;
+
+                    return this.occupied[cell.room + '-' + cell.time] ?? null;
                 },
 
                 isSelected(row, col) {

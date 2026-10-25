@@ -4,18 +4,26 @@ namespace App\Filament\Pages;
 
 use App\Filament\Resources\LessonResource;
 use App\Filament\Resources\LessonTemplateResource;
+use App\Forms\Components\CustomRichEditor;
 use App\Models\Absence;
 use App\Models\Color;
 use App\Models\Lesson;
 use App\Models\LessonTemplate;
+use App\Models\User;
 use App\Services\LastSeenService;
 use App\Services\LayoutService;
 use App\Services\LunchService;
 use App\Services\PdfExportService;
 use Carbon\Carbon;
 use Exception;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Support\Enums\MaxWidth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Response;
 use Livewire\Attributes\Url;
 
@@ -108,6 +116,7 @@ class Day extends Page
                 $array['url_template'] = LessonTemplateResource::getUrl('edit', ['record' => $template->id, 'date' => $this->day]);
                 $array['url'] = LessonResource::getUrl('create', ['copy' => $template->id, 'date' => $this->day]);
             }
+            $array['inline_template'] = $user->can('create', Lesson::class) ? $template->id : null;
 
             return [$key => $array];
         });
@@ -120,6 +129,7 @@ class Day extends Page
             if (($user->can('view_lesson') && $lesson->assignedUsers()->where('user_id', $user->id)->exists()) || $user->can('view_any_lesson')) {
                 $array['url'] = LessonResource::getUrl('edit', ['record' => $lesson->id, 'date' => $this->day]);
             }
+            $array['inline_lesson'] = $user->can('update', $lesson) ? $lesson->id : null;
 
             return [$key => $array];
         });
@@ -204,6 +214,116 @@ class Day extends Page
         $this->urlDay = $newDate->format('d.m.Y');
 
         $this->mount();
+    }
+
+    /**
+     * Inline editing from the day view. Arguments: ['lesson' => id] edits that lesson,
+     * ['template' => id] creates a lesson for this day only (the recurring template stays
+     * untouched, like "Nur heute" on the full edit page).
+     */
+    public function editLessonAction(): Action
+    {
+        return Action::make('editLesson')
+            ->modalHeading(fn (array $arguments) => isset($arguments['template'])
+                ? 'Angebot nur für diesen Tag bearbeiten'
+                : 'Angebot bearbeiten')
+            ->modalDescription(fn (array $arguments) => isset($arguments['template'])
+                ? 'Die Änderung gilt nur für diesen Tag. Das wiederholende Angebot bleibt unverändert.'
+                : null)
+            ->modalWidth(MaxWidth::ThreeExtraLarge)
+            ->modalSubmitActionLabel('Speichern')
+            ->fillForm(function (array $arguments) {
+                $source = $this->inlineSource($arguments);
+
+                return [
+                    'name' => $source->name,
+                    'description' => $source->description,
+                    'notes' => $source->notes,
+                    'color' => $source->color,
+                    'disabled' => (bool) $source->disabled,
+                    'assignedUsers' => $source->assignedUsers->pluck('id')->all(),
+                ];
+            })
+            ->form([
+                CustomRichEditor::make('name')
+                    ->label('Name')
+                    ->toolbarButtons(['bold', 'italic', 'strike', 'underline', 'undo', 'redo']),
+                CustomRichEditor::make('description')
+                    ->label('Beschreibung')
+                    ->toolbarButtons(['bold', 'italic', 'strike', 'underline', 'bulletList', 'orderedList', 'undo', 'redo']),
+                Select::make('assignedUsers')
+                    ->label('Personen')
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->options(fn () => User::query()
+                        ->whereHas('roles')
+                        ->whereDoesntHave('roles', fn ($query) => $query->where('name', 'super_admin'))
+                        ->orderBy('name')
+                        ->pluck('name', 'id'))
+                    ->visible(fn () => auth()->user()->can('view_any_lesson')),
+                Select::make('color')
+                    ->label('Farbe')
+                    ->options(fn () => Color::query()->pluck('name', 'id')),
+                TextInput::make('notes')
+                    ->label('Notizen'),
+                Toggle::make('disabled')
+                    ->label('Fällt aus'),
+            ])
+            ->action(function (array $data, array $arguments) {
+                $source = $this->inlineSource($arguments);
+                $fields = [
+                    'name' => $data['name'],
+                    'description' => $data['description'],
+                    'notes' => $data['notes'],
+                    'color' => $data['color'],
+                    'disabled' => $data['disabled'],
+                    'updated_by' => auth()->id(),
+                ];
+
+                if ($source instanceof LessonTemplate) {
+                    Gate::authorize('create', Lesson::class);
+
+                    $lesson = Lesson::create($fields + [
+                        'parent_id' => $source->id,
+                        'date' => $this->day,
+                        'room' => $source->room,
+                        'lesson_time' => $source->lesson_time,
+                        'created_by' => auth()->id(),
+                    ]);
+                    $lesson->assignedUsers()->sync($source->assignedUsers->pluck('id'));
+                } else {
+                    Gate::authorize('update', $source);
+
+                    $lesson = $source;
+                    $lesson->update($fields);
+                }
+
+                if (auth()->user()->can('view_any_lesson')) {
+                    $lesson->assignedUsers()->sync($data['assignedUsers'] ?? []);
+                }
+
+                Notification::make()->title('Angebot gespeichert')->success()->send();
+
+                $this->mount();
+            })
+            ->extraModalFooterActions(fn (array $arguments) => [
+                Action::make('openFullEditor')
+                    ->label('Alle Optionen')
+                    ->color('gray')
+                    ->url(isset($arguments['template'])
+                        ? LessonResource::getUrl('create', ['copy' => $arguments['template'], 'date' => $this->day])
+                        : LessonResource::getUrl('edit', ['record' => $arguments['lesson'] ?? 0, 'date' => $this->day])),
+            ]);
+    }
+
+    private function inlineSource(array $arguments): Lesson|LessonTemplate
+    {
+        if (isset($arguments['template'])) {
+            return LessonTemplate::with('assignedUsers')->findOrFail($arguments['template']);
+        }
+
+        return Lesson::with('assignedUsers')->findOrFail($arguments['lesson'] ?? 0);
     }
 
     public function checkForUpdate(): void

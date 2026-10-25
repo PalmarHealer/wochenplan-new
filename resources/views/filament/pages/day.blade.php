@@ -97,7 +97,7 @@
                                     @if (isset($cell['rowspan']) && $cell['rowspan'] > 1)
                                         rowspan="{{ $cell['rowspan'] }}"
                                     @endif
-                                    class="p-1 text-center align-middle @if($lesson['url'] ?? false) cursor-pointer @endif"
+                                    class="p-1 text-center align-middle @if(($lesson['url'] ?? false) || ! empty($lesson['inline_lesson'])) cursor-pointer @endif"
                                     style="
                                         color: black;
                                         border: 0.35vh solid white;
@@ -108,10 +108,14 @@
                                             background-color: {{ $colors[$cell['color']] }};
                                         @endif
                                     "
-                                    @if ($lesson['url'] ?? false)
+                                    @if (! empty($lesson['inline_lesson']))
+                                        wire:click="mountAction('editLesson', { lesson: {{ (int) $lesson['inline_lesson'] }} })"
+                                    @elseif ($lesson['url'] ?? false)
 
                                         @if($canCreateTemplates && ($lesson['url_template'] ?? false))
-                                            @click="openScopeModal('{{ $lesson['url'] }}', '{{ $lesson['url_template'] }}')"
+                                            @click="openScopeModal('{{ $lesson['url'] }}', '{{ $lesson['url_template'] }}', {{ (int) ($lesson['inline_template'] ?? 0) }})"
+                                        @elseif (! empty($lesson['inline_template']))
+                                            wire:click="mountAction('editLesson', { template: {{ (int) $lesson['inline_template'] }} })"
                                         @else
                                             onclick="window.location='{{ $lesson['url'] }}'"
                                         @endif
@@ -191,7 +195,15 @@
                     Alle Wochen
                 </x-filament::button>
                 <x-filament::button
+                    x-show="modal.templateId"
+                    x-on:click="$dispatch('close-modal', { id: 'select-scope' }); $wire.mountAction('editLesson', { template: modal.templateId })"
+                    icon="tabler-calendar-dot"
+                    class="w-1/2">
+                    Nur heute
+                </x-filament::button>
+                <x-filament::button
                     tag="a"
+                    x-show="!modal.templateId"
                     x-bind:href="modal.singleUrl"
                     icon="tabler-calendar-dot"
                     class="w-1/2">
@@ -209,6 +221,7 @@
                 modal: {
                     singleUrl: null,
                     templateUrl: null,
+                    templateId: null,
                 },
                 init() {
                     document.addEventListener('fullscreenchange', () => {
@@ -223,11 +236,10 @@
                         document.exitFullscreen();
                     }
                 },
-                openScopeModal(singleUrl, templateUrl) {
-                    console.log(singleUrl);
-                    console.log(templateUrl);
+                openScopeModal(singleUrl, templateUrl, templateId = 0) {
                     this.modal.singleUrl = singleUrl;
                     this.modal.templateUrl = templateUrl;
+                    this.modal.templateId = templateId || null;
                     this.$dispatch('open-modal', { id: 'select-scope' });
                 }
             };

@@ -8,6 +8,7 @@ use App\Forms\Components\LayoutSelector;
 use App\Models\Color;
 use App\Models\Lesson;
 use App\Models\LessonTemplate;
+use App\Services\DayLessonService;
 use App\Services\LayoutService;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Carbon\Carbon;
@@ -174,6 +175,15 @@ class LessonResource extends Resource implements HasShieldPermissions
                         ->columnSpanFull()
                         ->required()
                         ->layout(fn (Get $get) => app(LayoutService::class)->getLayoutForDate($get('date') ?? now()->toDateString()))
+                        ->occupied(function (Get $get, ?Lesson $record) {
+                            $service = app(DayLessonService::class);
+                            $lessons = $service->lessonsForDate(Carbon::parse($get('date') ?? now()))
+                                // Hide the lesson being edited and the template it is copied from.
+                                ->reject(fn ($lesson) => ($lesson instanceof Lesson && $lesson->id === $record?->id)
+                                    || ($lesson instanceof LessonTemplate && $lesson->id === (int) $get('parent_id')));
+
+                            return $service->slotSummaries($lessons);
+                        })
                         ->reactive()
                         ->colors($colors),
                 ]),
