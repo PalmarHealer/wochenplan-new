@@ -5,8 +5,6 @@ namespace App\Services;
 use App\Models\Absence;
 use App\Models\Color;
 use App\Models\DayPdf;
-use App\Models\Lesson;
-use App\Models\LessonTemplate;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Spatie\LaravelPdf\Facades\Pdf;
@@ -16,6 +14,7 @@ class PdfExportService
     public function __construct(
         private LayoutService $layoutService,
         private LunchService $lunchService,
+        private DayLessonService $dayLessonService,
     ) {}
 
     /**
@@ -68,49 +67,16 @@ class PdfExportService
         $layoutModel = $layoutWithModel['model'];
         $textSize = $layoutModel?->text_size ?? 100.0;
 
-        // Get lessons data similar to Day.php
-        $rawLessons = Lesson::with(['assignedUsers'])
-            ->whereDate('date', $date->toDateString())
-            ->get();
+        // Same lessons as the day view.
+        $lessons = $this->dayLessonService->lessonsForDate($date)
+            ->map(function ($lesson) {
+                $array = $lesson->toArray();
+                $array['assigned_users'] = $lesson->assignedUsers->pluck('display_name', 'id')->toArray();
 
-        $parentIds = $rawLessons->pluck('parent_id')->filter()->unique();
-
-        $rawLessonTemplates = LessonTemplate::with(['assignedUsers'])
-            ->where('weekday', $date->format('N'))
-            ->where('created_at', '<=', $date)
-            ->where(function ($query) use ($date) {
-                $query->whereNull('deleted_at')
-                    ->orWhere('deleted_at', '>=', $date);
+                return $array;
             })
-            ->get();
-
-        $filteredTemplates = $rawLessonTemplates->reject(function ($template) use ($parentIds) {
-            return $parentIds->contains($template->id);
-        });
-
-        $templateLessons = $filteredTemplates->mapWithKeys(function ($template) {
-            $key = $template->room.'-'.$template->lesson_time;
-            $array = $template->toArray();
-            $array['assigned_users'] = $template->assignedUsers->pluck('display_name', 'id')->toArray();
-
-            return [$key => $array];
-        });
-
-        $lessonLessons = $rawLessons->mapWithKeys(function ($lesson) {
-            $key = $lesson->room.'-'.$lesson->lesson_time;
-            $array = $lesson->toArray();
-            $array['assigned_users'] = $lesson->assignedUsers->pluck('display_name', 'id')->toArray();
-
-            return [$key => $array];
-        });
-
-        if (empty($templateLessons->values()->toArray())) {
-            $merged = $lessonLessons;
-        } else {
-            $merged = $templateLessons->merge($lessonLessons);
-        }
-
-        $lessons = $merged->values()->toArray();
+            ->values()
+            ->toArray();
 
         // Get colors
         $colors = Color::all()->pluck('color', 'id')->toArray();

@@ -47,8 +47,8 @@ final class HelpTopics
                 group: 'Planung',
                 icon: 'tabler-pencil',
                 heading: 'Angebote in der Tagesansicht bearbeiten',
-                description: 'Direkt anklicken, „Nur heute“ oder „Alle Wochen“ und Angebote ausfallen lassen.',
-                permissions: ['update_lesson', 'create_lesson'],
+                description: 'Direkt anklicken, „Nur heute“ oder „Alle Wochen“, ausfallen lassen und in leeren Zellen neu anlegen.',
+                permissions: ['update_lesson', 'create_lesson', 'create_lesson::template'],
                 keywords: ['fällt aus', 'ausfallen', 'vertretung', 'nur heute', 'alle wochen', 'inline'],
             ),
             new HelpTopic(

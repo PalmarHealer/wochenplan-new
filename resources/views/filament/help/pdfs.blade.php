@@ -20,4 +20,5 @@
 <p class="help-note">
     Vorsicht mit „Neu generieren“ oder „Erstellen“ bei vergangenen Tagen: Das überschreibt das Archiv mit dem heutigen Stand,
     inklusive aller seither geänderten wiederholenden Angebote. Der alte Stand ist danach weg.
+    Deshalb dürfen das nur Rollen, die auch PDFs erstellen dürfen.
 </p>

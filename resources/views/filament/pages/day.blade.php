@@ -89,6 +89,8 @@
                                     $lesson = collect($lessons)->first(function ($lesson) use ($cell) {
                                         return $lesson['room'] == $cell['room'] && $lesson['lesson_time'] == $cell['time'];
                                     });
+                                    $canCreateHere = ! isset($lesson) && ! empty($cell['room']) && ! empty($cell['time'])
+                                        && ($canCreateLesson || $canCreateRecurring);
                                 @endphp
                                 <td
                                     @if (isset($cell['colspan']) && $cell['colspan'] > 1)
@@ -97,7 +99,7 @@
                                     @if (isset($cell['rowspan']) && $cell['rowspan'] > 1)
                                         rowspan="{{ $cell['rowspan'] }}"
                                     @endif
-                                    class="p-1 text-center align-middle @if(($lesson['url'] ?? false) || ! empty($lesson['inline_lesson'])) cursor-pointer @endif"
+                                    class="p-1 text-center align-middle @if(($lesson['url'] ?? false) || ! empty($lesson['inline_lesson']) || $canCreateHere) cursor-pointer @endif"
                                     style="
                                         color: black;
                                         border: 0.35vh solid white;
@@ -120,6 +122,13 @@
                                             onclick="window.location='{{ $lesson['url'] }}'"
                                         @endif
 
+                                    @elseif ($canCreateHere)
+                                        title="Klicken, um hier ein Angebot anzulegen"
+                                        @if ($canCreateLesson && $canCreateRecurring)
+                                            @click="openCreateModal({{ (int) $cell['room'] }}, {{ (int) $cell['time'] }})"
+                                        @else
+                                            wire:click="mountAction('createLesson', { room: {{ (int) $cell['room'] }}, time: {{ (int) $cell['time'] }}, recurring: {{ $canCreateRecurring ? 'true' : 'false' }} })"
+                                        @endif
                                     @endif
                                 >
                                     @if(isset($lesson))
@@ -182,13 +191,30 @@
             </x-slot>
 
             <x-slot name="description">
-                Möchtest du alle Wochen oder nur den heutigen Tag bearbeiten.
+                <span x-text="modal.create ? 'Soll das neue Angebot nur heute oder jede Woche stattfinden?' : 'Möchtest du alle Wochen oder nur den heutigen Tag bearbeiten?'"></span>
             </x-slot>
 
-            <div class="flex gap-3">
+            <div class="flex gap-3" x-show="modal.create">
+                <x-filament::button
+                    x-on:click="$dispatch('close-modal', { id: 'select-scope' }); $wire.mountAction('createLesson', { room: modal.room, time: modal.time, recurring: true })"
+                    color="gray"
+                    icon="tabler-calendar-repeat"
+                    class="w-1/2">
+                    Jede Woche
+                </x-filament::button>
+                <x-filament::button
+                    x-on:click="$dispatch('close-modal', { id: 'select-scope' }); $wire.mountAction('createLesson', { room: modal.room, time: modal.time, recurring: false })"
+                    icon="tabler-calendar-dot"
+                    class="w-1/2">
+                    Nur heute
+                </x-filament::button>
+            </div>
+
+            <div class="flex gap-3" x-show="! modal.create">
                 <x-filament::button
                     tag="a"
                     x-bind:href="modal.templateUrl"
+                    x-show="modal.templateUrl"
                     color="gray"
                     icon="tabler-calendar-repeat"
                     class="w-1/2">
@@ -219,6 +245,9 @@
             return {
                 isFullscreen: false,
                 modal: {
+                    create: false,
+                    room: null,
+                    time: null,
                     singleUrl: null,
                     templateUrl: null,
                     templateId: null,
@@ -236,7 +265,14 @@
                         document.exitFullscreen();
                     }
                 },
+                openCreateModal(room, time) {
+                    this.modal.create = true;
+                    this.modal.room = room;
+                    this.modal.time = time;
+                    this.$dispatch('open-modal', { id: 'select-scope' });
+                },
                 openScopeModal(singleUrl, templateUrl, templateId = 0) {
+                    this.modal.create = false;
                     this.modal.singleUrl = singleUrl;
                     this.modal.templateUrl = templateUrl;
                     this.modal.templateId = templateId || null;

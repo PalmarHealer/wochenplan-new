@@ -63,3 +63,18 @@ it('ignores templates created after or deleted before the date', function () {
     $this->template->forceFill(['created_at' => '2026-01-01', 'deleted_at' => '2026-10-20'])->save();
     expect(app(DayLessonService::class)->lessonsForDate($this->monday))->toBeEmpty();
 });
+
+it('counts a template created later on the same day for that day', function () {
+    $this->template->forceFill(['created_at' => '2026-10-26 14:30:00'])->save();
+
+    expect(app(DayLessonService::class)->lessonsForDate($this->monday))->toHaveCount(1);
+});
+
+it('keeps a deleted template on earlier days but not from the deletion day on', function () {
+    $this->template->forceFill(['deleted_at' => '2026-10-26 09:00:00'])->save();
+    $service = app(DayLessonService::class);
+
+    expect($service->lessonsForDate($this->monday->copy()->subWeek()))->toHaveCount(1)
+        ->and($service->lessonsForDate($this->monday))->toBeEmpty()
+        ->and($service->lessonsForDate($this->monday->copy()->addWeek()))->toBeEmpty();
+});

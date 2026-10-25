@@ -21,11 +21,22 @@
     Dann gilt an dem Tag wieder das wiederholende Angebot.
 </p>
 
+<h4>Neues Angebot in einer leeren Zelle</h4>
+<p>
+    Klick auf einen freien Slot. Du wirst gefragt, ob das Angebot <strong>nur heute</strong> oder <strong>jede Woche</strong>
+    stattfinden soll. Danach öffnet sich dasselbe Fenster wie beim Bearbeiten.
+</p>
+<ul>
+    <li><strong>Nur heute</strong> legt ein Angebot für genau diesen Tag an.</li>
+    <li><strong>Jede Woche</strong> legt ein wiederholendes Angebot an, das ab heute jede Woche an diesem Wochentag in diesem Slot stattfindet.</li>
+    <li>Darfst du nur eins von beiden, entfällt die Frage.</li>
+</ul>
+
 <h4>Häufige Fragen</h4>
 <ul>
     <li><strong>Ich kann ein Angebot nicht anklicken.</strong> Bearbeiten darfst du nur Angebote, denen du zugewiesen bist,
         es sei denn, deine Rolle darf alle Angebote bearbeiten.</li>
-    <li><strong>Leere Zellen</strong> lassen sich nicht anklicken. Neue Angebote legst du unter
-        <x-filament::link :href="\App\Filament\Resources\LessonResource::getUrl('create')">Angebote → Erstellen</x-filament::link> an.</li>
+    <li><strong>Eine leere Zelle lässt sich nicht anklicken.</strong> Anklickbar sind nur Zellen mit Raum und Zeit,
+        und du brauchst das Recht, Angebote anzulegen.</li>
     <li><strong>Ich sehe kein Feld „Personen“.</strong> Personen zuweisen dürfen nur Rollen, die alle Angebote sehen.</li>
 </ul>

@@ -32,12 +32,7 @@ class DayLessonService
         $overriddenTemplateIds = $lessons->pluck('parent_id')->filter()->unique();
 
         $templates = LessonTemplate::with(['assignedUsers', 'rooms', 'times'])
-            ->where('weekday', $date->format('N'))
-            ->where('created_at', '<=', $date)
-            ->where(function ($query) use ($date) {
-                $query->whereNull('deleted_at')
-                    ->orWhere('deleted_at', '>=', $date);
-            })
+            ->activeOn($date)
             ->get()
             ->reject(fn ($template) => $overriddenTemplateIds->contains($template->id));
 

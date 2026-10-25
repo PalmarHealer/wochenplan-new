@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Lunch;
+use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
@@ -11,7 +12,10 @@ class LunchService
 {
     public function getLunch(string $date): string
     {
-        $menu = Lunch::where('date', $date)->first();
+        // Callers pass "Y-m-d" or a Carbon with time; store and ask the API for the plain date.
+        $date = Carbon::parse($date)->toDateString();
+
+        $menu = Lunch::whereDate('date', $date)->first();
         if ($menu) {
             return $menu->lunch;
         }
@@ -39,7 +43,7 @@ class LunchService
 
     public function clearLunch(string $date): bool
     {
-        return Lunch::where('date', $date)->delete() > 0;
+        return Lunch::whereDate('date', $date)->delete() > 0;
     }
 
     protected function fetchFromApi(string $date): array

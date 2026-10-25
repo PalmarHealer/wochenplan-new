@@ -34,3 +34,9 @@ it('returns false when clearing lunch for a non-existing date', function () {
 
     expect($service->clearLunch('2026-03-22'))->toBeFalse();
 });
+
+it('finds a cached lunch when the date is passed with a time', function () {
+    Lunch::create(['date' => '2026-03-23', 'lunch' => 'Reis']);
+
+    expect((new LunchService)->getLunch('2026-03-23 00:00:00'))->toBe('Reis');
+});
