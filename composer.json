@@ -9,7 +9,7 @@
         "php": "^8.3",
         "bezhansalleh/filament-shield": "^3.3",
         "dutchcodingcompany/filament-socialite": "^2.4",
-        "filament/filament": "3.3",
+        "filament/filament": "^3.3",
         "jeffgreco13/filament-breezy": "^2.6",
         "laravel/framework": "^12.1.1",
         "laravel/tinker": "^2.10.1",
@@ -80,6 +80,9 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "platform": {
+            "php": "8.3.36"
         }
     },
     "minimum-stability": "stable",

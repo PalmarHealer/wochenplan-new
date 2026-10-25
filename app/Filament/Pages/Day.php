@@ -14,8 +14,10 @@ use App\Services\LunchService;
 use App\Services\PdfExportService;
 use Carbon\Carbon;
 use Exception;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Response;
+use Livewire\Attributes\Url;
 
 class Day extends Page
 {
@@ -45,7 +47,7 @@ class Day extends Page
 
     public float $textSize = 100.0;
 
-    #[\Livewire\Attributes\Url(as: 'date')]
+    #[Url(as: 'date')]
     public ?string $urlDay = null;
 
     public ?string $day = null;
@@ -215,7 +217,7 @@ class Day extends Page
         }
 
         try {
-            if (\Carbon\Carbon::parse($current)->gt(\Carbon\Carbon::parse($this->lastSeenLoadedAt))) {
+            if (Carbon::parse($current)->gt(Carbon::parse($this->lastSeenLoadedAt))) {
                 $this->lastSeenLoadedAt = $current;
                 $this->mount();
             }
@@ -259,7 +261,7 @@ class Day extends Page
             $base64Content = $pdfService->getExistingPdf($this->day);
 
             if (! $base64Content) {
-                \Filament\Notifications\Notification::make()
+                Notification::make()
                     ->title('PDF nicht verfügbar')
                     ->body('Für dieses Datum existiert keine PDF.')
                     ->danger()

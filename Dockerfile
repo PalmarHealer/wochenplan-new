@@ -1,9 +1,13 @@
 # syntax=docker/dockerfile:1.7
 
+# Pinned patch release: >= 8.3.36 fixes PHP2Shell (CVE-2026-109618, CVE-2026-109619).
+# Builder and runtime must use the same version, since compiled extensions are copied over.
+ARG PHP_IMAGE=php:8.3.36-fpm-alpine
+
 # ============================================================================
 # Build stage: Install Composer dependencies
 # ============================================================================
-FROM php:8.3-fpm-alpine AS builder
+FROM ${PHP_IMAGE} AS builder
 
 # Install build dependencies and compile all PHP extensions (including redis)
 RUN apk add --no-cache \
@@ -34,10 +38,11 @@ RUN composer dump-autoload --optimize
 # ============================================================================
 # Runtime stage: Final optimized image
 # ============================================================================
-FROM php:8.3-fpm-alpine
+FROM ${PHP_IMAGE}
 
 ENV APP_DIR=/var/www/html \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_SKIP_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Copy pre-compiled PHP extensions from builder (avoids recompiling — saves minutes)
@@ -63,7 +68,7 @@ RUN apk add --no-cache \
 # Install Puppeteer (will use system Chromium)
 ARG SKIP_PUPPETEER_INSTALL=false
 RUN if [ "${SKIP_PUPPETEER_INSTALL}" = "false" ]; then \
-        PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm install -g puppeteer@21 --unsafe-perm=true \
+        PUPPETEER_SKIP_DOWNLOAD=true npm install -g puppeteer@25 --unsafe-perm=true \
             --omit=dev \
             --omit=optional \
         && echo 'export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true' >> /etc/profile.d/puppeteer.sh \
