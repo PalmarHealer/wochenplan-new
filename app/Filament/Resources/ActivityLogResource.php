@@ -11,6 +11,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\HtmlString;
 
 class ActivityLogResource extends Resource implements HasShieldPermissions
 {
@@ -130,7 +131,7 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
 
                                     $html .= '</div>';
 
-                                    return new \Illuminate\Support\HtmlString($html);
+                                    return new HtmlString($html);
                                 }
 
                                 // For create actions, show the created data
@@ -158,7 +159,7 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
 
                                     $html .= '</div>';
 
-                                    return new \Illuminate\Support\HtmlString($html);
+                                    return new HtmlString($html);
                                 }
 
                                 // For delete actions, show the deleted data
@@ -186,7 +187,7 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
 
                                     $html .= '</div>';
 
-                                    return new \Illuminate\Support\HtmlString($html);
+                                    return new HtmlString($html);
                                 }
 
                                 return 'Keine Daten verfügbar';

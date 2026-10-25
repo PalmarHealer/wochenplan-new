@@ -2,7 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Absence;
+use App\Models\Color;
 use App\Models\DayPdf;
+use App\Models\Lesson;
+use App\Models\LessonTemplate;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Spatie\LaravelPdf\Facades\Pdf;
@@ -65,13 +69,13 @@ class PdfExportService
         $textSize = $layoutModel?->text_size ?? 100.0;
 
         // Get lessons data similar to Day.php
-        $rawLessons = \App\Models\Lesson::with(['assignedUsers'])
+        $rawLessons = Lesson::with(['assignedUsers'])
             ->whereDate('date', $date->toDateString())
             ->get();
 
         $parentIds = $rawLessons->pluck('parent_id')->filter()->unique();
 
-        $rawLessonTemplates = \App\Models\LessonTemplate::with(['assignedUsers'])
+        $rawLessonTemplates = LessonTemplate::with(['assignedUsers'])
             ->where('weekday', $date->format('N'))
             ->where('created_at', '<=', $date)
             ->where(function ($query) use ($date) {
@@ -109,10 +113,10 @@ class PdfExportService
         $lessons = $merged->values()->toArray();
 
         // Get colors
-        $colors = \App\Models\Color::all()->pluck('color', 'id')->toArray();
+        $colors = Color::all()->pluck('color', 'id')->toArray();
 
         // Get absences
-        $rawAbsences = \App\Models\Absence::with(['user'])
+        $rawAbsences = Absence::with(['user'])
             ->whereDate('start', '<=', $date)
             ->whereDate('end', '>=', $date)
             ->get();
