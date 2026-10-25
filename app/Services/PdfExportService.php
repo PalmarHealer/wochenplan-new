@@ -135,7 +135,11 @@ class PdfExportService
         // Per-invocation subdir so concurrent generatePdf() calls (e.g. the
         // scheduled `yesterday` and `today` jobs running back-to-back) don't
         // collide on Chromium's user-data-dir lock.
-        $userDataDir = storage_path('app/chrome-data/'.$date->format('Y-m-d').'-'.uniqid('', true));
+        // Kept short and in the system temp dir: it is also used as TMPDIR, and
+        // Chromium places its SingletonSocket there. Unix socket paths are
+        // limited to 108 bytes, a storage_path() based dir exceeded that and
+        // made Chromium abort with "Socket path too long".
+        $userDataDir = sys_get_temp_dir().'/chrome-'.bin2hex(random_bytes(6));
         if (! file_exists($userDataDir)) {
             mkdir($userDataDir, 0755, true); // Secure permissions (owner rwx, group/others rx)
         }

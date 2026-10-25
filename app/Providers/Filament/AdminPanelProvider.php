@@ -74,7 +74,16 @@ class AdminPanelProvider extends PanelProvider
                             ->stateless(false),
                     ])
                     ->resolveUserUsing(function (string $provider, SocialiteUserContract $oauthUser, FilamentSocialitePlugin $plugin) {
-                        return User::where('email', $oauthUser->getEmail())->first();
+                        $email = self::azureEmail($oauthUser);
+                        $user = User::where('email', $email)->first();
+
+                        // Guest accounts used to be created with their #EXT# UPN; move them to the real address.
+                        if (! $user && $oauthUser->getEmail() !== $email) {
+                            $user = User::where('email', $oauthUser->getEmail())->first();
+                            $user?->update(['email' => $email]);
+                        }
+
+                        return $user;
                     })
 
                     ->createUserUsing(function (string $provider, SocialiteUserContract $oauthUser, FilamentSocialitePlugin $plugin) {
@@ -83,13 +92,14 @@ class AdminPanelProvider extends PanelProvider
                             return null;
                         }
 
-                        $fullName = $oauthUser->getName() ?? $oauthUser->getNickname() ?? $oauthUser->getEmail();
+                        $email = self::azureEmail($oauthUser);
+                        $fullName = $oauthUser->getName() ?? $oauthUser->getNickname() ?? $email;
                         $firstName = explode(' ', trim($fullName))[0] ?? 'Unbekannt';
 
                         return User::create([
                             'display_name' => $firstName,
                             'name' => $fullName,
-                            'email' => $oauthUser->getEmail(),
+                            'email' => $email,
                             'password' => Hash::make(Str::random(32)),
                             'email_verified_at' => now(),
                         ]);
@@ -145,5 +155,31 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+    /**
+     * The Azure provider maps email to the userPrincipalName. For B2B guests that is
+     * "first_domain.tld#EXT#@tenant.onmicrosoft.com", so prefer the real mail attribute
+     * and otherwise decode the guest UPN back to the original address.
+     */
+    private static function azureEmail(SocialiteUserContract $oauthUser): string
+    {
+        $raw = $oauthUser->getRaw();
+        $upn = $oauthUser->getEmail();
+
+        if (! empty($raw['mail'])) {
+            return Str::lower($raw['mail']);
+        }
+
+        if (str_contains($upn, '#EXT#')) {
+            $local = Str::before($upn, '#EXT#');
+            $at = strrpos($local, '_');
+
+            if ($at !== false) {
+                return Str::lower(substr_replace($local, '@', $at, 1));
+            }
+        }
+
+        return $upn;
     }
 }

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Lunch;
 use Exception;
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Log;
 
 class LunchService
 {
@@ -18,7 +19,10 @@ class LunchService
         try {
             $data = $this->fetchFromApi($date);
         } catch (Exception $e) {
-            return $e->getMessage();
+            // Never print raw exception text into the plan or the PDF.
+            Log::warning('Lunch API request failed', ['date' => $date, 'error' => $e->getMessage()]);
+
+            return 'Mittagessen nicht verfügbar';
         }
 
         if ($data['available']) {
