@@ -1,6 +1,9 @@
 <x-filament-panels::page>
     <style>
-        .help-group { font-size: .8rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; opacity: .6; margin: .75rem 0 -.25rem; }
+        /* Spacing via margins: x-show resets inline display, so flex gaps would get lost. */
+        .help-block { margin-top: 2rem; }
+        .help-group { font-size: .8rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; opacity: .6; margin: 0 0 .75rem .25rem; }
+        .help-topic + .help-topic { margin-top: .75rem; }
         .help-body p { margin-bottom: .75rem; }
         .help-body p:last-child { margin-bottom: 0; }
         .help-body ul, .help-body ol { margin: 0 0 .75rem 1.25rem; }
@@ -35,20 +38,18 @@
                 });
             }
         "
-        style="display: flex; flex-direction: column; gap: 1rem;"
     >
         <x-filament::input.wrapper prefix-icon="tabler-search">
             <x-filament::input type="search" x-model.debounce.150ms="query" placeholder="Hilfe durchsuchen, z. B. „Schichtplan“ oder „Ferien“" />
         </x-filament::input.wrapper>
 
         @forelse ($this->groups() as $group => $topics)
-            <div x-show="[...$el.querySelectorAll('[data-help-search]')].some((topic) => matches(topic.dataset.helpSearch))"
-                 style="display: flex; flex-direction: column; gap: 1rem;">
+            <div class="help-block" x-show="[...$el.querySelectorAll('[data-help-search]')].some((topic) => matches(topic.dataset.helpSearch))">
                 <div class="help-group">{{ $group }}</div>
 
                 @foreach ($topics as $entry)
                     @php($topic = $entry['topic'])
-                    <div x-show="matches($el.dataset.helpSearch)" data-help-search="{{ $entry['search'] }}" wire:key="help-{{ $topic->id }}">
+                    <div class="help-topic" x-show="matches($el.dataset.helpSearch)" data-help-search="{{ $entry['search'] }}" wire:key="help-{{ $topic->id }}">
                         <x-filament::section
                             :icon="$topic->icon"
                             collapsible
