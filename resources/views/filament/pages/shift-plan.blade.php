@@ -33,7 +33,7 @@
         .dark .sp-badge { background: rgb(127 29 29 / .6); color: rgb(254 226 226); }
     </style>
 
-    <div style="display: flex; gap: .5rem; flex-wrap: wrap;">
+    <div style="display: flex; gap: .5rem; flex-wrap: wrap; align-items: center;">
         <x-filament::button icon="tabler-arrow-narrow-left" wire:click="changeWeek(-1)">
             Vorherige Woche
         </x-filament::button>
@@ -45,7 +45,7 @@
         </x-filament::button>
 
         @if ($this->canSeeAll())
-            <x-filament::tabs style="margin-left: auto;">
+            <x-filament::tabs style="margin: 0 0 0 auto;">
                 <x-filament::tabs.item :active="! $this->showsAll()" icon="tabler-user" wire:click="setScope('meins')">
                     Meins
                 </x-filament::tabs.item>
