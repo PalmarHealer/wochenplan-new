@@ -14,7 +14,6 @@ use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
-use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Resources\Resource;
@@ -175,6 +174,7 @@ class LessonResource extends Resource implements HasShieldPermissions
                         ->columnSpanFull()
                         ->required()
                         ->layout(fn (Get $get) => app(LayoutService::class)->getLayoutForDate($get('date') ?? now()->toDateString()))
+                        ->textSize(fn (Get $get) => app(LayoutService::class)->getLayoutModelForDate($get('date') ?? now()->toDateString())?->text_size)
                         ->occupied(function (Get $get, ?Lesson $record) {
                             $service = app(DayLessonService::class);
                             $lessons = $service->lessonsForDate(Carbon::parse($get('date') ?? now()))
@@ -221,24 +221,9 @@ class LessonResource extends Resource implements HasShieldPermissions
                         ->columnSpanFull()
                         ->label('Notizen'),
                 ]),
-                ToggleButtons::make('disabled')
+                Forms\Components\Toggle::make('disabled')
                     ->default($defaults['disabled'] ?? false)
-                    ->label('Aktiviert')
-                    ->required()
-                    ->boolean()
-                    ->inline()
-                    ->options([
-                        true => 'Deaktiviert',
-                        false => 'Aktiviert',
-                    ])
-                    ->icons([
-                        true => 'heroicon-o-x-mark',
-                        false => 'heroicon-o-check',
-                    ])
-                    ->colors([
-                        true => 'warning',
-                        false => 'success',
-                    ]),
+                    ->label('Fällt aus'),
             ]);
     }
 

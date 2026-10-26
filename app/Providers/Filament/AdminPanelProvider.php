@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Widgets\WeekDaysCollection;
 use App\Livewire\PersonalInfo;
@@ -59,7 +60,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogoHeight('2rem')
             ->id('admin')
             ->path('')
-            ->login()
+            ->login(Login::class)
             ->colors([
                 'primary' => Color::Indigo,
             ])
@@ -105,6 +106,7 @@ class AdminPanelProvider extends PanelProvider
                         ]);
                     })
                     ->rememberLogin(true)
+                    ->showDivider(false)
                     ->registration(env('ALLOW_REGISTRATION', true))
                     ->userModelClass(User::class),
                 FilamentShieldPlugin::make()->gridColumns([

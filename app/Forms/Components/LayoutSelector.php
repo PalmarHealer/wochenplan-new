@@ -17,6 +17,9 @@ class LayoutSelector extends Field
     /** @var array|Closure */
     protected $occupied = [];
 
+    /** @var float|Closure|null */
+    protected $textSize = null;
+
     public function colors(array $colors): static
     {
         $this->colors = $colors;
@@ -62,5 +65,20 @@ class LayoutSelector extends Field
         $evaluated = $this->evaluate($this->occupied);
 
         return is_array($evaluated) ? $evaluated : [];
+    }
+
+    /**
+     * Text size of the layout in percent, applied like in the day view.
+     */
+    public function textSize(float|Closure|null $textSize): static
+    {
+        $this->textSize = $textSize;
+
+        return $this;
+    }
+
+    public function getTextSize(): float
+    {
+        return (float) ($this->evaluate($this->textSize) ?? 100.0);
     }
 }
