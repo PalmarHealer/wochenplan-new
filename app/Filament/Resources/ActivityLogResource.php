@@ -13,7 +13,6 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
-use Illuminate\Support\Str;
 
 class ActivityLogResource extends Resource implements HasShieldPermissions
 {
@@ -60,9 +59,7 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
                             ->disabled(),
                         Forms\Components\Placeholder::make('resource_label')
                             ->label('Ressourcen-Label')
-                            ->content(fn (?ActivityLog $record) => new HtmlString(Str::sanitizeHtml(
-                                preg_replace('/^[^:]+:\s*/', '', $record?->resource_label ?? '')
-                            ))),
+                            ->content(fn (?ActivityLog $record) => static::plainLabel($record?->resource_label)),
                     ])->columns(3),
 
                 Forms\Components\Section::make('Request')
@@ -289,13 +286,12 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('resource_label')
                     ->label('Ressource')
                     ->searchable()
-                    ->html()
                     ->lineClamp(2)
                     ->wrap()
                     ->url(fn (ActivityLog $record) => static::subjectUrl($record))
                     ->color(fn (ActivityLog $record) => static::subjectUrl($record) ? 'primary' : null)
                     ->toggleable()
-                    ->formatStateUsing(fn ($state) => preg_replace('/^[^:]+:\s*/', '', $state ?? '')),
+                    ->formatStateUsing(fn ($state) => static::plainLabel($state)),
 
                 Tables\Columns\TextColumn::make('method')
                     ->label('HTTP-Methode')
@@ -423,7 +419,7 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
             ? Filament::getModelResource($log->resource_type)
             : null;
         $record = ($resource && $resource !== static::class && $resource::hasPage('edit'))
-            ? $log->resource_type::find($log->resource_id)
+            ? $resource::resolveRecordRouteBinding($log->resource_id)
             : null;
 
         $urls[$log] = ($record && $resource::canEdit($record))
@@ -431,6 +427,17 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
             : '';
 
         return $urls[$log] ?: null;
+    }
+
+    /**
+     * The label without its type prefix, as plain text. Labels can hold lesson rich text,
+     * but also user input such as the email of a failed login, so markup is never rendered.
+     */
+    public static function plainLabel(?string $label): string
+    {
+        $label = preg_replace('/^[^:]+:\s*/', '', $label ?? '');
+
+        return trim(html_entity_decode(strip_tags(str_replace(['</p>', '<br>', '<br/>', '<br />'], ' ', $label)), ENT_QUOTES | ENT_HTML5));
     }
 
     public static function getRelations(): array

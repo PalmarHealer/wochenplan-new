@@ -7,6 +7,7 @@ use App\Models\LessonTemplate;
 use App\Models\Time;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class DayLessonService
 {
@@ -67,8 +68,8 @@ class DayLessonService
     {
         return $lessons
             ->map(fn ($lesson) => [
-                'name' => (string) $lesson->name,
-                'description' => (string) $lesson->description,
+                'name' => Str::sanitizeHtml((string) $lesson->name),
+                'description' => Str::sanitizeHtml((string) $lesson->description),
                 'users' => $lesson->assignedUsers->pluck('display_name')->filter()->implode(', '),
                 'color' => $lesson->color ? (int) $lesson->color : null,
                 'disabled' => (bool) $lesson->disabled,

@@ -46,7 +46,7 @@
                             :colspan="cell.colspan || 1"
                             style="color: black; border: 0.35vh solid white;"
                             :style="{
-                                backgroundColor: colors[(slotOf(cell)?.color ?? cell.color ?? 'default')] ?? 'red',
+                                backgroundColor: colors[slotOf(cell)?.color] ?? colors[cell.color ?? 'default'] ?? 'red',
                                 // Darkens only the cell color (an overlay on the background), not the text.
                                 backgroundImage: highlightOverlay(
                                     ! (cell.room && cell.time) ? 0 :

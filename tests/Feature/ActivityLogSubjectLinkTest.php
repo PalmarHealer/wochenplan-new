@@ -49,3 +49,8 @@ it('does not link without permission or when the record is gone', function () {
     expect(ActivityLogResource::subjectUrl(logFor(Lesson::class, '999999')))->toBeNull()
         ->and(ActivityLogResource::subjectUrl(logFor('login_attempt', '1')))->toBeNull();
 });
+
+it('shows labels as plain text, never as markup', function () {
+    expect(ActivityLogResource::plainLabel('Lesson: <p><strong>Acker</strong> &amp; Garten</p>'))->toBe('Acker & Garten')
+        ->and(ActivityLogResource::plainLabel('Email: "<a href=/x style=position:fixed>"@x.de'))->toBe('""@x.de');
+});
