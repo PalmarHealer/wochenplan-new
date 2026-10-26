@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ActivityLogResource\Pages;
 use App\Models\ActivityLog;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -56,10 +57,9 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
                         Forms\Components\TextInput::make('resource_id')
                             ->label('Ressourcen-ID')
                             ->disabled(),
-                        Forms\Components\TextInput::make('resource_label')
+                        Forms\Components\Placeholder::make('resource_label')
                             ->label('Ressourcen-Label')
-                            ->disabled()
-                            ->formatStateUsing(fn ($state) => preg_replace('/^[^:]+:\s*/', '', $state ?? '')),
+                            ->content(fn (?ActivityLog $record) => static::plainLabel($record?->resource_label)),
                     ])->columns(3),
 
                 Forms\Components\Section::make('Request')
@@ -286,10 +286,12 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('resource_label')
                     ->label('Ressource')
                     ->searchable()
-                    ->limit(50)
+                    ->lineClamp(2)
                     ->wrap()
+                    ->url(fn (ActivityLog $record) => static::subjectUrl($record))
+                    ->color(fn (ActivityLog $record) => static::subjectUrl($record) ? 'primary' : null)
                     ->toggleable()
-                    ->formatStateUsing(fn ($state) => preg_replace('/^[^:]+:\s*/', '', $state ?? '')),
+                    ->formatStateUsing(fn ($state) => static::plainLabel($state)),
 
                 Tables\Columns\TextColumn::make('method')
                     ->label('HTTP-Methode')
@@ -399,6 +401,43 @@ class ActivityLogResource extends Resource implements HasShieldPermissions
                     ->label('Ansehen'),
             ])
             ->poll('30s'); // Auto-refresh every 30 seconds
+    }
+
+    /**
+     * Edit page of the logged record, if it still exists and the current user may edit it.
+     */
+    public static function subjectUrl(ActivityLog $log): ?string
+    {
+        // The table asks twice per row (url and color), so remember the answer per log instance.
+        static $urls = new \WeakMap;
+
+        if (isset($urls[$log])) {
+            return $urls[$log] ?: null;
+        }
+
+        $resource = ($log->resource_type && $log->resource_id && class_exists($log->resource_type))
+            ? Filament::getModelResource($log->resource_type)
+            : null;
+        $record = ($resource && $resource !== static::class && $resource::hasPage('edit'))
+            ? $resource::resolveRecordRouteBinding($log->resource_id)
+            : null;
+
+        $urls[$log] = ($record && $resource::canEdit($record))
+            ? $resource::getUrl('edit', ['record' => $record])
+            : '';
+
+        return $urls[$log] ?: null;
+    }
+
+    /**
+     * The label without its type prefix, as plain text. Labels can hold lesson rich text,
+     * but also user input such as the email of a failed login, so markup is never rendered.
+     */
+    public static function plainLabel(?string $label): string
+    {
+        $label = preg_replace('/^[^:]+:\s*/', '', $label ?? '');
+
+        return trim(html_entity_decode(strip_tags(str_replace(['</p>', '<br>', '<br/>', '<br />'], ' ', $label)), ENT_QUOTES | ENT_HTML5));
     }
 
     public static function getRelations(): array

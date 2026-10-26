@@ -7,6 +7,7 @@ use App\Models\LessonTemplate;
 use App\Models\Time;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class DayLessonService
 {
@@ -57,17 +58,20 @@ class DayLessonService
     }
 
     /**
-     * Compact, display-ready summary per slot for showing occupied cells in a layout.
+     * Summary per slot for showing occupied cells in a layout like the day view does.
+     * Name and description are the stored rich text HTML, rendered as in the day view.
      *
      * @param  Collection<string, Lesson|LessonTemplate>  $lessons
-     * @return array<string, array{name: string, users: string, disabled: bool}>
+     * @return array<string, array{name: string, description: string, users: string, color: ?int, disabled: bool}>
      */
     public function slotSummaries(Collection $lessons): array
     {
         return $lessons
             ->map(fn ($lesson) => [
-                'name' => trim(html_entity_decode(strip_tags((string) $lesson->name))),
+                'name' => Str::sanitizeHtml((string) $lesson->name),
+                'description' => Str::sanitizeHtml((string) $lesson->description),
                 'users' => $lesson->assignedUsers->pluck('display_name')->filter()->implode(', '),
+                'color' => $lesson->color ? (int) $lesson->color : null,
                 'disabled' => (bool) $lesson->disabled,
             ])
             ->all();

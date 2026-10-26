@@ -3,6 +3,7 @@
     $layout = $getLayout();
     $colors = $getColors();
     $occupied = $getOccupied();
+    $textSize = $getTextSize();
 @endphp
 <x-dynamic-component
     :component="$getFieldWrapperView()"
@@ -25,7 +26,8 @@
             class="hidden"
         {!! $applyStateBindingModifiers('wire:model') !!}="{{ $getStatePath() }}"
         />
-        <table class="table-auto w-full border border-gray-400 text-xs bg-white dark:bg-white/5">
+        {{-- The plan always stays in light mode, also when the panel is dark. --}}
+        <table class="table-auto w-full bg-white" style="font-size: calc(1rem * {{ $textSize }} / 100);">
             <tbody>
             <template x-for="(row, rowIndex) in layout" :key="rowIndex">
                 <tr class="h-10">
@@ -33,7 +35,7 @@
                         <td
                             x-show="!cell?.hidden"
                             x-data="{ isHovered: false }"
-                            class="px-2 py-1 text-xl"
+                            class="p-1 align-middle"
                             :class="{
                                 'text-center': cell.alignment === 'center',
                                 'text-right': cell.alignment === 'right',
@@ -44,30 +46,28 @@
                             :colspan="cell.colspan || 1"
                             style="color: black; border: 0.35vh solid white;"
                             :style="{
-                                backgroundColor: colors[(cell.color ?? 'default')] ?? 'red',
-                                filter: isSelected(rowIndex, colIndex) && (cell.room && cell.time) ?
-                                    cell.color ? 'grayscale(20%) brightness(80%)' :
-                                        'invert(50%)' :
-                                        isHovered && (cell.room && cell.time) ?
-                                            cell.color ? 'grayscale(10%) brightness(90%)' :
-                                            'invert(70%)' :
-                                        'none'
+                                backgroundColor: colors[slotOf(cell)?.color] ?? colors[cell.color ?? 'default'] ?? 'red',
+                                // Darkens only the cell color (an overlay on the background), not the text.
+                                backgroundImage: highlightOverlay(
+                                    ! (cell.room && cell.time) ? 0 :
+                                        isSelected(rowIndex, colIndex) ? 0.22 :
+                                            isHovered ? 0.1 : 0
+                                ),
                             }"
                             @click="selectCell(rowIndex, colIndex); updateState()"
                             @mouseenter="isHovered = true"
                             @mouseleave="isHovered = false"
                         >
-                            <div x-html="cell.displayName ?? ``" class="select-none"></div>
+                            {{-- Occupied slots look like the lesson cell in the day view. --}}
                             <template x-if="slotOf(cell)">
-                                <div
-                                    class="select-none"
-                                    style="font-size: 0.7rem; line-height: 1.15;"
-                                    :style="slotOf(cell).disabled ? { textDecoration: 'line-through', opacity: .6 } : {}"
-                                    :title="slotOf(cell).users"
-                                >
-                                    <div style="opacity: .75;" x-text="slotOf(cell).users"></div>
-                                    <div style="font-weight: 600;" x-text="slotOf(cell).name"></div>
+                                <div class="select-none" :style="slotOf(cell).disabled ? { textDecoration: 'line-through' } : {}">
+                                    <small x-text="slotOf(cell).users"></small>
+                                    <strong x-html="slotOf(cell).name"></strong>
+                                    <div x-html="slotOf(cell).description"></div>
                                 </div>
+                            </template>
+                            <template x-if="!slotOf(cell)">
+                                <div x-html="cell.displayName ?? ``" class="select-none"></div>
                             </template>
                         </td>
                     </template>
@@ -101,6 +101,10 @@
                     if (!cell || !cell.room || !cell.time) return null;
 
                     return this.occupied[cell.room + '-' + cell.time] ?? null;
+                },
+
+                highlightOverlay(alpha) {
+                    return alpha ? `linear-gradient(rgba(0, 0, 0, ${alpha}), rgba(0, 0, 0, ${alpha}))` : 'none';
                 },
 
                 isSelected(row, col) {

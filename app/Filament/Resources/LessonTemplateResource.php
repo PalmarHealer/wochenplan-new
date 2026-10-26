@@ -12,7 +12,6 @@ use App\Services\LayoutService;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
-use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Resources\Resource;
@@ -108,6 +107,7 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                         ->columnSpanFull()
                         ->required()
                         ->layout(fn (Get $get) => app(LayoutService::class)->getLayoutByWeekday((int) ($get('weekday') ?? 6)))
+                        ->textSize(fn (Get $get) => app(LayoutService::class)->getLayoutModelByWeekday((int) ($get('weekday') ?? 6))?->text_size)
                         ->occupied(function (Get $get, ?LessonTemplate $record) {
                             $service = app(DayLessonService::class);
                             $templates = $service->templatesForWeekday((int) ($get('weekday') ?? 6))
@@ -150,24 +150,9 @@ class LessonTemplateResource extends Resource implements HasShieldPermissions
                         ->columnSpanFull()
                         ->label('Notizen'),
                 ]),
-                ToggleButtons::make('disabled')
-                    ->label('Aktiviert')
-                    ->required()
-                    ->boolean()
-                    ->inline()
+                Forms\Components\Toggle::make('disabled')
                     ->default(false)
-                    ->options([
-                        true => 'Deaktiviert',
-                        false => 'Aktiviert',
-                    ])
-                    ->icons([
-                        true => 'heroicon-o-x-mark',
-                        false => 'heroicon-o-check',
-                    ])
-                    ->colors([
-                        true => 'warning',
-                        false => 'success',
-                    ]),
+                    ->label('Fällt aus'),
             ]);
     }
 

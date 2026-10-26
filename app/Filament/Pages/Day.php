@@ -338,7 +338,6 @@ class Day extends Page
         return [
             CustomRichEditor::make('name')
                 ->label('Name')
-                ->required()
                 ->toolbarButtons(['bold', 'italic', 'strike', 'underline', 'undo', 'redo']),
             CustomRichEditor::make('description')
                 ->label('Beschreibung')
